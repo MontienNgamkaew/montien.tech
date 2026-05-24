@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PNP Digital Platform - ระบบสารสนเทศวิทยาลัยการอาชีพพนมไพร ศูนย์รวมแอปพลิเคชันระบบสารสนเทศภายในวิทยาลัย">
+    <title>PNP Digital Platform | วิทยาลัยการอาชีพพนมไพร</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <!-- Particle Canvas for Animated Background -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- App Wrapper -->
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon-wrapper">
+                    <!-- Crisp Glowing SVG Logo -->
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#00f2fe"/>
+                                <stop offset="1" stop-color="#4facfe"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="logo-text">PNP <span class="logo-subtext">Platform</span></span>
+            </div>
+            
+            <div class="header-controls">
+                <!-- Clock Widget -->
+                <div class="clock-widget" id="clock-widget">
+                    <span class="clock-icon">🕒</span>
+                    <span id="live-time">00:00:00</span>
+                </div>
+                
+                <!-- Theme Toggle Button -->
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="สลับโหมดมืด/สว่าง">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Hero / Greeting Section -->
+            <section class="hero-section">
+                <h1 class="hero-title">
+                    <span class="highlight-text">PNP Digital Platform</span>
+                    <span class="hero-college-title">ระบบสารสนเทศ วิทยาลัยการอาชีพพนมไพร</span>
+                </h1>
+            </section>
+
+            <!-- Cards Grid Section -->
+            <section class="apps-grid">
+                
+                <!-- Card 1: PNP Go -->
+                <div class="app-card card-carrequest">
+                    <div class="card-glow"></div>
+                    <div class="card-header">
+                        <div class="icon-box icon-car">
+                            <!-- SVG Car Icon -->
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="3" width="15" height="13" rx="2" ry="2"></rect>
+                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                            </svg>
+                        </div>
+                        <span class="status-pill status-active">เปิดใช้งาน</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">PNP Go</h3>
+                        <p class="card-desc">ระบบขออนุญาตใช้รถยนต์ส่วนกลางและสั่งซื้อน้ำมันเชื้อเพลิงออนไลน์</p>
+                        <ul class="feature-list">
+                            <li><span>🚗</span> ตรวจสอบสถานะรถแบบ Real-time</li>
+                            <li><span>⛽</span> ยื่นขออนุมัติและสั่งซื้อน้ำมันรวดเร็ว</li>
+                            <li><span>📄</span> พิมพ์เอกสารใบขอและใบสั่งซื้อ A4</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <!-- CHANGE THE URL BELOW TO YOUR REAL SUBDOMAIN LATER -->
+                        <a href="http://car.yourdomain.com" class="app-link" target="_blank" rel="noopener noreferrer">
+                            <span>เข้าใช้งานระบบ</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 2: PNP Man -->
+                <div class="app-card card-pnpman">
+                    <div class="card-glow"></div>
+                    <div class="card-header">
+                        <div class="icon-box icon-man">
+                            <!-- SVG Users/People Icon -->
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <span class="status-pill status-active">เปิดใช้งาน</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">PNP Man</h3>
+                        <p class="card-desc">ระบบบริหารจัดการข้อมูลบุคลากรและผังองค์กรแบบลากวาง</p>
+                        <ul class="feature-list">
+                            <li><span>👥</span> จัดการผังบุคลากรแบบ Drag & Drop</li>
+                            <li><span>📂</span> ส่งออกข้อมูล Excel และนำเข้าผ่าน CSV</li>
+                            <li><span>🔒</span> รันภายในองค์กร ปลอดภัย 100%</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <!-- CHANGE THE URL BELOW TO YOUR REAL SUBDOMAIN LATER -->
+                        <a href="http://admin.yourdomain.com" class="app-link" target="_blank" rel="noopener noreferrer">
+                            <span>เข้าใช้งานระบบ</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 3: PNP EDU Smart -->
+                <div class="app-card card-academic">
+                    <div class="card-glow"></div>
+                    <div class="card-header">
+                        <div class="icon-box icon-academic">
+                            <!-- SVG Book Open Icon -->
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                        </div>
+                        <span class="status-pill status-active">เปิดใช้งาน</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">PNP EDU Smart</h3>
+                        <p class="card-desc">ส่งและอนุมัติ โครงการสอน แผนการจัดการเรียนรู้ สื่อการเรียนการสอน ของครูผู้สอน</p>
+                        <ul class="feature-list">
+                            <li><span>📘</span> ส่งแผนการสอน PDF (สูงสุด 100MB)</li>
+                            <li><span>⚡</span> ช่วยรวมเอกสารผ่านแถบ iLovePDF</li>
+                            <li><span>📊</span> ล้างไฟล์ขยะและคืนพื้นที่เก็บข้อมูล</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <!-- CHANGE THE URL BELOW TO YOUR REAL SUBDOMAIN LATER -->
+                        <a href="http://academic.yourdomain.com" class="app-link" target="_blank" rel="noopener noreferrer">
+                            <span>เข้าใช้งานระบบ</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-divider"></div>
+            <div class="footer-content">
+                <p class="copyright">&copy; 2026 Montien Ngamkaew วิทยาลัยการอาชีพพนมไพร</p>
+                <div class="footer-meta">
+                    <span class="meta-item"><span class="pulse-dot"></span> ข้อมูลอัปเดตอัตโนมัติ</span>
+                    <span class="meta-item">🔒 การเชื่อมต่อที่ปลอดภัย (SSL Secured)</span>
+                    <span class="meta-item">⚡ ทำงานบนเซิร์ฟเวอร์ประสิทธิภาพสูง NVMe</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript File -->
+    <script src="script.js"></script>
+</body>
+</html>
