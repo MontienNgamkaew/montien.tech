@@ -590,20 +590,19 @@ body.light-theme .badge {
 }
 
 .card-responsible {
-    font-size: 9.5px;
+    font-size: 8px;
     text-align: center;
-    margin-top: 15px;
+    margin-top: 16px;
     font-family: var(--font-body);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: 0.75;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    opacity: 0.6;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .app-card:hover .card-responsible {
-    opacity: 1;
-    transform: scale(1.02);
+    opacity: 0.95;
+    transform: scale(1.01);
 }
 
 /* Cyber Neon Glows for Department Labels */
