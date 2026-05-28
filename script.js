@@ -154,4 +154,43 @@ document.addEventListener('DOMContentLoaded', () => {
         initParticles();
         animateParticles();
     }
+
+    // ==========================================
+    // 5. 3D TILT EFFECT & INTERACTIVE GLOW TRACKING FOR CARDS
+    // ==========================================
+    const cards = document.querySelectorAll('.app-card');
+    
+    cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left; // x position within the element.
+            const y = e.clientY - rect.top;  // y position within the element.
+            
+            // Set mouse position CSS variables for glow tracking
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+            
+            // Calculate 3D tilt angles based on cursor position relative to card center
+            const width = rect.width;
+            const height = rect.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Max tilt angle (degrees) - gentle tilt for extremely premium look
+            const maxTilt = 8; 
+            
+            const tiltX = ((centerY - y) / centerY) * maxTilt;
+            const tiltY = ((x - centerX) / centerX) * maxTilt;
+            
+            card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            // Reset card transformation and glow position smoothly
+            card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+            card.style.setProperty('--mouse-x', '50%');
+            card.style.setProperty('--mouse-y', '50%');
+        });
+    });
 });
+
