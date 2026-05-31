@@ -363,12 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok && data.valid) {
                 currentUserProfile = data.user;
                 
-                // หากเป็นผู้ดูแลระบบ (Portal Admin) ให้เปลี่ยนทางไปหน้าแอดมินบอร์ดหลักทันที
-                if (parseInt(data.user.is_portal_admin) === 1) {
-                    window.location.href = 'admin.html';
-                    return;
-                }
-                
+                // หากเป็นผู้ดูแลระบบ (Portal Admin) ไม่บังคับเปลี่ยนเส้นทางอัตโนมัติ เพื่อให้สามารถเข้าดูหน้าแรกได้
+                // โดยปุ่มแผงแอดมิน (btnAdminPanel) จะแสดงขึ้นมาให้คลิกเข้าไปเมื่อต้องการ
                 applyUserSession(token);
             } else {
                 localStorage.removeItem('pnp-token');

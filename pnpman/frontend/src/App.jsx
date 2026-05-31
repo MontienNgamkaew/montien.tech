@@ -156,7 +156,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightPersonId, setHighlightPersonId] = useState(null);
 
-  const isAdmin = !!token;
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -165,6 +165,7 @@ function App() {
     } else {
       delete axios.defaults.headers.common['Authorization'];
       localStorage.removeItem('adminToken');
+      setIsAdmin(false);
     }
   }, [token]);
 
@@ -180,8 +181,10 @@ function App() {
         setCollegeSettings(res.data.data.settings);
         applyTheme(res.data.data.settings.theme_preset);
       }
+      setIsAdmin(!!res.data.is_admin);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
@@ -189,7 +192,7 @@ function App() {
 
   useEffect(() => {
     fetchData();
-  }, [academicYear]);
+  }, [academicYear, token]);
 
   const handleRemoveAssignment = async (personnelId, jobId, role) => {
     const result = await Swal.fire({

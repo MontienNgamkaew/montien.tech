@@ -37,6 +37,7 @@ try {
     // Return the response
     echo json_encode([
         "status" => "success",
+        "is_admin" => isCurrentAdmin($pdo),
         "data" => [
             "personnel" => $personnel,
             "departments" => $departments,
