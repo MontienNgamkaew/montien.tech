@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PNP Digital Platform - แผงควบคุมผู้ดูแลระบบ จัดการสมาชิกและสิทธิ์การใช้งาน">
+    <title>แผงควบคุมผู้ดูแลระบบ | PNP Digital Platform</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin_styles.css">
+</head>
+<body class="dark-theme">
+    <!-- Particle Canvas for Animated Background -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- App Wrapper -->
+    <div class="app-container admin-container">
+        
+        <!-- Header -->
+        <header class="app-header admin-header">
+            <div class="logo-area">
+                <a href="index.html" class="admin-back-link" title="กลับสู่พอร์ทัล">
+                    <div class="logo-icon-wrapper">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <defs>
+                                <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#00f2fe"/>
+                                    <stop offset="1" stop-color="#4facfe"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                </a>
+                <div class="logo-and-breadcrumb">
+                    <span class="logo-text">PNP <span class="logo-subtext">Platform</span></span>
+                    <nav class="breadcrumb-nav" aria-label="breadcrumb">
+                        <a href="index.html" class="breadcrumb-link">Portal</a>
+                        <span class="breadcrumb-sep">›</span>
+                        <span class="breadcrumb-current">⚙️ จัดการระบบ</span>
+                    </nav>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <!-- Back to Portal -->
+                <a href="index.html" class="btn-back-portal" title="กลับสู่พอร์ทัล">
+                    <span>←</span> กลับสู่พอร์ทัล
+                </a>
+
+                <!-- Clock Widget -->
+                <div class="clock-widget" id="clock-widget">
+                    <span class="clock-icon">🕒</span>
+                    <span id="live-time">00:00:00</span>
+                </div>
+
+                <!-- User Profile Menu -->
+                <div class="user-profile-menu" id="user-profile-menu">
+                    <button class="profile-badge" id="profile-badge-btn">
+                        <span class="avatar-icon">👤</span>
+                        <span class="username-display" id="username-display">กำลังโหลด...</span>
+                        <span class="badge-arrow">▾</span>
+                    </button>
+                    <div class="profile-dropdown hidden" id="profile-dropdown">
+                        <div class="dropdown-user-info" id="dropdown-user-info">
+                            <span class="dropdown-fullname" id="dropdown-fullname">-</span>
+                            <span class="dropdown-role-tag">ผู้ดูแลระบบ</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="index.html" class="dropdown-item">🏠 กลับหน้าพอร์ทัล</a>
+                        <button class="dropdown-item btn-logout" id="btn-logout">🔴 ออกจากระบบ</button>
+                    </div>
+                </div>
+                
+                <!-- Theme Toggle Button -->
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="สลับโหมดมืด/สว่าง">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content admin-main">
+            
+            <!-- Page Title -->
+            <section class="admin-page-title">
+                <div class="title-left">
+                    <h1>⚙️ แผงควบคุมผู้ดูแลระบบ</h1>
+                    <p>จัดการสมาชิก สิทธิ์การใช้งาน และข้อมูลบุคลากรทั้งหมดในระบบ PNP Digital Platform</p>
+                </div>
+                <div class="title-right">
+                    <span class="admin-badge-pill">🛡️ ADMIN PANEL</span>
+                </div>
+            </section>
+
+            <!-- Stats Cards Row -->
+            <section class="stats-grid">
+                <div class="stat-card stat-card-total">
+                    <div class="stat-icon-wrap"><span>👥</span></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-total">0</span>
+                        <span class="stat-label">จำนวนสมาชิกทั้งหมด</span>
+                    </div>
+                    <div class="stat-glow"></div>
+                </div>
+                <div class="stat-card stat-card-active">
+                    <div class="stat-icon-wrap"><span>✅</span></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-active">0</span>
+                        <span class="stat-label">สมาชิกเปิดใช้งาน</span>
+                    </div>
+                    <div class="stat-glow"></div>
+                </div>
+                <div class="stat-card stat-card-suspended">
+                    <div class="stat-icon-wrap"><span>🚫</span></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-suspended">0</span>
+                        <span class="stat-label">สมาชิกถูกระงับ</span>
+                    </div>
+                    <div class="stat-glow"></div>
+                </div>
+                <div class="stat-card stat-card-departments">
+                    <div class="stat-icon-wrap"><span>🏢</span></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-departments">0</span>
+                        <span class="stat-label">จำนวนแผนก/ฝ่าย</span>
+                    </div>
+                    <div class="stat-glow"></div>
+                </div>
+            </section>
+
+            <!-- Toolbar -->
+            <section class="admin-toolbar">
+                <div class="toolbar-left">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-input" placeholder="ค้นหาชื่อ, ชื่อผู้ใช้, อีเมล..." autocomplete="off">
+                    </div>
+                    <select id="filter-department" class="toolbar-select">
+                        <option value="">ทุกแผนก/ฝ่าย</option>
+                        <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
+                        <option value="ฝ่ายวิชาการ">ฝ่ายวิชาการ</option>
+                        <option value="ฝ่ายพัฒนาฯ">ฝ่ายพัฒนาฯ</option>
+                        <option value="ฝ่ายแผนงาน">ฝ่ายแผนงาน</option>
+                        <option value="งานทั่วไป">งานทั่วไป</option>
+                    </select>
+                    <select id="filter-status" class="toolbar-select">
+                        <option value="">ทุกสถานะ</option>
+                        <option value="active">เปิดใช้งาน</option>
+                        <option value="suspended">ถูกระงับ</option>
+                    </select>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn-add-user" id="btn-add-user">
+                        <span>+</span> เพิ่มสมาชิกใหม่
+                    </button>
+                </div>
+            </section>
+
+            <!-- Users Table -->
+            <section class="admin-table-section">
+                <div class="admin-table-wrapper">
+                    <table class="admin-users-table">
+                        <thead>
+                            <tr>
+                                <th>รูป</th>
+                                <th>ชื่อผู้ใช้</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ตำแหน่งหลัก</th>
+                                <th>สถานะ</th>
+                                <th>🚗 PNP Go</th>
+                                <th>📘 PNP EDU Smart</th>
+                                <th>👥 PNP Man</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-table-body">
+                            <tr>
+                                <td colspan="9" class="table-loading">⚡ กำลังโหลดข้อมูลสมาชิก...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-divider"></div>
+            <div class="footer-content">
+                <p class="copyright">&copy; 2026 Montien Ngamkaew วิทยาลัยการอาชีพพนมไพร</p>
+                <div class="footer-meta">
+                    <span class="meta-item"><span class="pulse-dot"></span> ระบบล็อกอินแบบมีศูนย์กลาง (SSO + JWT) Active</span>
+                    <span class="meta-item">🔒 การเข้ารหัสโทเค็นแบบ HS256 Secured</span>
+                    <span class="meta-item">💾 เก็บข้อมูลผู้ใช้งานด้วยฐานข้อมูล SQLite</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- User Form Modal (Add / Edit) -->
+    <!-- ============================================ -->
+    <div class="modal-overlay hidden" id="user-modal-overlay">
+        <div class="modal-card user-modal-card">
+            <button class="modal-close-btn" id="btn-close-modal">✕</button>
+            
+            <div class="modal-header">
+                <div class="modal-logo-glow">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="url(#modal-user-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="7" r="4" stroke="url(#modal-user-grad)" stroke-width="2"/>
+                        <defs>
+                            <linearGradient id="modal-user-grad" x1="4" y1="3" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#00f2fe"/>
+                                <stop offset="1" stop-color="#8a4fff"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h3 id="modal-title">เพิ่มผู้ใช้งานใหม่</h3>
+                <p class="modal-subtitle">กรอกข้อมูลผู้ใช้งานเบื้องต้น (รหัสผ่านเริ่มต้นจะถูกตั้งเป็นเลขบัตรประชาชนโดยอัตโนมัติ)</p>
+            </div>
+
+            <form id="user-form" class="user-form">
+                <input type="hidden" id="form-user-id" value="">
+
+                <!-- Error Message -->
+                <div class="form-error-msg hidden" id="form-error-msg">
+                    <span>⚠️</span>
+                    <span id="form-error-text">เกิดข้อผิดพลาด</span>
+                </div>
+
+                <!-- Avatar Upload -->
+                <div class="form-avatar-section">
+                    <div class="avatar-preview" id="avatar-preview">
+                        <span class="avatar-placeholder">👤</span>
+                    </div>
+                    <div class="avatar-upload-group">
+                        <label for="form-avatar" class="btn-upload-avatar">📷 เลือกรูปโปรไฟล์</label>
+                        <input type="file" id="form-avatar" accept="image/*" class="file-input-hidden">
+                        <span class="avatar-hint">รองรับ JPG, PNG ขนาดไม่เกิน 2MB</span>
+                    </div>
+                </div>
+
+                <!-- Two-column grid -->
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="form-username">เลขประจำตัวประชาชน (Username / Password) *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="form-username" required maxlength="13" pattern="\d{13}" placeholder="เลขบัตรประชาชน 13 หลัก">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-title">คำนำหน้า *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📝</span>
+                            <input type="text" id="form-title" required placeholder="นาย / นาง / นางสาว / ดร.">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-firstname">ชื่อจริง *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📝</span>
+                            <input type="text" id="form-firstname" required placeholder="ชื่อจริง">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-lastname">นามสกุล *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📝</span>
+                            <input type="text" id="form-lastname" required placeholder="นามสกุล">
+                        </div>
+                    </div>
+                    <div class="form-group" id="form-primary-position-group">
+                        <label for="form-primary-position">ตำแหน่งหลัก *</label>
+                        <div class="input-wrapper select-wrapper">
+                            <span class="input-icon">💼</span>
+                            <select id="form-primary-position" required>
+                                <option value="">-- เลือกตำแหน่งหลัก --</option>
+                                <option value="ผู้อำนวยการ">ผู้อำนวยการ</option>
+                                <option value="รองผู้อำนวยการ">รองผู้อำนวยการ</option>
+                                <option value="ข้าราชการครู">ข้าราชการครู</option>
+                                <option value="พนักงานราชการครู">พนักงานราชการครู</option>
+                                <option value="ครูพิเศษสอน">ครูพิเศษสอน</option>
+                                <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                                <option value="นักการภารโรง">นักการภารโรง</option>
+                                <option value="แม่บ้าน">แม่บ้าน</option>
+                                <option value="พนักงานขับรถ">พนักงานขับรถ</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden Fields for Compatibility -->
+                <div style="display: none;">
+                    <input type="email" id="form-email" placeholder="email@example.com">
+                    <input type="tel" id="form-phone" placeholder="0XX-XXX-XXXX">
+                    <input type="checkbox" id="form-portal-admin">
+                </div>
+
+                <button type="submit" class="btn-submit-form" id="btn-submit-form">
+                    <span class="btn-text">💾 บันทึกข้อมูลสมาชิก</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- Position & Responsibility Modal (New) -->
+    <!-- ============================================ -->
+    <div class="modal-overlay hidden" id="position-modal-overlay">
+        <div class="modal-card position-modal-card" style="max-width: 650px;">
+            <button class="modal-close-btn" id="btn-close-position-modal">✕</button>
+            
+            <div class="modal-header">
+                <div class="modal-logo-glow">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z" stroke="url(#modal-pos-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="url(#modal-pos-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="modal-pos-grad" x1="3" y1="2" x2="21" y2="18" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#00f2fe"/>
+                                <stop offset="1" stop-color="#8a4fff"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h3>💼 จัดการข้อมูลตำแหน่งหน้าที่รับผิดชอบ</h3>
+                <p class="modal-subtitle">กำหนดตำแหน่งหลัก และฝ่ายงาน/หน้าที่ความรับผิดชอบตามโครงสร้างและระบบงานย่อย</p>
+                <div class="user-display-badge" id="position-user-display" style="background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.2); padding: 8px 16px; border-radius: 8px; font-weight: 600; text-align: center; margin-top: 10px; color: var(--accent-car); font-family: var(--font-heading);">
+                    คุณสมชาย ใจดี (1234567890123)
+                </div>
+            </div>
+
+            <form id="position-form" class="user-form" style="margin-top: 15px;">
+                <input type="hidden" id="position-user-id" value="">
+
+                <!-- Error Message -->
+                <div class="form-error-msg hidden" id="position-error-msg">
+                    <span>⚠️</span>
+                    <span id="position-error-text">เกิดข้อผิดพลาด</span>
+                </div>
+
+                <!-- Two-column grid -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="position-primary-position">ตำแหน่งหลัก (ประเภทการจ้าง) *</label>
+                        <div class="input-wrapper select-wrapper">
+                            <span class="input-icon">💼</span>
+                            <select id="position-primary-position" required>
+                                <option value="">-- เลือกตำแหน่งหลัก --</option>
+                                <option value="ผู้อำนวยการ">ผู้อำนวยการ</option>
+                                <option value="รองผู้อำนวยการ">รองผู้อำนวยการ</option>
+                                <option value="ข้าราชการครู">ข้าราชการครู</option>
+                                <option value="พนักงานราชการครู">พนักงานราชการครู</option>
+                                <option value="ครูพิเศษสอน">ครูพิเศษสอน</option>
+                                <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                                <option value="นักการภารโรง">นักการภารโรง</option>
+                                <option value="แม่บ้าน">แม่บ้าน</option>
+                                <option value="พนักงานขับรถ">พนักงานขับรถ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="position-org-position-group">
+                        <label for="position-org-position">ตำแหน่งตามโครงสร้างงาน *</label>
+                        <div class="input-wrapper select-wrapper">
+                            <span class="input-icon">💼</span>
+                            <select id="position-org-position" required>
+                                <option value="">-- เลือกตำแหน่งงาน --</option>
+                                <option value="รองผู้อำนวยการ">รองผู้อำนวยการ</option>
+                                <option value="หัวหน้างาน">หัวหน้างาน</option>
+                                <option value="ผู้ช่วยหัวหน้างาน">ผู้ช่วยหัวหน้างาน</option>
+                                <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="position-department-group">
+                        <label for="position-department">ฝ่ายงานต้นสังกัด *</label>
+                        <div class="input-wrapper select-wrapper">
+                            <span class="input-icon">🏢</span>
+                            <select id="position-department" required>
+                                <option value="">-- เลือกฝ่ายงาน --</option>
+                                <option value="ฝ่ายบริหารทรัพยากร">ฝ่ายบริหารทรัพยากร</option>
+                                <option value="ฝ่ายยุทธศาสตร์และแผนงาน">ฝ่ายยุทธศาสตร์และแผนงาน</option>
+                                <option value="ฝ่ายกิจการนักเรียน นักศึกษา">ฝ่ายกิจการนักเรียน นักศึกษา</option>
+                                <option value="ฝ่ายวิชาการ">ฝ่ายวิชาการ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="position-job-group">
+                        <label for="position-job">งาน/แผนกย่อย *</label>
+                        <div class="input-wrapper select-wrapper">
+                            <span class="input-icon">🏢</span>
+                            <select id="position-job" required>
+                                <option value="">-- กรุณาเลือกฝ่ายงานก่อน --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subsystem Roles Title -->
+                <div class="form-section-title">🛡️ สิทธิ์การเข้าใช้งานระบบงานย่อย (Roles)</div>
+                
+                <div class="form-roles-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <div class="form-group role-select-group">
+                        <label for="position-role-go">🚗 PNP Go (ขอใช้รถ)</label>
+                        <select id="position-role-go" class="admin-role-selector">
+                            <option value="none">❌ ไม่มีสิทธิ์</option>
+                            <option value="user">👤 สมาชิกทั่วไป</option>
+                            <option value="driver">🚗 คนขับรถ</option>
+                            <option value="admin">👑 ผู้ควบคุมรถ</option>
+                        </select>
+                    </div>
+                    <div class="form-group role-select-group">
+                        <label for="position-role-academic">📘 PNP EDU Smart (แผนสอน)</label>
+                        <select id="position-role-academic" class="admin-role-selector">
+                            <option value="none">❌ ไม่มีสิทธิ์</option>
+                            <option value="user">👤 สมาชิกทั่วไป</option>
+                            <option value="teacher">📘 ครูผู้สอน</option>
+                            <option value="admin">👑 หัวหน้าแผนก</option>
+                        </select>
+                    </div>
+                    <div class="form-group role-select-group">
+                        <label for="position-role-man">👥 PNP Man (บุคลากร)</label>
+                        <select id="position-role-man" class="admin-role-selector">
+                            <option value="none">❌ ไม่มีสิทธิ์</option>
+                            <option value="user">👤 สมาชิกทั่วไป</option>
+                            <option value="admin">👑 แอดมินบุคลากร</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-form" id="btn-submit-position-form">
+                    <span class="btn-text">💼 บันทึกตำแหน่งและหน้าที่ความรับผิดชอบ</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- Confirm Dialog Modal -->
+    <!-- ============================================ -->
+    <div class="modal-overlay hidden" id="confirm-modal-overlay">
+        <div class="modal-card confirm-modal-card">
+            <div class="confirm-icon" id="confirm-icon">⚠️</div>
+            <p class="confirm-message" id="confirm-message">คุณต้องการดำเนินการนี้หรือไม่?</p>
+            <div class="confirm-actions">
+                <button class="btn-confirm-cancel" id="btn-cancel-action">ยกเลิก</button>
+                <button class="btn-confirm-action" id="btn-confirm-action">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- Toast Notification -->
+    <!-- ============================================ -->
+    <div class="toast-notification hidden" id="toast-notification">
+        <span class="toast-icon" id="toast-icon">✅</span>
+        <span class="toast-message" id="toast-message">ดำเนินการสำเร็จ</span>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="admin_script.js"></script>
+</body>
+</html>
