@@ -1,0 +1,16 @@
+RewriteEngine On
+
+# 1. Allow direct access to the api and uploads directories and migrations
+RewriteRule ^api/ - [L]
+RewriteRule ^uploads/ - [L]
+RewriteRule ^migrate_.*\.php$ - [L]
+RewriteRule ^add_comment_column\.php$ - [L]
+
+# 2. If it's already requesting something in frontend/dist, let it pass
+RewriteRule ^frontend/dist/ - [L]
+
+# 3. Otherwise, rewrite everything else to frontend/dist/
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !^/uploads/
+RewriteCond %{REQUEST_URI} !^/migrate_
+RewriteRule ^(.*)$ frontend/dist/$1 [L]

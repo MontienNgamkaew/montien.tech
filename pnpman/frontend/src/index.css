@@ -1,0 +1,340 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Rose Theme */
+  --theme-body-bg: linear-gradient(135deg, #fdf2f2 0%, #fce4e4 30%, #fef0f0 60%, #f5e6e6 100%);
+  --theme-primary-gradient: linear-gradient(135deg, #6b1525 0%, #8b1a2b 40%, #7a1827 70%, #5c1220 100%);
+  --theme-primary-color: #8b1a2b;
+  --theme-primary-hover: #7a1827;
+  --theme-accent-color: #e8a0a0;
+  --theme-accent-hover: #c0494e;
+  --theme-scroll-track: #fef2f2;
+  --theme-scroll-thumb: linear-gradient(180deg, #e8a0a0, #d07070);
+  --theme-scroll-thumb-hover: linear-gradient(180deg, #c0494e, #a03040);
+}
+
+body {
+  margin: 0;
+  font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background: var(--theme-body-bg);
+  min-height: 100vh;
+  color: #1e293b;
+}
+
+/* Force image rendering quality and hardware acceleration */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0);
+}
+
+/* Prevent text/border blur during DND transforms */
+[data-rfd-draggable-id], [data-rbd-draggable-id] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--theme-accent-color);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-accent-hover);
+}
+
+/* Staff Pool Scrollbar — more visible */
+.staff-pool-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.staff-pool-scroll::-webkit-scrollbar-track {
+  background: var(--theme-scroll-track);
+  border-radius: 10px;
+}
+.staff-pool-scroll::-webkit-scrollbar-thumb {
+  background: var(--theme-scroll-thumb);
+  border-radius: 10px;
+  border: 1px solid var(--theme-scroll-track);
+}
+.staff-pool-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-scroll-thumb-hover);
+}
+
+/* Glass Panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Premium Header Gradient */
+.header-gradient {
+  background: var(--theme-primary-gradient);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Header Buttons */
+.btn-header {
+  @apply px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 backdrop-blur-sm;
+}
+.btn-header:hover {
+  transform: translateY(-1px);
+}
+/* ===== Org Chart Print Styles ===== */
+
+/* Org Chart Boxes */
+.org-box {
+  border: 1.5px solid #333;
+  border-radius: 6px;
+  padding: 4px 12px;
+  text-align: center;
+  background: white;
+  min-width: 140px;
+  max-width: 220px;
+}
+.org-box-sm {
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 2px 10px;
+  text-align: center;
+  background: white;
+  min-width: 120px;
+}
+.org-box-director {
+  border-color: #b45309;
+  background: linear-gradient(to bottom, #fffbeb, #fef3c7);
+}
+.org-box-deputy {
+  border-color: #1d4ed8;
+  background: linear-gradient(to bottom, #eff6ff, #dbeafe);
+}
+.org-box-role {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 1px;
+}
+.org-box-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+.org-box-title {
+  font-size: 10.5px;
+  color: #888;
+  margin-top: 0;
+}
+.org-box-dept {
+  font-size: 10.5px;
+  color: #1d4ed8;
+  font-weight: 600;
+  margin-top: 2px;
+  border-top: 1px solid #bfdbfe;
+  padding-top: 2px;
+}
+
+/* Connecting Lines */
+.org-vline {
+  width: 2px;
+  background: #555;
+}
+.org-hline {
+  height: 2px;
+  background: #555;
+}
+
+/* Job Cards */
+.org-job-card {
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  overflow: hidden;
+  width: 100%;
+  background: white;
+}
+.org-job-title {
+  background: linear-gradient(to right, #881337, #9f1239);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 5px;
+  text-align: center;
+  line-height: 1.2;
+}
+.org-person-row {
+  padding: 2px 4px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.org-person-section {
+  padding: 2px 4px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.org-person-section:last-child,
+.org-person-row:last-child {
+  border-bottom: none;
+}
+.org-role-label {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  display: inline-block;
+  align-self: flex-start;
+}
+.org-person-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #1e293b;
+  padding-left: 2px;
+  line-height: 1.3;
+}
+.org-person-head .org-person-name {
+  font-weight: 800;
+}
+
+/* Print Styles */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #printable-report, #printable-report * {
+    visibility: visible;
+  }
+  #printable-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    font-size: 10px;
+    font-family: 'TH Sarabun New', 'TH SarabunPSK', 'Sarabun', sans-serif !important;
+  }
+  .print-page {
+    page-break-after: always;
+  }
+  .print-page:last-child {
+    page-break-after: auto;
+  }
+  .avoid-page-break {
+    page-break-inside: avoid;
+  }
+  .org-box-director {
+    background: #fffbeb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .org-box-deputy {
+    background: #eff6ff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .org-job-title {
+    background: #881337 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .org-role-label {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .org-vline, .org-hline {
+    background: #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* SweetAlert Customization */
+.swal2-popup {
+  font-family: 'Sarabun', sans-serif !important;
+  border-radius: 16px !important;
+}
+.swal2-title {
+  font-family: 'Sarabun', sans-serif !important;
+}
+.swal2-html-container {
+  font-family: 'Sarabun', sans-serif !important;
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .btn-header {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .header-gradient h1 {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  body {
+    background: linear-gradient(180deg, #fdf2f2 0%, #fef0f0 100%);
+  }
+  
+  .btn-header {
+    @apply px-2.5 py-1.5 text-[11px] gap-1;
+  }
+  .btn-header svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .header-gradient {
+    border-radius: 12px !important;
+    padding: 12px !important;
+  }
+  .header-gradient h1 {
+    font-size: 0.95rem !important;
+    line-height: 1.3 !important;
+  }
+  .header-gradient p {
+    font-size: 0.7rem !important;
+  }
+  .header-gradient img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .header-gradient h1 {
+    font-size: 0.85rem !important;
+  }
+  .btn-header span {
+    display: none;
+  }
+  .btn-header {
+    @apply px-2 py-1.5;
+  }
+}
