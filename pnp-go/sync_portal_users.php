@@ -97,8 +97,8 @@ try {
             $calculatedRole = 'admin';
         }
         elseif (
-            $calculatedOrgPosition === 'ผู้อำนวยการ' || 
-            strpos($calculatedOrgPosition, 'ผู้อำนวยการ') !== false
+            ($calculatedOrgPosition === 'ผู้อำนวยการ' || strpos($calculatedOrgPosition, 'ผู้อำนวยการ') !== false) &&
+            strpos($calculatedOrgPosition, 'รอง') === false
         ) {
             $calculatedRole = 'director';
         }

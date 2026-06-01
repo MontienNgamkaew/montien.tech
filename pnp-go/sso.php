@@ -73,8 +73,11 @@ $localRole = 'user'; // สิทธิ์เริ่มต้นสำหร�
 if ($isPortalAdmin === 1 || $pnpGoRole === 'admin') {
     $localRole = 'admin';
 }
-// อนุมัติระดับ 3: ผู้อำนวยการ (ความสำคัญสูงสุดของระดับบริหาร)
-elseif ($primaryPosition === 'ผู้อำนวยการ' || strpos($primaryPosition, 'ผู้อำนวยการ') !== false || strpos($orgPosition, 'ผู้อำนวยการ') !== false) {
+// อนุมัติระดับ 3: ผู้อำนวยการ (ความสำคัญสูงสุดของระดับบริหาร และต้องไม่ใช่รองผู้อำนวยการ)
+elseif (
+    ($primaryPosition === 'ผู้อำนวยการ' || strpos($primaryPosition, 'ผู้อำนวยการ') !== false || strpos($orgPosition, 'ผู้อำนวยการ') !== false) &&
+    (strpos($primaryPosition, 'รอง') === false && strpos($orgPosition, 'รอง') === false)
+) {
     $localRole = 'director';
 }
 // อนุมัติระดับ 2: ต้องเป็นรองผู้อำนวยการฝ่ายบริหารทรัพยากรเท่านั้น!
