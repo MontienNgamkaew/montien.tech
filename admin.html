@@ -1066,11 +1066,14 @@
                             <input type="text" id="form-education" placeholder="เช่น ปริญญาตรี ครุศาสตรบัณฑิต (ค.บ.)">
                         </div>
                     </div>
-                </div>
-
-                <!-- Hidden Fields for Compatibility -->
-                <div style="display: none;">
-                    <input type="checkbox" id="form-portal-admin">
+                    
+                    <!-- Portal Admin Privileges -->
+                    <div class="form-group" style="grid-column: span 2; display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 12px; background: rgba(138, 79, 255, 0.06); border: 1px solid rgba(138, 79, 255, 0.15); border-radius: 12px;">
+                        <input type="checkbox" id="form-portal-admin" style="width: 20px; height: 20px; cursor: pointer; margin: 0;">
+                        <label for="form-portal-admin" style="margin: 0; cursor: pointer; font-weight: 700; color: var(--text-primary); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                            🛡️ มอบสิทธิ์แอดมินพอร์ทัล (Portal Admin)
+                        </label>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-submit-form" id="btn-submit-form">

@@ -51,7 +51,7 @@ $avatar = isset($input['avatar']) ? $input['avatar'] : '';
 $removeAvatar = isset($input['remove_avatar']) ? (int)$input['remove_avatar'] : 0;
 
 if (empty($email)) {
-    sendResponse(['error' => 'กรุณากรอกอีเมลประจำตัวกลาง'], 400);
+    sendResponse(['error' => 'กรุณากรอก E-mail'], 400);
 }
 
 try {
@@ -72,7 +72,7 @@ try {
     $stmtEmailCheck = $db->prepare("SELECT COUNT(*) FROM users WHERE email = :email AND id != :id");
     $stmtEmailCheck->execute([':email' => $email, ':id' => $userId]);
     if ($stmtEmailCheck->fetchColumn() > 0) {
-        sendResponse(['error' => 'อีเมลประจำตัวนี้ถูกใช้งานโดยบุคลากรรายอื่นแล้ว'], 400);
+        sendResponse(['error' => 'E-mail นี้ถูกใช้งานโดยบุคลากรรายอื่นแล้ว'], 400);
     }
 
     $db->beginTransaction();
