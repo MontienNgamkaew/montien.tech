@@ -16,7 +16,7 @@ $config = $isLocal ? [
     'port'     => 3306,
     'database' => 'u651170081_carrequest',
     'username' => 'u651170081_carrequest',
-    'password' => 'CHANGE_ON_SERVER',   // ← แก้ผ่าน File Manager บน Hostinger
+    'password' => 'a1d9GH10%',
     'charset'  => 'utf8mb4',
 ];
 
