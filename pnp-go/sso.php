@@ -87,6 +87,8 @@ elseif ($orgPosition === 'หัวหน้างานพัสดุ' || strp
 }
 
 try {
+    $avatar = $payload['avatar'] ?? '';
+
     $db = Database::connection();
     
     // Check if the user already exists in carrequest DB
@@ -101,6 +103,7 @@ try {
             SET full_name = :full_name, 
                 role = :role, 
                 position_title = :position_title, 
+                avatar_path = :avatar_path,
                 is_active = 1,
                 last_login_at = NOW() 
             WHERE id = :id
@@ -109,6 +112,7 @@ try {
             'full_name' => $fullName,
             'role' => $localRole,
             'position_title' => $orgPosition ?: $primaryPosition,
+            'avatar_path' => $avatar ?: null,
             'id' => $localUser['id']
         ]);
         $localUserId = (int)$localUser['id'];
@@ -116,15 +120,16 @@ try {
         // Automatically register (Sync) user into local carrequest DB
         $randomPass = bin2hex(random_bytes(16));
         $insertStmt = $db->prepare('
-            INSERT INTO users (full_name, username, password_hash, role, position_title, is_active, last_login_at)
-            VALUES (:full_name, :username, :password_hash, :role, :position_title, 1, NOW())
+            INSERT INTO users (full_name, username, password_hash, role, position_title, avatar_path, is_active, last_login_at)
+            VALUES (:full_name, :username, :password_hash, :role, :position_title, :avatar_path, 1, NOW())
         ');
         $insertStmt->execute([
             'full_name' => $fullName,
             'username' => $username,
             'password_hash' => password_hash($randomPass, PASSWORD_BCRYPT),
             'role' => $localRole,
-            'position_title' => $orgPosition ?: $primaryPosition
+            'position_title' => $orgPosition ?: $primaryPosition,
+            'avatar_path' => $avatar ?: null
         ]);
         $localUserId = (int)$db->lastInsertId();
     }

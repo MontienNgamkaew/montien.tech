@@ -8,11 +8,9 @@ final class AuthController
             redirect('/dashboard');
         }
 
-        render('auth/login', [
-            'title' => 'เข้าสู่ระบบผู้อนุมัติ',
-            'error' => $error,
-            'username' => $_POST['username'] ?? '',
-        ]);
+        // Auto-Redirect to central portal login
+        header('Location: /pnp-portal/');
+        exit;
     }
 
     public function login(): void
@@ -55,6 +53,11 @@ final class AuthController
         }
 
         session_destroy();
-        redirect('/login');
+        
+        // Single Logout (SLO): redirect to central portal and wipe localStorage token
+        $isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']);
+        $portalUrl = $isLocal ? '/pnp-portal/?action=logout' : '/?action=logout';
+        header('Location: ' . $portalUrl);
+        exit;
     }
 }

@@ -4,6 +4,7 @@ final class PublicController
 {
     public function requestForm(array $errors = [], array $old = []): void
     {
+        $user = require_auth();
         $vehicles = $this->activeVehicles();
 
         render('public/request_form', [
@@ -11,6 +12,7 @@ final class PublicController
             'vehicles' => $vehicles,
             'errors' => $errors,
             'old' => $old,
+            'user' => $user,
             'positionOptions' => $this->positionOptions(),
             'fuelTypeOptions' => $this->fuelTypeOptions(),
         ]);
@@ -18,7 +20,14 @@ final class PublicController
 
     public function submitRequest(): void
     {
+        $user = require_auth();
         $data = $this->requestData();
+
+        // Auto-fill from central Portal session
+        $data['requester_name'] = $user['full_name'];
+        $data['requester_position'] = $user['position_title'];
+        $data['odometer_before'] = ''; // นำออกไปกรอกหลังใช้รถยนต์เสร็จ
+
         $errors = $this->validateRequest($data);
 
         if ($errors !== []) {
@@ -133,6 +142,7 @@ final class PublicController
                 AND r.status = \'approved\'
                 AND r.travel_start_at <= NOW()
                 AND r.travel_end_at   >= NOW()
+                AND r.reported_at IS NULL
              WHERE v.is_active = 1
              ORDER BY v.vehicle_name ASC'
         );
@@ -256,10 +266,6 @@ final class PublicController
             }
         }
 
-        if (!in_array($data['requester_position'], $this->positionOptions(), true)) {
-            $errors['requester_position'] = 'กรุณาเลือกตำแหน่งจากรายการ';
-        }
-
         if ($data['travel_start_at'] !== '' && $data['travel_end_at'] !== '') {
             $start = strtotime($data['travel_start_at']);
             $end = strtotime($data['travel_end_at']);
@@ -361,5 +367,140 @@ final class PublicController
             'rejected' => 'ไม่อนุมัติ',
             'cancelled' => 'ยกเลิกคำขอ',
         ];
+    }
+
+    public function reportForm(array $errors = [], array $old = []): void
+    {
+        $trackingId = strtoupper(trim($_GET['tracking_id'] ?? ''));
+
+        if ($trackingId === '') {
+            view('ไม่พบรายการ', '<h1 class="h4">กรุณาระบุ Tracking ID</h1>', 400);
+            return;
+        }
+
+        $statement = Database::connection()->prepare(
+            'SELECT r.*, v.vehicle_name, v.license_plate
+             FROM requisitions r
+             LEFT JOIN vehicles v ON v.id = r.assigned_vehicle_id
+             WHERE r.tracking_id = :tracking_id
+             LIMIT 1'
+        );
+        $statement->execute(['tracking_id' => $trackingId]);
+        $requisition = $statement->fetch();
+
+        if (!$requisition) {
+            view('ไม่พบรายการ', '<h1 class="h4">ไม่พบข้อมูลคำขอ</h1>', 404);
+            return;
+        }
+
+        if ($requisition['status'] !== 'approved') {
+            view('รายงานยังไม่เปิดใช้งาน', '<h1 class="h4">คำขอนี้ยังไม่ได้รับอนุมัติเสร็จสมบูรณ์</h1>', 400);
+            return;
+        }
+
+        if (!empty($requisition['reported_at'])) {
+            redirect('/status?tracking_id=' . urlencode($trackingId));
+        }
+
+        render('public/report_form', [
+            'title' => '📝 รายงานการใช้รถหลังเดินทาง',
+            'requisition' => $requisition,
+            'errors' => $errors,
+            'old' => $old,
+        ]);
+    }
+
+    public function submitReport(): void
+    {
+        $trackingId = strtoupper(trim($_POST['tracking_id'] ?? ''));
+
+        $statement = Database::connection()->prepare(
+            'SELECT * FROM requisitions WHERE tracking_id = :tracking_id LIMIT 1'
+        );
+        $statement->execute(['tracking_id' => $trackingId]);
+        $requisition = $statement->fetch();
+
+        if (!$requisition || $requisition['status'] !== 'approved' || !empty($requisition['reported_at'])) {
+            view('คำขอไม่ถูกต้อง', '<h1 class="h4">คำขอไม่ถูกต้องหรือได้รับการรายงานแล้ว</h1>', 400);
+            return;
+        }
+
+        $odometerBefore = trim($_POST['odometer_before'] ?? '');
+        $odometerAfter = trim($_POST['odometer_after'] ?? '');
+
+        $errors = [];
+        if ($odometerBefore === '') {
+            $errors['odometer_before'] = 'กรุณากรอกเลขไมล์ก่อนออกเดินทาง';
+        } elseif (!ctype_digit($odometerBefore)) {
+            $errors['odometer_before'] = 'เลขไมล์ต้องเป็นตัวเลขจำนวนเต็มบวก';
+        }
+
+        if ($odometerAfter === '') {
+            $errors['odometer_after'] = 'กรุณากรอกเลขไมล์หลังเดินทางเสร็จสิ้น';
+        } elseif (!ctype_digit($odometerAfter)) {
+            $errors['odometer_after'] = 'เลขไมล์ต้องเป็นตัวเลขจำนวนเต็มบวก';
+        }
+
+        if (empty($errors['odometer_before']) && empty($errors['odometer_after'])) {
+            if ((int)$odometerAfter < (int)$odometerBefore) {
+                $errors['odometer_after'] = 'เลขไมล์หลังเดินทางต้องไม่น้อยกว่าเลขไมล์ก่อนเดินทาง';
+            }
+        }
+
+        // Handle file upload
+        $photoPath = null;
+        if (empty($_FILES['report_photo']['name'])) {
+            $errors['report_photo'] = 'กรุณาอัปโหลดรูปภาพเลขไมล์หรือสภาพรถยนต์';
+        } else {
+            $file = $_FILES['report_photo'];
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            $fileType = mime_content_type($file['tmp_name']);
+            if (!in_array($fileType, $allowedTypes, true)) {
+                $errors['report_photo'] = 'รองรับเฉพาะไฟล์รูปภาพ .png, .jpg, .jpeg เท่านั้น';
+            }
+            if ($file['size'] > 5 * 1024 * 1024) {
+                $errors['report_photo'] = 'ขนาดไฟล์ห้ามเกิน 5MB';
+            }
+
+            if ($errors === []) {
+                $targetDir = dirname(__DIR__, 2) . '/storage/reports';
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0777, true);
+                }
+                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                $fileName = 'report_' . $trackingId . '_' . time() . '.' . $ext;
+                $photoPath = 'storage/reports/' . $fileName;
+
+                if (!move_uploaded_file($file['tmp_name'], dirname(__DIR__, 2) . '/' . $photoPath)) {
+                    $errors['report_photo'] = 'เกิดข้อผิดพลาดระหว่างอัปโหลดรูปภาพ';
+                }
+            }
+        }
+
+        if ($errors !== []) {
+            $this->reportForm($errors, [
+                'odometer_before' => $odometerBefore,
+                'odometer_after' => $odometerAfter,
+            ]);
+            return;
+        }
+
+        // Update database
+        $update = Database::connection()->prepare('
+            UPDATE requisitions 
+            SET odometer_before = :odometer_before, 
+                odometer_after = :odometer_after, 
+                report_photo_path = :report_photo_path, 
+                reported_at = NOW() 
+            WHERE id = :id
+        ');
+        $update->execute([
+            'odometer_before' => (int)$odometerBefore,
+            'odometer_after' => (int)$odometerAfter,
+            'report_photo_path' => $photoPath,
+            'id' => $requisition['id'],
+        ]);
+
+        redirect('/status?tracking_id=' . urlencode($trackingId) . '&reported=success');
     }
 }

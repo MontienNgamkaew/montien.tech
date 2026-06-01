@@ -4,6 +4,10 @@
     <p class="text-secondary mb-0">กรอก Tracking ID ที่ได้รับหลังส่งคำขอ</p>
 </div>
 
+<?php if (($_GET['reported'] ?? '') === 'success'): ?>
+    <div class="alert alert-success">🎉 ส่งรายงานการใช้รถยนต์และหลักฐานเลขไมล์เสร็จเรียบร้อยแล้ว สถานะรถยนต์คืนเข้าคลังว่างพร้อมใช้งานทันทีขอบพระคุณครับ!</div>
+<?php endif; ?>
+
 <section class="form-section mb-3">
     <?php if ($error): ?>
         <div class="alert alert-danger"><?= e($error) ?></div>
@@ -63,9 +67,42 @@
         </div>
 
         <?php if ($result['status'] === 'approved'): ?>
-            <div class="mt-4">
-                <a class="btn btn-success" href="<?= e(config('app')['base_path'] . '/download?tracking_id=' . urlencode($result['tracking_id'])) ?>" target="_blank" rel="noopener">ดาวน์โหลด PDF</a>
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <a class="btn btn-success" href="<?= e(config('app')['base_path'] . '/download?tracking_id=' . urlencode($result['tracking_id'])) ?>" target="_blank" rel="noopener">📥 ดาวน์โหลด PDF</a>
+                <?php if (empty($result['reported_at'])): ?>
+                    <a class="btn btn-primary" href="<?= e(config('app')['base_path'] . '/report/submit?tracking_id=' . urlencode($result['tracking_id'])) ?>">📝 รายงานการใช้รถหลังเดินทาง</a>
+                <?php else: ?>
+                    <button class="btn btn-outline-secondary" disabled>✅ รายงานผลการเดินทางเรียบร้อยแล้ว</button>
+                <?php endif; ?>
             </div>
+
+            <?php if (!empty($result['reported_at'])): ?>
+                <div class="mt-4 pt-3 border-top">
+                    <h5 class="h6 text-primary mb-2">📋 ข้อมูลการรายงานหลังใช้งานจริง</h5>
+                    <div class="row g-2 bg-light p-3 rounded border">
+                        <div class="col-md-4">
+                            <span class="text-secondary small d-block">เวลาส่งรายงาน</span>
+                            <span class="fw-semibold"><?= e(date('d/m/Y H:i', strtotime($result['reported_at']))) ?></span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-secondary small d-block">เลขไมล์ก่อนเดินทาง</span>
+                            <span class="fw-semibold"><?= e(number_format((float)$result['odometer_before'])) ?> กม.</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-secondary small d-block">เลขไมล์หลังเดินทาง</span>
+                            <span class="fw-semibold"><?= e(number_format((float)$result['odometer_after'])) ?> กม.</span>
+                        </div>
+                        <?php if (!empty($result['report_photo_path'])): ?>
+                            <div class="col-12 mt-3">
+                                <span class="text-secondary small d-block mb-1">รูปถ่ายพยานหลักฐานเลขไมล์/สภาพรถ</span>
+                                <a href="<?= e(config('app')['base_path'] . '/' . $result['report_photo_path']) ?>" target="_blank">
+                                    <img src="<?= e(config('app')['base_path'] . '/' . $result['report_photo_path']) ?>" class="img-thumbnail" style="max-height: 200px;">
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </section>
 <?php endif; ?>

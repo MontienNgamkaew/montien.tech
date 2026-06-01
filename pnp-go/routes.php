@@ -13,6 +13,8 @@ $router->get('/request', [$publicController, 'requestForm']);
 $router->post('/request', [$publicController, 'submitRequest']);
 $router->get('/status', [$publicController, 'statusForm']);
 $router->post('/status', [$publicController, 'checkStatus']);
+$router->get('/report/submit', [$publicController, 'reportForm']);
+$router->post('/report/submit', [$publicController, 'submitReport']);
 $router->get('/download', [$publicController, 'downloadPdf']);
 $router->get('/vehicles', [$publicController, 'vehicleBoard']);
 $router->get('/login', [$authController, 'loginForm']);

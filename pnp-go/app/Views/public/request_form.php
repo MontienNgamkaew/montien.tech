@@ -17,20 +17,11 @@ ob_start();
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label required" for="requester_name">ชื่อ-สกุล</label>
-                <input class="form-control <?= isset($errors['requester_name']) ? 'is-invalid' : '' ?>" id="requester_name" name="requester_name" value="<?= e($old['requester_name'] ?? '') ?>">
-                <div class="invalid-feedback"><?= e($errors['requester_name'] ?? '') ?></div>
+                <input class="form-control" id="requester_name" name="requester_name" value="<?= e($user['full_name']) ?>" readonly>
             </div>
             <div class="col-md-6">
                 <label class="form-label required" for="requester_position">ตำแหน่ง</label>
-                <select class="form-select <?= isset($errors['requester_position']) ? 'is-invalid' : '' ?>" id="requester_position" name="requester_position">
-                    <option value="">เลือกตำแหน่ง</option>
-                    <?php foreach ($positionOptions as $position): ?>
-                        <option value="<?= e($position) ?>" <?= ($old['requester_position'] ?? '') === $position ? 'selected' : '' ?>>
-                            <?= e($position) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="invalid-feedback"><?= e($errors['requester_position'] ?? '') ?></div>
+                <input class="form-control" id="requester_position" name="requester_position" value="<?= e($user['position_title']) ?>" readonly>
             </div>
         </div>
     </section>
@@ -55,17 +46,12 @@ ob_start();
                 <label class="form-label" for="destination_province">จังหวัด</label>
                 <input class="form-control" id="destination_province" name="destination_province" value="<?= e($old['destination_province'] ?? '') ?>">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label" for="distance_km">ระยะทางไป-กลับโดยประมาณ (กม.)</label>
                 <input class="form-control <?= isset($errors['distance_km']) ? 'is-invalid' : '' ?>" id="distance_km" name="distance_km" value="<?= e($old['distance_km'] ?? '') ?>">
                 <div class="invalid-feedback"><?= e($errors['distance_km'] ?? '') ?></div>
             </div>
-            <div class="col-md-4">
-                <label class="form-label" for="odometer_before">เลขไมล์ก่อนออกเดินทาง</label>
-                <input class="form-control <?= isset($errors['odometer_before']) ? 'is-invalid' : '' ?>" id="odometer_before" name="odometer_before" value="<?= e($old['odometer_before'] ?? '') ?>">
-                <div class="invalid-feedback"><?= e($errors['odometer_before'] ?? '') ?></div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label" for="requested_vehicle_id">รถที่ต้องการใช้</label>
                 <select class="form-select" id="requested_vehicle_id" name="requested_vehicle_id">
                     <option value="">ให้หัวหน้างานพัสดุพิจารณา</option>

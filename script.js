@@ -6,6 +6,14 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     
+    // Single Logout (SLO) check from subsystems
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'logout') {
+        localStorage.removeItem('pnp-token');
+        // Clean URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // ==========================================
     // 1. DYNAMIC TIME-OF-DAY GREETING (ภาษาไทย)
     // ==========================================
@@ -305,12 +313,51 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             updateAppCards(currentUserProfile.roles, token);
+            fetchPendingRequestsCount(token);
         } else {
             btnLoginTrigger.classList.remove('hidden');
             userProfileMenu.classList.add('hidden');
             
             updateGreeting();
             updateAppCards(null, null);
+
+            // ซ่อนป้ายแจ้งเตือนเมื่อไม่ได้เข้าสู่ระบบ
+            const badgeGo = document.getElementById('badge-pnp-go');
+            if (badgeGo) {
+                badgeGo.classList.add('hidden');
+                badgeGo.textContent = '0 งานอนุมัติ';
+            }
+        }
+    }
+
+    // ดึงจำนวนคำขอค้างอนุมัติของ PNP Go
+    async function fetchPendingRequestsCount(token) {
+        const badgeGo = document.getElementById('badge-pnp-go');
+        if (!badgeGo) return;
+
+        try {
+            const response = await fetch('./pnp-go/api_pending_count.php', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const count = parseInt(data.pending_count) || 0;
+                if (count > 0) {
+                    badgeGo.textContent = `${count} งานอนุมัติ`;
+                    badgeGo.classList.remove('hidden');
+                } else {
+                    badgeGo.classList.add('hidden');
+                }
+            } else {
+                badgeGo.classList.add('hidden');
+            }
+        } catch (err) {
+            console.error('ไม่สามารถดึงข้อมูลจำนวนคำขอค้างอนุมัติ:', err);
+            badgeGo.classList.add('hidden');
         }
     }
 

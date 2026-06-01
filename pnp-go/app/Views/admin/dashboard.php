@@ -19,9 +19,9 @@
 </div>
 
 <div class="stat-grid">
-    <div class="stat-tile">
-        <div class="stat-value"><?= e((string) count($pendingRequisitions)) ?></div>
-        <div class="stat-label"><?= $user['role'] === 'admin' ? 'คำขอที่แสดงอยู่' : 'งานรออนุมัติของคุณ' ?></div>
+    <div class="stat-tile" style="<?= count($pendingRequisitions) > 0 && $user['role'] !== 'admin' ? 'box-shadow: 0 0 20px rgba(245, 158, 11, 0.35); border: 2px solid #f59e0b; background: #fffbeb; transform: scale(1.03); transition: all 0.3s ease;' : '' ?>">
+        <div class="stat-value" style="<?= count($pendingRequisitions) > 0 && $user['role'] !== 'admin' ? 'color: #d97706; font-size: 3rem; text-shadow: 0 0 10px rgba(245, 158, 11, 0.2);' : '' ?>"><?= e((string) count($pendingRequisitions)) ?></div>
+        <div class="stat-label" style="<?= count($pendingRequisitions) > 0 && $user['role'] !== 'admin' ? 'color: #b45309; font-weight:700;' : '' ?>">⚡ <?= $user['role'] === 'admin' ? 'คำขอที่แสดงอยู่' : 'งานรอการอนุมัติของคุณ (เร่งด่วน)' ?></div>
     </div>
     <div class="stat-tile">
         <div class="stat-value"><?= e((string) count($vehicleStats)) ?></div>

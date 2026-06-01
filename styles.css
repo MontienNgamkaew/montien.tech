@@ -497,9 +497,32 @@ body.light-theme .badge {
     animation: pulseGlow 2s infinite;
 }
 
+.status-pending {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #ff4d4d;
+    border: 1px solid rgba(231, 76, 60, 0.35);
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.15);
+}
+
+.status-pending::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ff4d4d;
+    animation: pulsePendingGlow 2s infinite;
+}
+
 @keyframes pulseGlow {
     0% { transform: scale(0.9); opacity: 0.5; }
     50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 8px var(--success-color); }
+    100% { transform: scale(0.9); opacity: 0.5; }
+}
+
+@keyframes pulsePendingGlow {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 8px #ff4d4d; }
     100% { transform: scale(0.9); opacity: 0.5; }
 }
 

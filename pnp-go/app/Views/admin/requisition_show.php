@@ -83,6 +83,34 @@
     </div>
 </section>
 
+<?php if (!empty($requisition['reported_at'])): ?>
+    <section class="form-section mb-3">
+        <h2 class="section-title">📝 รายงานหลังเสร็จสิ้นเดินทาง</h2>
+        <div class="row g-3 bg-light p-3 rounded border mx-0">
+            <div class="col-md-4">
+                <span class="text-secondary small d-block">เวลาส่งรายงาน</span>
+                <span class="fw-semibold text-success"><?= e(date('d/m/Y H:i', strtotime($requisition['reported_at']))) ?></span>
+            </div>
+            <div class="col-md-4">
+                <span class="text-secondary small d-block">เลขไมล์ก่อนเดินทาง</span>
+                <span class="fw-semibold"><?= e(number_format((float)$requisition['odometer_before'])) ?> กม.</span>
+            </div>
+            <div class="col-md-4">
+                <span class="text-secondary small d-block">เลขไมล์หลังเดินทาง</span>
+                <span class="fw-semibold"><?= e(number_format((float)$requisition['odometer_after'])) ?> กม.</span>
+            </div>
+            <?php if (!empty($requisition['report_photo_path'])): ?>
+                <div class="col-12 mt-3 pt-3 border-top">
+                    <span class="text-secondary small d-block mb-2">📸 รูปภาพหน้าปัดไมล์ / สภาพรถยนต์</span>
+                    <a href="<?= e(config('app')['base_path'] . '/' . $requisition['report_photo_path']) ?>" target="_blank">
+                        <img src="<?= e(config('app')['base_path'] . '/' . $requisition['report_photo_path']) ?>" class="img-thumbnail" style="max-height: 250px;">
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
+<?php endif; ?>
+
 <?php if ($canApprove): ?>
     <section class="form-section mb-3">
         <h2 class="section-title">การพิจารณาอนุมัติ</h2>
