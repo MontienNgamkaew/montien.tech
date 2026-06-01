@@ -66,6 +66,9 @@ sendResponse([
         'department' => isset($payload['department']) ? $payload['department'] : '',
         'is_portal_admin' => $payload['is_portal_admin'],
         'roles' => $payload['roles'],
+        'phone' => isset($payload['phone']) ? $payload['phone'] : '',
+        'education' => isset($payload['education']) ? $payload['education'] : '',
+        'avatar' => isset($payload['avatar']) ? $payload['avatar'] : '',
         'exp' => $payload['exp']
     ]
 ]);

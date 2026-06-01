@@ -287,6 +287,15 @@ document.addEventListener('DOMContentLoaded', () => {
             userProfileMenu.classList.remove('hidden');
             usernameDisplay.textContent = `${currentUserProfile.first_name} ${currentUserProfile.last_name[0]}.`;
             
+            const avatarIcon = userProfileMenu.querySelector('.avatar-icon');
+            if (avatarIcon) {
+                if (currentUserProfile.avatar) {
+                    avatarIcon.innerHTML = `<img src="${currentUserProfile.avatar}" class="badge-avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block; vertical-align: middle; margin-right: 4px;" alt="Avatar">`;
+                } else {
+                    avatarIcon.innerHTML = '👤';
+                }
+            }
+            
             updateGreeting();
 
             if (parseInt(currentUserProfile.is_portal_admin) === 1) {
@@ -1061,5 +1070,221 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('❌ เกิดข้อผิดพลาด: ' + err.message);
             loadAdminUsersTable();
         }
+    }
+
+    // ==========================================
+    // 10. EDIT USER PROFILE LOGIC
+    // ==========================================
+    const profileModalOverlay = document.getElementById('profile-modal-overlay');
+    const btnEditProfile = document.getElementById('btn-edit-profile');
+    const btnCloseProfile = document.getElementById('btn-close-profile');
+    const btnCloseProfileModal = document.getElementById('btn-close-profile-modal');
+    const profileForm = document.getElementById('profile-form');
+
+    const profileEmailInput = document.getElementById('profile-email');
+    const profilePhoneInput = document.getElementById('profile-phone');
+    const profileEducationInput = document.getElementById('profile-education');
+    const profilePasswordInput = document.getElementById('profile-password');
+    const profileConfirmPasswordInput = document.getElementById('profile-confirm-password');
+
+    const profileAvatarInput = document.getElementById('profile-avatar-input');
+    const profileAvatarPreview = document.getElementById('profile-avatar-preview-container');
+    const btnRemoveProfileAvatar = document.getElementById('btn-remove-profile-avatar');
+    const profileErrorMsg = document.getElementById('profile-error-msg');
+    const profileErrorText = document.getElementById('profile-error-text');
+    const btnSubmitProfile = document.getElementById('btn-submit-profile');
+
+    let currentAvatarBase64 = '';
+    let removeAvatarFlag = 0;
+
+    // เปิดหน้าต่างแก้ไขข้อมูลส่วนตัว
+    if (btnEditProfile) {
+        btnEditProfile.addEventListener('click', () => {
+            if (!currentUserProfile) return;
+            
+            // ซ่อนดรอปดาวน์ผู้ใช้งาน
+            const profileDropdown = document.getElementById('profile-dropdown');
+            if (profileDropdown) profileDropdown.classList.remove('show');
+
+            // รีเซ็ตค่าและตัวแปร
+            currentAvatarBase64 = '';
+            removeAvatarFlag = 0;
+            profileForm.reset();
+            profileErrorMsg.classList.add('hidden');
+
+            // โหลดข้อมูลเก่าของผู้ใช้ใส่ลงฟอร์ม
+            profileEmailInput.value = currentUserProfile.email || '';
+            profilePhoneInput.value = currentUserProfile.phone || '';
+            profileEducationInput.value = currentUserProfile.education || '';
+
+            // จัดรูปภาพโปรไฟล์เดิมลงพรีวิว
+            updateAvatarPreview(currentUserProfile.avatar, currentUserProfile.first_name);
+
+            // แสดงโมดอล
+            profileModalOverlay.classList.remove('hidden');
+        });
+    }
+
+    // ปิดหน้าต่างโมดอล
+    function closeProfileModal() {
+        if (profileModalOverlay) {
+            profileModalOverlay.classList.add('hidden');
+        }
+    }
+
+    if (btnCloseProfile) {
+        btnCloseProfile.addEventListener('click', closeProfileModal);
+    }
+    if (btnCloseProfileModal) {
+        btnCloseProfileModal.addEventListener('click', closeProfileModal);
+    }
+
+    // ปิดเมื่อคลิกนอกพื้นที่การ์ดโมดอล
+    if (profileModalOverlay) {
+        profileModalOverlay.addEventListener('click', (e) => {
+            if (e.target === profileModalOverlay) {
+                closeProfileModal();
+            }
+        });
+    }
+
+    // อัปเดตรูปแสดงผลของพรีวิวใน Modal
+    function updateAvatarPreview(avatarPath, firstName) {
+        if (avatarPath) {
+            profileAvatarPreview.innerHTML = `<img src="${avatarPath}" style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">`;
+        } else {
+            const letter = (firstName || '👤')[0].toUpperCase();
+            const color = getAvatarColor(currentUserProfile.username || 'default');
+            profileAvatarPreview.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: ${color}; color: #fff;">${letter}</div>`;
+        }
+    }
+
+    // ฟังก์ชันช่วยหาชุดสีอวาตาร์ตัวอักษร
+    function getAvatarColor(str) {
+        const colors = [
+            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+            'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+            'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+            'linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%)',
+            'linear-gradient(135deg, #a6c0fe 0%, #f1eefc 100%)'
+        ];
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % colors.length;
+        return colors[index];
+    }
+
+    // จัดการการเลือกรูปโปรไฟล์ใหม่
+    if (profileAvatarInput) {
+        profileAvatarInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert('⚠️ ขนาดไฟล์ภาพโปรไฟล์ห้ามเกิน 2MB');
+                profileAvatarInput.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                currentAvatarBase64 = event.target.result;
+                removeAvatarFlag = 0;
+                // อัปเดตรูปพรีวิวด้วย Base64 ที่เพิ่งดึงได้
+                profileAvatarPreview.innerHTML = `<img src="${currentAvatarBase64}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // จัดการการลบรูปโปรไฟล์ออก
+    if (btnRemoveProfileAvatar) {
+        btnRemoveProfileAvatar.addEventListener('click', () => {
+            currentAvatarBase64 = '';
+            removeAvatarFlag = 1;
+            profileAvatarInput.value = '';
+            // กลับไปพรีวิวด้วยตัวอักษรแทนรูปโปรไฟล์เดิม
+            updateAvatarPreview(null, currentUserProfile.first_name);
+        });
+    }
+
+    // จัดการส่งฟอร์มข้อมูลส่วนตัว
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = profileEmailInput.value.trim();
+            const phone = profilePhoneInput.value.trim();
+            const education = profileEducationInput.value.trim();
+            const password = profilePasswordInput.value;
+            const confirmPassword = profileConfirmPasswordInput.value;
+
+            // ตรวจสอบความถูกต้องของรหัสผ่าน
+            if (password) {
+                if (password.length < 6) {
+                    profileErrorText.textContent = 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร';
+                    profileErrorMsg.classList.remove('hidden');
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    profileErrorText.textContent = 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน';
+                    profileErrorMsg.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            const token = localStorage.getItem('pnp-token');
+            if (!token) return;
+
+            btnSubmitProfile.disabled = true;
+            btnSubmitProfile.style.opacity = '0.7';
+            btnSubmitProfile.textContent = '⚡ กำลังบันทึกข้อมูล...';
+            profileErrorMsg.classList.add('hidden');
+
+            try {
+                const response = await fetch('api/update_profile.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        email,
+                        phone,
+                        education,
+                        password: password || null,
+                        avatar: currentAvatarBase64,
+                        remove_avatar: removeAvatarFlag
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'การเชื่อมต่อผิดพลาด');
+                }
+
+                // เซฟโทเค็นใหม่ที่ได้รับและอัปเดต Session
+                localStorage.setItem('pnp-token', data.token);
+                currentUserProfile = data.user;
+                
+                // อัปเดตข้อมูลผู้ใช้งานบน UI
+                applyUserSession(data.token);
+
+                alert('✅ ปรับปรุงข้อมูลส่วนตัวเรียบร้อยแล้วครับ!');
+                closeProfileModal();
+
+            } catch (err) {
+                profileErrorText.textContent = err.message;
+                profileErrorMsg.classList.remove('hidden');
+            } finally {
+                btnSubmitProfile.disabled = false;
+                btnSubmitProfile.style.opacity = '1';
+                btnSubmitProfile.textContent = 'บันทึกข้อมูลส่วนตัว';
+            }
+        });
     }
 });

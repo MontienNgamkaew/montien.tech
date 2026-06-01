@@ -63,6 +63,7 @@
                         </button>
                         <div class="profile-dropdown" id="profile-dropdown">
                             <button class="dropdown-item hidden" id="btn-admin-panel">⚙️ จัดการสิทธิ์สมาชิก</button>
+                            <button class="dropdown-item" id="btn-edit-profile">👤 แก้ไขข้อมูลส่วนตัว</button>
                             <button class="dropdown-item btn-logout" id="btn-logout">🔴 ออกจากระบบ</button>
                         </div>
                     </div>
@@ -422,7 +423,73 @@
         </div>
     </div>
 
+    <!-- Glassmorphic Edit Profile Modal (Hidden by default) -->
+    <div class="crud-modal-overlay hidden" id="profile-modal-overlay">
+        <div class="crud-modal-card">
+            <button class="crud-modal-close" id="btn-close-profile">✕</button>
+            <div class="crud-card-header" style="text-align: center;">
+                <h3 id="profile-modal-title">👤 แก้ไขข้อมูลส่วนตัว</h3>
+                <p id="profile-modal-subtitle">ปรับปรุงข้อมูลการติดต่อ วุฒิการศึกษา รูปภาพ และรหัสผ่านของคุณ</p>
+            </div>
+            
+            <form class="crud-form" id="profile-form">
+                <!-- Avatar Upload Section -->
+                <div class="profile-avatar-upload" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px;">
+                    <div id="profile-avatar-preview-container" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); font-size: 32px; font-weight: bold; position: relative;">
+                        👤
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <label for="profile-avatar-input" class="btn-avatar-upload" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 12px; border-radius: 6px; font-size: 12px; color: #fff; cursor: pointer; transition: all 0.3s; display: inline-block;">
+                            📸 เลือกรูปภาพ
+                        </label>
+                        <input type="file" id="profile-avatar-input" accept="image/*" style="display: none;">
+                        <button type="button" id="btn-remove-profile-avatar" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 6px 12px; border-radius: 6px; font-size: 12px; color: #ef4444; cursor: pointer; transition: all 0.3s;">
+                            🗑️ ลบรูปโปรไฟล์
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profile-email">อีเมลประจำตัวกลาง *</label>
+                        <input type="email" id="profile-email" required placeholder="เช่น example@pnp.ac.th">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-phone">เบอร์โทรศัพท์</label>
+                        <input type="text" id="profile-phone" placeholder="เช่น 0812345678" maxlength="10">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="profile-education">วุฒิการศึกษา</label>
+                    <input type="text" id="profile-education" placeholder="เช่น ปริญญาตรี ค.บ. คอมพิวเตอร์">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profile-password">รหัสผ่านใหม่ (ว่างไว้หากไม่ต้องการเปลี่ยน)</label>
+                        <input type="password" id="profile-password" placeholder="รหัสผ่านใหม่อย่างน้อย 6 ตัวอักษร">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-confirm-password">ยืนยันรหัสผ่านใหม่</label>
+                        <input type="password" id="profile-confirm-password" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง">
+                    </div>
+                </div>
+
+                <div class="crud-error-msg hidden" id="profile-error-msg">
+                    <span class="error-icon">⚠️</span>
+                    <span id="profile-error-text">เกิดข้อผิดพลาด</span>
+                </div>
+
+                <div class="crud-form-actions">
+                    <button type="button" class="btn-cancel-crud" id="btn-close-profile-modal">ยกเลิก</button>
+                    <button type="submit" class="btn-submit-crud" id="btn-submit-profile">บันทึกข้อมูลส่วนตัว</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript File -->
-    <script src="script.js?v=1.0.2"></script>
+    <script src="script.js?v=1.0.3"></script>
 </body>
 </html>

@@ -69,6 +69,9 @@ try {
         'department' => $user['department'],
         'is_portal_admin' => (int)$user['is_portal_admin'],
         'roles' => $appRoles,
+        'phone' => $user['phone'],
+        'education' => $user['education'],
+        'avatar' => $user['avatar_path'],
         'iat' => $issuedAt,
         'exp' => $expireAt
     ];
@@ -90,7 +93,10 @@ try {
             'org_position' => $user['org_position'],
             'department' => $user['department'],
             'is_portal_admin' => (int)$user['is_portal_admin'],
-            'roles' => $appRoles
+            'roles' => $appRoles,
+            'phone' => $user['phone'],
+            'education' => $user['education'],
+            'avatar' => $user['avatar_path']
         ]
     ]);
 
