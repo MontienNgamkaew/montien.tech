@@ -514,6 +514,21 @@ body.light-theme .badge {
     animation: pulsePendingGlow 2s infinite;
 }
 
+.status-inactive {
+    background-color: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+    border: 1px solid rgba(243, 156, 18, 0.35);
+}
+
+.status-inactive::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #f39c12;
+}
+
 @keyframes pulseGlow {
     0% { transform: scale(0.9); opacity: 0.5; }
     50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 8px var(--success-color); }
