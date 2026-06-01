@@ -23,14 +23,17 @@ if ($isHostinger) {
 }
 
 try {
-    // 2. เชื่อมต่อเซิร์ฟเวอร์ MySQL ขั้นต้น (โดยยังไม่ระบุชื่อฐานข้อมูล เพื่อทำการสร้างแบบ Auto-Creation)
-    $dsnInit = "mysql:host=$dbHost;charset=utf8mb4";
-    $pdoInit = new PDO($dsnInit, $dbUser, $dbPass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-    
-    // สร้างฐานข้อมูลหากยังไม่มี
-    $pdoInit->exec("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    // บน Hostinger ฐานข้อมูลจะถูกสร้างไว้ล่วงหน้าจากระบบควบคุม hPanel แล้ว และสิทธิ์ผู้ใช้อาจเชื่อมต่อได้เฉพาะระบุฐานข้อมูลเท่านั้น
+    if (!$isHostinger) {
+        // 2. เชื่อมต่อเซิร์ฟเวอร์ MySQL ขั้นต้น (โดยยังไม่ระบุชื่อฐานข้อมูล เพื่อทำการสร้างแบบ Auto-Creation)
+        $dsnInit = "mysql:host=$dbHost;charset=utf8mb4";
+        $pdoInit = new PDO($dsnInit, $dbUser, $dbPass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ]);
+        
+        // สร้างฐานข้อมูลหากยังไม่มี
+        $pdoInit->exec("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    }
     
     // 3. เชื่อมต่อฐานข้อมูลจริง
     $dsn = "mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4";
