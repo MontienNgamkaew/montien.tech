@@ -2059,3 +2059,18 @@ input:checked + .slider:before {
 .crud-form-actions {
     border-top: 1px solid #e2e8f0 !important;
 }
+
+/* Avatar Upload Button in Edit Profile */
+.btn-avatar-upload {
+    background: rgba(138, 79, 255, 0.08) !important;
+    border: 1px solid rgba(138, 79, 255, 0.25) !important;
+    color: #8a4fff !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-avatar-upload:hover {
+    background: rgba(138, 79, 255, 0.15) !important;
+    border-color: rgba(138, 79, 255, 0.4) !important;
+    transform: translateY(-1px) !important;
+}
