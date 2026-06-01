@@ -91,6 +91,10 @@ function current_user(): ?array
     $statement->execute(['id' => $_SESSION['user_id']]);
     $user = $statement->fetch() ?: null;
 
+    if ($user && empty($user['role'])) {
+        $user['role'] = 'user';
+    }
+
     return $user;
 }
 

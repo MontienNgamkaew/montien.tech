@@ -11,9 +11,10 @@ final class DashboardController
     public function index(): void
     {
         $user = require_auth();
-        $level = self::ROLE_LEVELS[$user['role']] ?? null;
+        $userRole = empty($user['role']) ? 'user' : $user['role'];
+        $level = self::ROLE_LEVELS[$userRole] ?? null;
 
-        if ($user['role'] === 'user') {
+        if ($userRole === 'user') {
             $db = Database::connection();
             $stmt = $db->prepare('
                 SELECT r.*, 

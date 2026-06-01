@@ -73,16 +73,21 @@ $localRole = 'user'; // สิทธิ์เริ่มต้นสำหร�
 if ($isPortalAdmin === 1 || $pnpGoRole === 'admin') {
     $localRole = 'admin';
 }
-// อนุมัติระดับ 2: รองผู้อำนวยการฝ่ายบริหารทรัพยากร (หรือตำแหน่งหลักเป็น รองผู้อำนวยการ ตามการคัดกรองระบบ)
-elseif ($orgPosition === 'รองผู้อำนวยการฝ่ายบริหารทรัพยากร' || $primaryPosition === 'รองผู้อำนวยการ') {
-    $localRole = 'deputy_director';
-}
-// อนุมัติระดับ 3: ผู้อำนวยการ
-elseif ($primaryPosition === 'ผู้อำนวยการ') {
+// อนุมัติระดับ 3: ผู้อำนวยการ (ความสำคัญสูงสุดของระดับบริหาร)
+elseif ($primaryPosition === 'ผู้อำนวยการ' || strpos($primaryPosition, 'ผู้อำนวยการ') !== false || strpos($orgPosition, 'ผู้อำนวยการ') !== false) {
     $localRole = 'director';
 }
+// อนุมัติระดับ 2: ต้องเป็นรองผู้อำนวยการฝ่ายบริหารทรัพยากรเท่านั้น!
+elseif (
+    $orgPosition === 'รองผู้อำนวยการฝ่ายบริหารทรัพยากร' || 
+    strpos($orgPosition, 'รองผู้อำนวยการฝ่ายบริหารทรัพยากร') !== false ||
+    (strpos($orgPosition, 'รองผู้อำนวยการ') !== false && strpos($orgPosition, 'บริหารทรัพยากร') !== false) ||
+    (strpos($primaryPosition, 'รองผู้อำนวยการ') !== false && strpos($orgPosition, 'บริหารทรัพยากร') !== false)
+) {
+    $localRole = 'deputy_director';
+}
 // อนุมัติระดับ 1: หัวหน้างานพัสดุ
-elseif ($orgPosition === 'หัวหน้างานพัสดุ' || strpos($orgPosition, 'หัวหน้างานพัสดุ') !== false) {
+elseif ($orgPosition === 'หัวหน้างานพัสดุ' || strpos($orgPosition, 'หัวหน้างานพัสดุ') !== false || strpos($primaryPosition, 'หัวหน้างานพัสดุ') !== false) {
     $localRole = 'supply_head';
 }
 

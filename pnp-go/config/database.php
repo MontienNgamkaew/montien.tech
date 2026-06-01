@@ -1,6 +1,6 @@
 <?php
 
-$isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']);
+$isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) || (php_sapi_name() === 'cli');
 
 $config = $isLocal ? [
     // === Local XAMPP ===

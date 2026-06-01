@@ -53,6 +53,41 @@ try {
         $appRoles['pnp-man'] = 'admin';
     }
 
+    // 3.1 ค้นหาข้อมูลการมอบหมายหน้าที่และฝ่ายงานล่าสุด (Assignment) เพื่อส่งไปใน Payload อย่างถูกต้อง
+    $calculatedOrgPosition = $user['org_position'];
+    $calculatedDepartment = $user['department'];
+    
+    try {
+        $stmtAssign = $db->prepare("
+            SELECT a.org_position, j.name AS job_name, d.name AS dept_name 
+            FROM user_org_assignments a
+            LEFT JOIN jobs j ON j.id = a.job_id
+            LEFT JOIN departments d ON d.id = a.department_id
+            WHERE a.user_id = :user_id 
+            LIMIT 1
+        ");
+        $stmtAssign->execute([':user_id' => $user['id']]);
+        $assignment = $stmtAssign->fetch();
+
+        if ($assignment) {
+            if ($assignment['org_position'] === 'หัวหน้างาน' && !empty($assignment['job_name'])) {
+                // หากแผนกขึ้นต้นด้วยคำว่า "งาน" (เช่น งานพัสดุ) ให้ลบคำว่า "งาน" ออก เพื่อให้ประกอบกันเป็น "หัวหน้างานพัสดุ" สวยงาม
+                $jobName = $assignment['job_name'];
+                if (mb_strpos($jobName, 'งาน') === 0) {
+                    $jobName = mb_substr($jobName, 3); // ลบคำว่า "งาน" ออก (3 bytes ใน UTF-8 สำหรับ "งาน")
+                }
+                $calculatedOrgPosition = 'หัวหน้างาน' . $jobName;
+            } elseif ($assignment['org_position'] === 'รองผู้อำนวยการ' && !empty($assignment['dept_name'])) {
+                $calculatedOrgPosition = 'รองผู้อำนวยการ' . $assignment['dept_name'];
+            } else {
+                $calculatedOrgPosition = $assignment['org_position'];
+            }
+            $calculatedDepartment = $assignment['dept_name'];
+        }
+    } catch (PDOException $exAssign) {
+        // ข้ามอย่างปลอดภัยในกรณีโครงสร้างตารางไม่พร้อม
+    }
+
     // 4. จัดเตรียมข้อมูล Payload ของ JWT
     $issuedAt = time();
     $expireAt = $issuedAt + JWT_EXPIRY_SECONDS;
@@ -65,8 +100,8 @@ try {
         'first_name' => $user['first_name'],
         'last_name' => $user['last_name'],
         'primary_position' => $user['primary_position'],
-        'org_position' => $user['org_position'],
-        'department' => $user['department'],
+        'org_position' => $calculatedOrgPosition,
+        'department' => $calculatedDepartment,
         'is_portal_admin' => (int)$user['is_portal_admin'],
         'roles' => $appRoles,
         'phone' => $user['phone'],
