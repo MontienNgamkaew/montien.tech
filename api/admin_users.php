@@ -106,6 +106,7 @@ if ($method === 'GET') {
 
             // ดึงข้อมูลตำแหน่งหน้าที่รับผิดชอบจาก PNP Man (assignments table)
             $pnpmanAssignments = [];
+            $pnpmanErr = null;
             try {
                 $stmtAssign = $db->prepare("
                     SELECT 
@@ -136,9 +137,14 @@ if ($method === 'GET') {
                     $pnpmanAssignments[] = $part;
                 }
             } catch (PDOException $ex) {
-                // หากยังไม่มีการสร้างตาราง ให้ข้ามไปเงียบๆ
+                // บันทึกข้อผิดพลาดใน PHP error log
+                error_log("Error fetching assignments for user " . $u['id'] . ": " . $ex->getMessage());
+                $pnpmanErr = $ex->getMessage();
             }
             $u['pnpman_assignments'] = $pnpmanAssignments;
+            if ($pnpmanErr !== null) {
+                $u['pnpman_assignments_error'] = $pnpmanErr;
+            }
         }
 
         sendResponse(['users' => $users]);

@@ -1138,6 +1138,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = allUsersData.find(u => u.id === userId || parseInt(u.id) === userId);
         if (!user) return;
 
+        console.log("Detail Modal User:", user);
+        if (user.pnpman_assignments_error) {
+            console.error("Database assignments query error for user:", user.username, "-", user.pnpman_assignments_error);
+        }
+
         // Header Elements
         const fullName = `${user.title || ''}${user.first_name || ''} ${user.last_name || ''}`.trim();
         document.getElementById('detail-fullname').textContent = fullName;
