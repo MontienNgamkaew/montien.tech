@@ -221,6 +221,13 @@ try {
         $db->commit();
     }
 
+    // ปรับปรุงลำดับการแสดงผลของงานอาคารสถานที่ให้ไปอยู่ลำดับสุดท้าย (สลับผ่าน sort_order ปลอดภัย 100%)
+    try {
+        $db->exec("UPDATE jobs SET sort_order = 1 WHERE id = 6 AND name = 'งานอาคารสถานที่'");
+    } catch (PDOException $ex) {
+        // ข้ามอย่างปลอดภัย
+    }
+
 } catch (PDOException $e) {
     if (function_exists('sendResponse')) {
         sendResponse(['error' => 'Database connection failed: ' . $e->getMessage()], 500);
