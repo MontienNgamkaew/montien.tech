@@ -1199,13 +1199,21 @@ document.addEventListener('DOMContentLoaded', () => {
             emailLink.style.opacity = '0.5';
         }
 
-        // Structure Work (Department / Org Position / Job)
-        let structureParts = [];
-        if (user.department) structureParts.push(user.department);
-        if (user.job) structureParts.push(user.job);
-        if (user.org_position) structureParts.push(`(${user.org_position})`);
-        
-        document.getElementById('detail-structure-work').textContent = structureParts.length > 0 ? structureParts.join(' / ') : 'ยังไม่มีการมอบหมายฝ่าย/กลุ่มงาน';
+        // Structure Work (Department / Org Position / Job / PNP Man Assignments)
+        if (user.pnpman_assignments && user.pnpman_assignments.length > 0) {
+            document.getElementById('detail-structure-work').innerHTML = user.pnpman_assignments.map(a => {
+                const div = document.createElement('div');
+                div.textContent = a;
+                return div.innerHTML;
+            }).join('<br>');
+        } else {
+            let structureParts = [];
+            if (user.department) structureParts.push(user.department);
+            if (user.job) structureParts.push(user.job);
+            if (user.org_position) structureParts.push(`(${user.org_position})`);
+            
+            document.getElementById('detail-structure-work').textContent = structureParts.length > 0 ? structureParts.join(' / ') : 'ยังไม่มีการมอบหมายฝ่าย/กลุ่มงาน';
+        }
 
         // Sub-system Roles
         const roles = user.roles || {};

@@ -103,6 +103,42 @@ if ($method === 'GET') {
                 $u['roles']['pnp-academic'] = 'admin';
                 $u['roles']['pnp-man'] = 'admin';
             }
+
+            // ดึงข้อมูลตำแหน่งหน้าที่รับผิดชอบจาก PNP Man (assignments table)
+            $pnpmanAssignments = [];
+            try {
+                $stmtAssign = $db->prepare("
+                    SELECT 
+                        d.name AS dept_name,
+                        j.name AS job_name,
+                        a.role AS assign_role
+                    FROM assignments a
+                    JOIN jobs j ON a.job_id = j.id
+                    LEFT JOIN departments d ON j.department_id = d.id
+                    WHERE a.personnel_id = :user_id
+                    ORDER BY a.sort_order ASC
+                ");
+                $stmtAssign->execute([':user_id' => $u['id']]);
+                $assignRows = $stmtAssign->fetchAll();
+                
+                foreach ($assignRows as $row) {
+                    $part = '';
+                    if ($row['dept_name']) {
+                        $part .= $row['dept_name'];
+                    }
+                    if ($row['job_name']) {
+                        if ($part) $part .= ' / ';
+                        $part .= $row['job_name'];
+                    }
+                    if ($row['assign_role']) {
+                        $part .= ' (' . $row['assign_role'] . ')';
+                    }
+                    $pnpmanAssignments[] = $part;
+                }
+            } catch (PDOException $ex) {
+                // หากยังไม่มีการสร้างตาราง ให้ข้ามไปเงียบๆ
+            }
+            $u['pnpman_assignments'] = $pnpmanAssignments;
         }
 
         sendResponse(['users' => $users]);
