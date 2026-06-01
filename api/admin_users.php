@@ -112,29 +112,54 @@ if ($method === 'GET') {
                     SELECT 
                         d.name AS dept_name,
                         j.name AS job_name,
-                        a.role AS assign_role
+                        a.role AS assign_role,
+                        a.sort_order
                     FROM assignments a
                     JOIN jobs j ON a.job_id = j.id
                     LEFT JOIN departments d ON j.department_id = d.id
                     WHERE a.personnel_id = :user_id
-                    ORDER BY a.sort_order ASC
                 ");
                 $stmtAssign->execute([':user_id' => $u['id']]);
                 $assignRows = $stmtAssign->fetchAll();
                 
+                // เรียงลำดับระดับความสำคัญของบทบาทหน้าที่ (ระดับหัวหน้าแสดงก่อน ตามด้วยผู้ช่วย)
+                usort($assignRows, function($x, $y) {
+                    $roleOrder = [
+                        'ผู้อำนวยการวิทยาลัย' => 1,
+                        'ผู้อำนวยการ' => 1,
+                        'รองผู้อำนวยการฝ่าย' => 2,
+                        'รองผู้อำนวยการ' => 2,
+                        'หัวหน้างาน' => 3,
+                        'หัวหน้าแผนกวิชา' => 3,
+                        'ผู้ช่วยหัวหน้างาน' => 4,
+                        'ผู้ช่วยหัวหน้าแผนกวิชา' => 4,
+                        'เจ้าหน้าที่งาน' => 5,
+                        'เจ้าหน้าที่' => 5,
+                        'ครูในแผนกวิชา' => 6,
+                        'ครูผู้สอน' => 6
+                    ];
+                    
+                    $p1 = $roleOrder[$x['assign_role']] ?? 99;
+                    $p2 = $roleOrder[$y['assign_role']] ?? 99;
+                    
+                    if ($p1 !== $p2) {
+                        return $p1 - $p2;
+                    }
+                    return (int)($x['sort_order'] ?? 0) - (int)($y['sort_order'] ?? 0);
+                });
+                
                 foreach ($assignRows as $row) {
                     $part = '';
-                    if ($row['dept_name']) {
-                        $part .= $row['dept_name'];
+                    if ($row['assign_role']) {
+                        $part .= '(' . $row['assign_role'] . ') ';
                     }
                     if ($row['job_name']) {
-                        if ($part) $part .= ' / ';
                         $part .= $row['job_name'];
                     }
-                    if ($row['assign_role']) {
-                        $part .= ' (' . $row['assign_role'] . ')';
+                    if ($row['dept_name']) {
+                        $part .= ' / ' . $row['dept_name'];
                     }
-                    $pnpmanAssignments[] = $part;
+                    $pnpmanAssignments[] = trim($part);
                 }
             } catch (PDOException $ex) {
                 // บันทึกข้อผิดพลาดใน PHP error log

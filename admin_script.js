@@ -1212,12 +1212,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return div.innerHTML;
             }).join('<br>');
         } else {
-            let structureParts = [];
-            if (user.department) structureParts.push(user.department);
-            if (user.job) structureParts.push(user.job);
-            if (user.org_position) structureParts.push(`(${user.org_position})`);
+            let structureStr = '';
+            if (user.org_position) {
+                structureStr += `(${user.org_position}) `;
+            }
+            if (user.job) {
+                structureStr += user.job;
+            }
+            if (user.department) {
+                if (user.job) {
+                    structureStr += ' / ';
+                }
+                structureStr += user.department;
+            }
             
-            document.getElementById('detail-structure-work').textContent = structureParts.length > 0 ? structureParts.join(' / ') : 'ยังไม่มีการมอบหมายฝ่าย/กลุ่มงาน';
+            document.getElementById('detail-structure-work').textContent = structureStr.trim() || 'ยังไม่มีการมอบหมายตำแหน่งที่รับผิดชอบ';
         }
 
         // Sub-system Roles
