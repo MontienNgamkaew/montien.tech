@@ -96,6 +96,13 @@ if ($method === 'GET') {
                     $u['roles'][$appKey] = $row['role'];
                 }
             }
+
+            // หากเป็นผู้ดูแลระบบพอร์ทัลกลางสูงสุด ให้สิทธิ์แอดมินทุกระบบย่อยโดยอัตโนมัติ
+            if ((int)$u['is_portal_admin'] === 1) {
+                $u['roles']['pnp-go'] = 'admin';
+                $u['roles']['pnp-academic'] = 'admin';
+                $u['roles']['pnp-man'] = 'admin';
+            }
         }
 
         sendResponse(['users' => $users]);

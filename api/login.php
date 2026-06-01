@@ -46,6 +46,13 @@ try {
         $appRoles[$row['app_id']] = $row['role'];
     }
 
+    // หากเป็นผู้ดูแลระบบพอร์ทัลกลางสูงสุด ให้สิทธิ์แอดมินทุกระบบย่อยโดยอัตโนมัติ
+    if ((int)$user['is_portal_admin'] === 1) {
+        $appRoles['pnp-go'] = 'admin';
+        $appRoles['pnp-academic'] = 'admin';
+        $appRoles['pnp-man'] = 'admin';
+    }
+
     // 4. จัดเตรียมข้อมูล Payload ของ JWT
     $issuedAt = time();
     $expireAt = $issuedAt + JWT_EXPIRY_SECONDS;
