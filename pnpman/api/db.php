@@ -8,6 +8,40 @@ require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../../api/database.php';
 $pdo = $db;
 
+// Auto-create college_settings and assignments tables for PNP Man if they do not exist (Self-healing DB)
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS college_settings (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        college_name VARCHAR(255) NOT NULL DEFAULT 'วิทยาลัยการอาชีพพนมไพร',
+        logo_path VARCHAR(255) NULL,
+        theme_preset VARCHAR(50) NOT NULL DEFAULT 'rose'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    
+    $stmt = $pdo->query("SELECT COUNT(*) FROM college_settings WHERE id = 1");
+    if ($stmt->fetchColumn() == 0) {
+        $pdo->exec("INSERT IGNORE INTO college_settings (id, college_name, logo_path, theme_preset) VALUES (1, 'วิทยาลัยการอาชีพพนมไพร', '', 'rose')");
+    }
+} catch (PDOException $e) {
+    // Silently continue or log if needed
+}
+
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS assignments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        personnel_id INT NOT NULL,
+        job_id INT NOT NULL,
+        role VARCHAR(100) NOT NULL,
+        academic_year INT NOT NULL DEFAULT 2569,
+        sort_order INT NOT NULL DEFAULT 0,
+        comment VARCHAR(255) DEFAULT NULL,
+        FOREIGN KEY (personnel_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_assignment_v2 (personnel_id, job_id, role, academic_year)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+} catch (PDOException $e) {
+    // Silently continue or log if needed
+}
+
 function parseFullName($fullName) {
     $fullName = trim($fullName);
     $titles = ['นาย', 'นางสาว', 'นาง', 'ดร.', 'ศาสตราจารย์', 'รองศาสตราจารย์', 'ผู้ช่วยศาสตราจารย์', 'ศ.', 'รศ.', 'ผศ.', 'ว่าที่ร้อยตรี', 'ว่าที่ ร.ต.', 'จ่าสิบเอก'];
