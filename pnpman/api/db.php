@@ -42,6 +42,31 @@ try {
     // Silently continue or log if needed
 }
 
+// Make sure jobs.department_id is nullable (to support Director position)
+try {
+    $pdo->exec("ALTER TABLE jobs MODIFY department_id INT NULL");
+} catch (PDOException $e) {
+    // Silently continue or log if needed
+}
+
+// Auto-insert Director/Deputy Director positions into jobs table if missing (Self-healing positions)
+try {
+    $stmt = $pdo->prepare("
+        INSERT INTO jobs (id, department_id, name, sort_order) VALUES
+        (900, NULL, 'ผู้อำนวยการวิทยาลัย', 0),
+        (901, 1, 'รองผู้อำนวยการฝ่ายบริหารทรัพยากร', 0),
+        (902, 2, 'รองผู้อำนวยการฝ่ายยุทธศาสตร์และแผนงาน', 0),
+        (903, 3, 'รองผู้อำนวยการฝ่ายพัฒนากิจการนักเรียน นักศึกษา', 0),
+        (904, 4, 'รองผู้อำนวยการฝ่ายวิชาการ', 0)
+        ON DUPLICATE KEY UPDATE 
+            name = VALUES(name), 
+            department_id = VALUES(department_id)
+    ");
+    $stmt->execute();
+} catch (PDOException $e) {
+    // Silently continue or log if needed
+}
+
 function parseFullName($fullName) {
     $fullName = trim($fullName);
     $titles = ['นาย', 'นางสาว', 'นาง', 'ดร.', 'ศาสตราจารย์', 'รองศาสตราจารย์', 'ผู้ช่วยศาสตราจารย์', 'ศ.', 'รศ.', 'ผศ.', 'ว่าที่ร้อยตรี', 'ว่าที่ ร.ต.', 'จ่าสิบเอก'];
