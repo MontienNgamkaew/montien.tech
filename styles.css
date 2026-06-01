@@ -1013,7 +1013,7 @@ body.light-theme .app-link.disabled {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 100;
     animation: fadeIn 0.3s ease-out;
@@ -1261,7 +1261,7 @@ body.light-theme .login-help code {
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 105;
     animation: fadeIn 0.3s ease-out;
@@ -1274,6 +1274,7 @@ body.light-theme .login-help code {
     border: 1px solid rgba(138, 79, 255, 0.25);
     box-shadow: 0 10px 40px rgba(138, 79, 255, 0.15);
     border-radius: 24px;
+    margin: auto;
     padding: 32px;
     max-width: 1200px;
     width: 100%;
@@ -1582,7 +1583,7 @@ input:checked + .slider:before {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 110;
     animation: fadeIn 0.3s ease-out;
@@ -1594,6 +1595,7 @@ input:checked + .slider:before {
     background: var(--bg-card);
     border: 1px solid rgba(138, 79, 255, 0.25);
     border-radius: 28px;
+    margin: auto;
     width: 100%;
     max-width: 650px;
     padding: 36px;

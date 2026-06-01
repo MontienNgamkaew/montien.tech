@@ -1,13 +1,7 @@
 <?php
-// Handle CORS
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+// CORS headers are handled by api/config.php
 
-// Handle preflight requests
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    exit(0);
-}
+// นำเข้าการเชื่อมต่อฐานข้อมูลหลักจากพอร์ทัลกลางเพื่อหลีกเลี่ยงรหัสผ่านไม่ตรงกัน
 
 // นำเข้าการเชื่อมต่อฐานข้อมูลหลักจากพอร์ทัลกลางเพื่อหลีกเลี่ยงรหัสผ่านไม่ตรงกัน
 require_once __DIR__ . '/../../api/config.php';
@@ -43,8 +37,11 @@ function isCurrentAdmin($pdo) {
     require_once __DIR__ . '/../../api/jwt.php';
     require_once __DIR__ . '/../../api/config.php';
 
-    $headers = apache_request_headers();
-    $authHeader = $headers['Authorization'] ?? '';
+    $authHeader = '';
+    if (function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        $authHeader = $headers['Authorization'] ?? '';
+    }
     
     if (empty($authHeader) && isset($_SERVER['HTTP_AUTHORIZATION'])) {
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
