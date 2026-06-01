@@ -41,6 +41,23 @@ final class DashboardController
             return;
         }
 
+        $db = Database::connection();
+        $stmt = $db->prepare('
+            SELECT r.*, 
+                   COALESCE(va.vehicle_name, vr.vehicle_name, \'ไม่ได้ระบุเจาะจง\') AS vehicle_name,
+                   va.license_plate
+            FROM requisitions r
+            LEFT JOIN vehicles vr ON vr.id = r.requested_vehicle_id
+            LEFT JOIN vehicles va ON va.id = r.assigned_vehicle_id
+            WHERE r.user_id = :user_id OR r.requester_name = :full_name
+            ORDER BY r.created_at DESC
+        ');
+        $stmt->execute([
+            'user_id' => $user['id'],
+            'full_name' => $user['full_name']
+        ]);
+        $myRequisitions = $stmt->fetchAll();
+
         render('admin/dashboard', [
             'title'               => 'แดชบอร์ดผู้อนุมัติ',
             'user'                => $user,
@@ -50,6 +67,7 @@ final class DashboardController
             'fuelSummary'         => $this->fuelSummary(),
             'level'               => $level,
             'statusLabels'        => $this->statusLabels(),
+            'myRequisitions'      => $myRequisitions
         ]);
     }
 

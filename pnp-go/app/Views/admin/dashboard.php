@@ -265,6 +265,96 @@
     <?php endif; ?>
 </section>
 
+<?php if ($myRequisitions !== []): ?>
+<!-- ===== My Personal Requisitions Section ===== -->
+<section class="form-section shadow-sm p-4 mt-4" style="border-radius: 20px; background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.05);">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title mb-0" style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">📅 ประวัติการขอใช้รถส่วนตัวของฉัน (My Personal Requisitions)</h2>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle table-hover">
+            <thead>
+                <tr>
+                    <th>เลขที่เอกสาร</th>
+                    <th>จุดหมายปลายทาง</th>
+                    <th>วันเดินทาง</th>
+                    <th>รถยนต์ที่ได้รับ</th>
+                    <th>สถานะคำขอ</th>
+                    <th class="text-end">การจัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($myRequisitions as $item): ?>
+                    <tr>
+                        <td class="fw-bold text-primary">
+                            <?= e($item['tracking_id']) ?>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark"><?= e($item['destination']) ?></div>
+                            <small class="text-muted"><?= e(trim(($item['destination_subdistrict'] ?? '') . ' ' . ($item['destination_district'] ?? '') . ' ' . ($item['destination_province'] ?? ''))) ?></small>
+                        </td>
+                        <td>
+                            <div class="text-dark" style="font-size: 0.9rem;"><?= e(date('d/m/Y H:i', strtotime($item['travel_start_at']))) ?></div>
+                            <small class="text-muted">ถึง <?= e(date('d/m/Y H:i', strtotime($item['travel_end_at']))) ?></small>
+                        </td>
+                        <td>
+                            <?php if (!empty($item['assigned_vehicle_id'])): ?>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1.5" style="font-size: 11px; border-radius: 8px;">
+                                    🚘 <?= e($item['vehicle_name']) ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="text-muted" style="font-size: 13px;">
+                                    🚗 <?= e($item['vehicle_name'] ?? 'ไม่ได้ระบุเจาะจง') ?>
+                                </span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php
+                            $badgeClass = 'bg-secondary';
+                            if ($item['status'] === 'approved') {
+                                $badgeClass = 'bg-success';
+                            } elseif ($item['status'] === 'rejected') {
+                                $badgeClass = 'bg-danger';
+                            } elseif (str_starts_with($item['status'], 'pending_')) {
+                                $badgeClass = 'bg-warning text-dark';
+                            }
+                            ?>
+                            <span class="badge <?= $badgeClass ?> px-2 py-1.5" style="font-size: 11px; font-weight: 600; border-radius: 8px;">
+                                <?= e($statusLabels[$item['status']] ?? $item['status']) ?>
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <a class="btn btn-sm btn-outline-primary" style="border-radius: 8px;" href="<?= e(config('app')['base_path']) ?>/status?id=<?= e($item['id']) ?>">
+                                    🔍 เปิดดู
+                                </a>
+
+                                <?php if ($item['status'] === 'approved' && empty($item['reported_at'])): ?>
+                                    <a class="btn btn-sm btn-success text-white" style="border-radius: 8px;" href="<?= e(config('app')['base_path']) ?>/report/submit?id=<?= e($item['id']) ?>">
+                                        📝 รายงานผลไมล์
+                                    </a>
+                                <?php elseif ($item['status'] === 'approved' && !empty($item['reported_at'])): ?>
+                                    <span class="btn btn-sm btn-outline-secondary disabled" style="cursor: default; border-radius: 8px;">
+                                        ✅ รายงานแล้ว
+                                    </span>
+                                <?php endif; ?>
+                                
+                                <?php if ($item['status'] === 'approved' && !empty($item['pdf_path'])): ?>
+                                    <a class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" href="<?= e(config('app')['base_path']) ?>/download?id=<?= e($item['id']) ?>" target="_blank">
+                                        📄 PDF
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+<?php endif; ?>
+
 
 <?php
 $content = ob_get_clean();
