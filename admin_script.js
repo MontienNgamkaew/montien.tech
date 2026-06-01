@@ -1264,10 +1264,11 @@ document.addEventListener('DOMContentLoaded', () => {
         roleManEl.style.color = roles['pnp-man'] && roles['pnp-man'] !== 'none' ? '#3b82f6' : 'var(--text-muted)';
 
         // Edit Shortcut
-        if (btnDetailEditShortcut) {
+        const currentBtnDetailEditShortcut = document.getElementById('btn-detail-edit-shortcut');
+        if (currentBtnDetailEditShortcut) {
             // Replace click listener safely
-            const newEditShortcut = btnDetailEditShortcut.cloneNode(true);
-            btnDetailEditShortcut.parentNode.replaceChild(newEditShortcut, btnDetailEditShortcut);
+            const newEditShortcut = currentBtnDetailEditShortcut.cloneNode(true);
+            currentBtnDetailEditShortcut.parentNode.replaceChild(newEditShortcut, currentBtnDetailEditShortcut);
             newEditShortcut.addEventListener('click', () => {
                 hideModal(detailModalOverlay);
                 openEditModal(user.id);
