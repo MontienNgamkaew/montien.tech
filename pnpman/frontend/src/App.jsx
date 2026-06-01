@@ -769,7 +769,7 @@ function App() {
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
           {isAdmin && (
-            <div className="w-full lg:w-80 flex flex-col transition-all duration-300 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-120px)]">
+            <div className="w-full lg:w-80 flex flex-col transition-all duration-300 lg:sticky lg:top-3 lg:self-start lg:h-[calc(100vh-50px)] lg:max-h-[calc(100vh-50px)]">
               <StaffPool 
                 personnel={personnel} 
                 assignments={assignments}

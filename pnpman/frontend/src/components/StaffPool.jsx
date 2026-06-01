@@ -116,26 +116,26 @@ const StaffPool = ({ personnel, assignments, onPersonClick, isAdmin, editMode })
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                       onClick={() => onPersonClick(person)}
-                      className={`p-3 mb-2.5 bg-white border rounded-xl shadow-sm flex flex-col gap-1.5 transition-all duration-200
+                      className={`p-2 mb-1.5 bg-white border rounded-xl shadow-sm flex flex-col gap-1 transition-all duration-200
                         ${editMode ? 'cursor-grab active:cursor-grabbing hover:-translate-y-0.5' : 'cursor-pointer'}
                         ${snapshot.isDragging ? 'shadow-2xl ring-2 ring-rose-500 z-50 scale-105 rotate-1' : 'hover:border-rose-200 hover:shadow-md border-gray-100'}
                       `}
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         {person.photo_path ? (
                           <img
                             src={`${BASE_URL}${person.photo_path}`}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm shrink-0"
+                            className="w-8 h-8 rounded-full object-cover border border-gray-200 shadow-sm shrink-0"
                             alt={person.name}
                           />
                         ) : (
-                          <div className={`w-10 h-10 rounded-full border flex items-center justify-center shadow-sm shrink-0 ${titleColor}`}>
-                            <User size={16} />
+                          <div className={`w-8 h-8 rounded-full border flex items-center justify-center shadow-sm shrink-0 ${titleColor}`}>
+                            <User size={14} />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm text-gray-800 truncate leading-tight">{person.name}</p>
-                          <span className={`inline-block ${titleColor} px-2 py-0.5 rounded-full text-[11px] font-bold mt-1 border`}>
+                          <p className="font-bold text-xs text-gray-800 truncate leading-tight">{person.name}</p>
+                          <span className={`inline-block ${titleColor} px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-0.5 border`}>
                             {displayTitle}
                           </span>
                         </div>
