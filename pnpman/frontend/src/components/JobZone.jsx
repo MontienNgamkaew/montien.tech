@@ -79,8 +79,7 @@ export const RoleZone = ({ job, roleName, limit, assignments, personnel, onPerso
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`min-h-[44px] rounded-lg border-2 border-dashed p-1.5 flex flex-col gap-1.5 transition-all duration-300
-              ${snapshot.isDraggingOver && !isFull && editMode ? `${colors.bg} ${colors.border} shadow-inner` : 'bg-gray-50/50 border-gray-200'}
-              ${isFull ? 'opacity-60' : ''}`}
+              ${snapshot.isDraggingOver && !isFull && editMode ? `${colors.bg} ${colors.border} shadow-inner` : 'bg-gray-50/50 border-gray-200'}`}
           >
             {sortAssignments(roleAssignments, personnel).map((assignment, index) => {
               const person = personnel.find(p => p.id === assignment.personnel_id);
