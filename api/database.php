@@ -219,5 +219,12 @@ try {
     }
 
 } catch (PDOException $e) {
-    sendResponse(['error' => 'Database connection failed: ' . $e->getMessage()], 500);
+    if (function_exists('sendResponse')) {
+        sendResponse(['error' => 'Database connection failed: ' . $e->getMessage()], 500);
+    } else {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
+        exit();
+    }
 }

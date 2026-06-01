@@ -9,36 +9,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit(0);
 }
 
-// Dynamic Environment Selection (XAMPP Local vs Hostinger Production)
-$isHostinger = isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'montien.tech') !== false || $_SERVER['HTTP_HOST'] === 'pnp-portal.montien.tech');
-
-if ($isHostinger) {
-    $host = 'localhost';
-    $db   = 'u651170081_pnp_portal';
-    $user = 'u651170081_pnp_portal';
-    $pass = 'a1d9GH10%';
-} else {
-    $host = 'localhost';
-    $db   = 'pnp_portal';
-    $user = 'root';
-    $pass = '';
-}
-$charset = 'utf8mb4';
-
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-$options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES   => false,
-    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
-];
-
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-} catch (\PDOException $e) {
-    echo json_encode(["error" => "Database connection failed: " . $e->getMessage()]);
-    exit;
-}
+// นำเข้าการเชื่อมต่อฐานข้อมูลหลักจากพอร์ทัลกลางเพื่อหลีกเลี่ยงรหัสผ่านไม่ตรงกัน
+require_once __DIR__ . '/../../api/config.php';
+require_once __DIR__ . '/../../api/database.php';
+$pdo = $db;
 
 function parseFullName($fullName) {
     $fullName = trim($fullName);
