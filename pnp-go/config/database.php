@@ -14,8 +14,8 @@ $config = $isLocal ? [
     // === Hostinger Production (pnp-go.montien.tech) ===
     'host'     => 'localhost',
     'port'     => 3306,
-    'database' => 'u651170081_carrequest',
-    'username' => 'u651170081_carrequest',
+    'database' => 'u651170081_pnpgo',
+    'username' => 'u651170081_pnpgo',
     'password' => 'a1d9GH10%',
     'charset'  => 'utf8mb4',
 ];
