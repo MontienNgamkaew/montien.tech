@@ -13,6 +13,30 @@ final class DashboardController
         $user = require_auth();
         $level = self::ROLE_LEVELS[$user['role']] ?? null;
 
+        if ($user['role'] === 'user') {
+            $db = Database::connection();
+            $stmt = $db->prepare('
+                SELECT r.*, v.vehicle_name, v.license_plate
+                FROM requisitions r
+                LEFT JOIN vehicles v ON v.id = r.requested_vehicle_id
+                WHERE r.user_id = :user_id OR r.requester_name = :full_name
+                ORDER BY r.created_at DESC
+            ');
+            $stmt->execute([
+                'user_id' => $user['id'],
+                'full_name' => $user['full_name']
+            ]);
+            $myRequisitions = $stmt->fetchAll();
+
+            render('public/dashboard', [
+                'title' => 'แดชบอร์ดคำขอของฉัน',
+                'user' => $user,
+                'myRequisitions' => $myRequisitions,
+                'statusLabels' => $this->statusLabels()
+            ]);
+            return;
+        }
+
         render('admin/dashboard', [
             'title'               => 'แดชบอร์ดผู้อนุมัติ',
             'user'                => $user,
@@ -422,5 +446,60 @@ final class DashboardController
             'engine_oil' => 'น้ำมันเครื่อง',
             'other' => 'น้ำมันเชื้อเพลิงประเภทอื่น',
         ][$fuelType ?? ''] ?? '-';
+    }
+
+    public function settingsForm(array $errors = []): void
+    {
+        $user = require_auth();
+        if ($user['role'] !== 'admin') {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">เฉพาะผู้ดูแลระบบสูงสุดที่เข้าจัดการตรงนี้ได้</h1>', 403);
+            return;
+        }
+
+        $sysSet = system_settings();
+
+        render('admin/settings', [
+            'title' => 'ตั้งค่าระบบ',
+            'user' => $user,
+            'settings' => $sysSet,
+            'errors' => $errors
+        ]);
+    }
+
+    public function saveSettings(): void
+    {
+        verify_csrf();
+        $user = require_auth();
+        if ($user['role'] !== 'admin') {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">เฉพาะผู้ดูแลระบบสูงสุดที่เข้าจัดการตรงนี้ได้</h1>', 403);
+            return;
+        }
+
+        $systemName = trim($_POST['system_name'] ?? '');
+        $themeColor = trim($_POST['theme_color'] ?? 'rose');
+
+        $errors = [];
+        if ($systemName === '') {
+            $errors['system_name'] = 'กรุณาระบุชื่อระบบ';
+        }
+
+        $allowedThemes = ['rose', 'indigo', 'emerald', 'sky', 'amber', 'slate'];
+        if (!in_array($themeColor, $allowedThemes)) {
+            $themeColor = 'rose';
+        }
+
+        if ($errors !== []) {
+            $this->settingsForm($errors);
+            return;
+        }
+
+        $db = Database::connection();
+        $stmt = $db->prepare('UPDATE system_settings SET system_name = :name, theme_color = :theme WHERE id = 1');
+        $stmt->execute([
+            'name' => $systemName,
+            'theme' => $themeColor
+        ]);
+
+        redirect('/dashboard/settings?saved=success');
     }
 }

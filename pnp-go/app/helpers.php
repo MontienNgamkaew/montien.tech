@@ -134,3 +134,47 @@ function redirect(string $path): void
     header('Location: ' . $basePath . '/' . ltrim($path, '/'));
     exit;
 }
+
+function system_settings(): array
+{
+    static $settings = null;
+    if ($settings !== null) {
+        return $settings;
+    }
+    
+    try {
+        $db = Database::connection();
+        $stmt = $db->query('SELECT * FROM system_settings WHERE id = 1 LIMIT 1');
+        $data = $stmt->fetch();
+        if ($data) {
+            $settings = $data;
+        } else {
+            $settings = ['system_name' => 'PNP Go', 'theme_color' => 'rose'];
+        }
+    } catch (Throwable $e) {
+        $settings = ['system_name' => 'PNP Go', 'theme_color' => 'rose'];
+    }
+    return $settings;
+}
+
+function college_settings(): array
+{
+    static $collegeSettings = null;
+    if ($collegeSettings !== null) {
+        return $collegeSettings;
+    }
+    
+    try {
+        $db = Database::portalConnection();
+        $stmt = $db->query('SELECT * FROM college_settings WHERE id = 1 LIMIT 1');
+        $data = $stmt->fetch();
+        if ($data) {
+            $collegeSettings = $data;
+        } else {
+            $collegeSettings = ['college_name' => 'วิทยาลัยการอาชีพพนมไพร', 'logo_path' => ''];
+        }
+    } catch (Throwable $e) {
+        $collegeSettings = ['college_name' => 'วิทยาลัยการอาชีพพนมไพร', 'logo_path' => ''];
+    }
+    return $collegeSettings;
+}

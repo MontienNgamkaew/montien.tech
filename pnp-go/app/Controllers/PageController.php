@@ -4,6 +4,10 @@ final class PageController
 {
     public function home(): void
     {
+        if (isset($_SESSION['user_id'])) {
+            redirect('/dashboard');
+            return;
+        }
         render('home', [
             'title' => 'หน้าแรก',
         ]);

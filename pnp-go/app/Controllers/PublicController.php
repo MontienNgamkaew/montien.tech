@@ -41,14 +41,14 @@ final class PublicController
         $fuelNotRequested = !$fuelPurchaseRequested;
 
         $sql = 'INSERT INTO requisitions (
-            tracking_id, requester_name, requester_position, destination,
+            user_id, tracking_id, requester_name, requester_position, destination,
             destination_subdistrict, destination_district, destination_province,
             distance_km, odometer_before, travel_start_at, travel_end_at,
             purpose, passenger_count, passenger_names, requested_vehicle_id,
             fuel_requested, fuel_purchase_requested, fuel_not_requested,
             fuel_type, fuel_quantity, fuel_unit, fuel_total_amount, status, current_level
         ) VALUES (
-            :tracking_id, :requester_name, :requester_position, :destination,
+            :user_id, :tracking_id, :requester_name, :requester_position, :destination,
             :destination_subdistrict, :destination_district, :destination_province,
             :distance_km, :odometer_before, :travel_start_at, :travel_end_at,
             :purpose, :passenger_count, :passenger_names, :requested_vehicle_id,
@@ -62,6 +62,7 @@ final class PublicController
         try {
             $statement = $db->prepare($sql);
             $statement->execute([
+                'user_id' => $user['id'] ?: null,
                 'tracking_id' => $trackingId,
                 'requester_name' => $data['requester_name'],
                 'requester_position' => $data['requester_position'],
@@ -312,7 +313,7 @@ final class PublicController
     private function generateTrackingId(): string
     {
         $db      = Database::connection();
-        $dateStr = date('dmy'); // เช่น 150569
+        $dateStr = date('ymd'); // เช่น 260601 (YYMMDD)
 
         // นับจำนวนคำขอที่ออกในวันนี้เพื่อคำนวณลำดับ
         $stmt = $db->prepare(
@@ -323,7 +324,7 @@ final class PublicController
 
         // ตรวจสอบซ้ำและเพิ่มลำดับหากชนกัน
         do {
-            $trackingId = str_pad((string) $seq, 3, '0', STR_PAD_LEFT) . $dateStr;
+            $trackingId = 'GO-' . $dateStr . '-' . str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
             $check = $db->prepare('SELECT COUNT(*) FROM requisitions WHERE tracking_id = :id');
             $check->execute(['id' => $trackingId]);
             if ((int) $check->fetchColumn() === 0) break;

@@ -1,24 +1,180 @@
 <?php
 $mainClass = 'home-wrap';
+$sysSet = system_settings();
+$colSet = college_settings();
+
+$systemName = $sysSet['system_name'] ?? 'PNP Go';
+$collegeName = $colSet['college_name'] ?? 'วิทยาลัยการอาชีพพนมไพร';
+$logoPath = $colSet['logo_path'] ?? '';
+$logoSrc = !empty($logoPath) ? (central_portal_base() . '/' . $logoPath) : (config('app')['base_path'] . '/public/assets/logo.png');
+
 ob_start();
 ?>
+
+<style>
+/* Modern premium glassmorphism styling matching PNP Man */
+body {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+}
+
+.home-container {
+    max-width: 880px;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.05);
+    margin: 20px auto 40px;
+    transition: all 0.3s ease;
+}
+
+.home-brand {
+    background: var(--theme-gradient);
+    color: white;
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 35px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.home-brand-icon-wrapper {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.home-brand-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    font-family: 'Sarabun', sans-serif;
+}
+
+.home-brand-sub {
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.action-card {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: 18px;
+    padding: 24px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.action-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08) !important;
+    border-color: var(--theme-primary) !important;
+    background: #ffffff !important;
+}
+
+.action-primary {
+    border-top: 4px solid var(--theme-primary) !important;
+}
+
+.action-icon-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.action-card:hover .action-icon-wrap {
+    transform: scale(1.1);
+}
+
+.action-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+
+.action-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.home-note {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #475569;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+}
+
+.home-note strong {
+    color: var(--theme-primary);
+}
+
+@media (max-width: 576px) {
+    .home-container {
+        padding: 24px 16px;
+        margin: 10px;
+    }
+    .home-brand {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    .action-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .action-card {
+        padding: 16px 12px;
+    }
+}
+</style>
 
 <div class="home-container">
 
     <!-- Header Brand -->
     <div class="home-brand">
-        <div class="home-brand-icon">
-            <svg viewBox="0 0 40 40" fill="none" width="30" height="30">
-                <rect width="40" height="40" rx="10" fill="rgba(255,255,255,0.15)"/>
-                <path d="M12 28h16l-2-6a2 2 0 00-1.9-1.4h-8.2A2 2 0 0014 22l-2 6Z" fill="white"/>
-                <circle cx="16" cy="30" r="2" fill="white"/>
-                <circle cx="24" cy="30" r="2" fill="white"/>
-                <path d="M20 10v6M17 13h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            </svg>
+        <div class="home-brand-icon-wrapper">
+            <img src="<?= e($logoSrc) ?>" alt="<?= e($collegeName) ?>" width="52" height="52" style="object-fit: contain;">
         </div>
         <div>
-            <div class="home-brand-title">PNP Go</div>
-            <div class="home-brand-sub">ระบบขออนุญาตใช้รถยนต์และสั่งซื้อน้ำมันเชื้อเพลิง</div>
+            <div class="home-brand-title"><?= e($systemName) ?></div>
+            <div class="home-brand-sub">ศูนย์รวมการจองยานพาหนะส่วนกลางและบริหารน้ำมันเชื้อเพลิง | <?= e($collegeName) ?></div>
         </div>
     </div>
 
@@ -26,18 +182,18 @@ ob_start();
     <div class="action-grid">
 
         <a href="<?= e(config('app')['base_path']) ?>/request" class="action-card action-primary" id="btn-request">
-            <div class="action-icon-wrap" style="background:#dbeafe;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" width="32" height="32">
+            <div class="action-icon-wrap" style="background: rgba(235, 245, 255, 0.8);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--theme-primary)" stroke-width="2" width="32" height="32">
                     <rect x="3" y="4" width="18" height="16" rx="2"/>
                     <path d="M8 9h8M8 12h8M8 15h5" stroke-linecap="round"/>
                 </svg>
             </div>
             <div class="action-label">ยื่นคำขอใช้รถ</div>
-            <div class="action-desc">กรอกแบบฟอร์มออนไลน์</div>
+            <div class="action-desc">เขียนคำขอและจองรถผ่านระบบ</div>
         </a>
 
         <a href="<?= e(config('app')['base_path']) ?>/status" class="action-card" id="btn-status">
-            <div class="action-icon-wrap" style="background:#d1fae5;">
+            <div class="action-icon-wrap" style="background: rgba(209, 250, 229, 0.8);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" width="32" height="32">
                     <circle cx="11" cy="11" r="7"/>
                     <path d="m21 21-3.5-3.5" stroke-linecap="round"/>
@@ -45,45 +201,40 @@ ob_start();
                 </svg>
             </div>
             <div class="action-label">ตรวจสอบสถานะ</div>
-            <div class="action-desc">ค้นหาด้วย Tracking ID</div>
+            <div class="action-desc">ค้นหารายละเอียดคิวคำขอจอง</div>
         </a>
 
         <a href="<?= e(config('app')['base_path']) ?>/login" class="action-card" id="btn-login">
-            <div class="action-icon-wrap" style="background:#ede9fe;">
+            <div class="action-icon-wrap" style="background: rgba(237, 233, 254, 0.8);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" width="32" height="32">
                     <circle cx="12" cy="8" r="4"/>
                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round"/>
                 </svg>
             </div>
             <div class="action-label">เข้าสู่ระบบ</div>
-            <div class="action-desc">สำหรับผู้อนุมัติ</div>
+            <div class="action-desc">ตรวจสอบคิวงานและอนุมัติ</div>
         </a>
 
         <a href="<?= e(config('app')['base_path']) ?>/vehicles" class="action-card" id="btn-vehicles">
-            <div class="action-icon-wrap" style="background:#fef9c3;">
-                <svg viewBox="0 0 24 24" fill="none" width="32" height="32">
-                    <rect x="2" y="10" width="20" height="9" rx="2.5" fill="#fbbf24" opacity=".3"/>
-                    <path d="M5 10 C5 10 7 5 10 5 L14 5 C17 5 19 10 19 10" fill="#fbbf24" opacity=".7"/>
-                    <rect x="2" y="14" width="20" height="5" rx="2" fill="#f59e0b" opacity=".5"/>
-                    <rect x="3" y="6" width="6" height="5" rx="1" fill="#fef08a" opacity=".9"/>
-                    <rect x="15" y="6" width="6" height="5" rx="1" fill="#fef08a" opacity=".9"/>
-                    <circle cx="7" cy="19" r="2.5" fill="#92400e"/>
-                    <circle cx="17" cy="19" r="2.5" fill="#92400e"/>
-                    <circle cx="7" cy="19" r="1" fill="#d97706"/>
-                    <circle cx="17" cy="19" r="1" fill="#d97706"/>
-                    <circle cx="20" cy="11" r="1.5" fill="#86efac"/>
+            <div class="action-icon-wrap" style="background: rgba(254, 249, 195, 0.8);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" width="32" height="32">
+                    <rect x="2" y="10" width="20" height="9" rx="2"/>
+                    <circle cx="6.5" cy="19" r="2.5"/>
+                    <circle cx="17.5" cy="19" r="2.5"/>
+                    <path d="M10 5h4l4 5H6l4-5z"/>
                 </svg>
             </div>
             <div class="action-label">สถานะรถยนต์</div>
-            <div class="action-desc">ดูว่าคันไหนว่าง/ใช้งาน</div>
+            <div class="action-desc">กระดานเช็คคิวและสถิติรถว่าง</div>
         </a>
 
     </div><!-- end action-grid -->
+
     <div class="home-note">
-        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="color:#6b7280;flex-shrink:0;margin-top:2px;">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" style="color: var(--theme-primary); flex-shrink:0; margin-top:2px;">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
         </svg>
-        <span>หลังยื่นคำขอ ระบบจะออก <strong>Tracking ID</strong> ให้ใช้ตรวจสอบสถานะการอนุมัติได้ทุกเวลา</span>
+        <span>หลังล็อกอินหรือเขียนคำขอจอง ระบบจะออกรหัส <strong>เลขที่เอกสาร (เช่น GO-260601-001)</strong> เพื่อใช้ติดตามสถานะคิวคำขอและตรวจสอบได้สะดวกรวดเร็วครับ</span>
     </div>
 
 </div>
@@ -91,3 +242,4 @@ ob_start();
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/layout.php';
+?>

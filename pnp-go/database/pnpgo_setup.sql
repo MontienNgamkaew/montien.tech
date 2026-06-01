@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
 -- 3. สร้างตาราง requisitions
 CREATE TABLE IF NOT EXISTS requisitions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
     tracking_id VARCHAR(30) NOT NULL UNIQUE,
     document_no VARCHAR(50) NULL,
     requester_name VARCHAR(150) NOT NULL,
@@ -92,6 +93,9 @@ CREATE TABLE IF NOT EXISTS requisitions (
     reported_at DATETIME NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_requisitions_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_requisitions_requested_vehicle
         FOREIGN KEY (requested_vehicle_id) REFERENCES vehicles(id)
         ON UPDATE CASCADE ON DELETE SET NULL,
@@ -235,3 +239,12 @@ ON DUPLICATE KEY UPDATE
     address = VALUES(address),
     phone = VALUES(phone),
     is_default = VALUES(is_default);
+
+-- 8. สร้างตาราง system_settings (ค่าคอนฟิกธีมสีและชื่อระบบขอรถย่อย)
+CREATE TABLE IF NOT EXISTS system_settings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_name VARCHAR(150) NOT NULL DEFAULT 'PNP Go',
+    theme_color VARCHAR(50) NOT NULL DEFAULT 'rose'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO system_settings (id, system_name, theme_color) VALUES (1, 'PNP Go', 'rose');

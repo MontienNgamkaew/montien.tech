@@ -1,6 +1,14 @@
 <?php
 $app = config('app');
-$pageTitle = isset($title) ? $title . ' | ' . $app['name'] : $app['name'];
+$sysSet = system_settings();
+$colSet = college_settings();
+
+$themeColor = $sysSet['theme_color'] ?? 'rose';
+$systemName = $sysSet['system_name'] ?? 'PNP Go';
+$collegeName = $colSet['college_name'] ?? 'วิทยาลัยการอาชีพพนมไพร';
+$logoPath = $colSet['logo_path'] ?? '';
+
+$pageTitle = isset($title) ? $title . ' | ' . $systemName : $systemName;
 $assetVersion = file_exists(__DIR__ . '/../../public/assets/app.css') ? filemtime(__DIR__ . '/../../public/assets/app.css') : time();
 $mainClass = isset($mainClass) ? $mainClass : 'container app-shell py-4 py-md-5';
 
@@ -11,6 +19,49 @@ function central_portal_base(): string
     $isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']);
     return $isLocal ? '/pnp-portal' : '';
 }
+
+$logoSrc = !empty($logoPath) ? (central_portal_base() . '/' . $logoPath) : ($app['base_path'] . '/public/assets/logo.png');
+
+$themeVariables = [
+    'rose' => [
+        'primary' => '#8b1a2b',
+        'primary_gradient' => 'linear-gradient(135deg, #6b1525 0%, #8b1a2b 40%, #7a1827 70%, #5c1220 100%)',
+        'accent' => '#e8a0a0',
+        'accent_hover' => '#c0494e'
+    ],
+    'indigo' => [
+        'primary' => '#4f46e5',
+        'primary_gradient' => 'linear-gradient(135deg, #4338ca 0%, #4f46e5 40%, #3730a3 70%, #1e1b4b 100%)',
+        'accent' => '#c7d2fe',
+        'accent_hover' => '#818cf8'
+    ],
+    'emerald' => [
+        'primary' => '#059669',
+        'primary_gradient' => 'linear-gradient(135deg, #047857 0%, #059669 40%, #065f46 70%, #064e3b 100%)',
+        'accent' => '#a7f3d0',
+        'accent_hover' => '#34d399'
+    ],
+    'sky' => [
+        'primary' => '#0284c7',
+        'primary_gradient' => 'linear-gradient(135deg, #0369a1 0%, #0284c7 40%, #075985 70%, #0c4a6e 100%)',
+        'accent' => '#bae6fd',
+        'accent_hover' => '#38bdf8'
+    ],
+    'amber' => [
+        'primary' => '#d97706',
+        'primary_gradient' => 'linear-gradient(135deg, #b45309 0%, #d97706 40%, #92400e 70%, #78350f 100%)',
+        'accent' => '#fde68a',
+        'accent_hover' => '#fbbf24'
+    ],
+    'slate' => [
+        'primary' => '#475569',
+        'primary_gradient' => 'linear-gradient(135deg, #334155 0%, #475569 40%, #1e293b 70%, #0f172a 100%)',
+        'accent' => '#cbd5e1',
+        'accent_hover' => '#94a3b8'
+    ]
+];
+
+$activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
 ?>
 <!doctype html>
 <html lang="th">
@@ -18,12 +69,62 @@ function central_portal_base(): string
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($pageTitle) ?></title>
-    <meta name="description" content="ระบบขอใช้รถยนต์ราชการและน้ำมันเชื้อเพลิง วิทยาลัยการอาชีพพนมไพร">
+    <meta name="description" content="<?= e($systemName) ?> - <?= e($collegeName) ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= e($app['base_path']) ?>/public/assets/app.css?v=<?= e((string) $assetVersion) ?>" rel="stylesheet">
     <link href="<?= e($app['base_path']) ?>/public/assets/home.css?v=<?= e((string) $assetVersion) ?>" rel="stylesheet">
+    <style>
+    :root {
+        --theme-primary: <?= $activeVars['primary'] ?>;
+        --theme-gradient: <?= $activeVars['primary_gradient'] ?>;
+        --theme-accent: <?= $activeVars['accent'] ?>;
+        --theme-accent-hover: <?= $activeVars['accent_hover'] ?>;
+    }
+    
+    /* Override primary brand/button styles dynamically */
+    .site-header {
+        background: var(--theme-gradient) !important;
+    }
+    .btn-primary, .action-primary, .status-active {
+        background-color: var(--theme-primary) !important;
+        border-color: var(--theme-primary) !important;
+    }
+    .btn-primary:hover {
+        background-color: var(--theme-accent-hover) !important;
+        border-color: var(--theme-accent-hover) !important;
+    }
+    .btn-outline-primary {
+        color: var(--theme-primary) !important;
+        border-color: var(--theme-primary) !important;
+    }
+    .btn-outline-primary:hover {
+        background-color: var(--theme-primary) !important;
+        color: #fff !important;
+    }
+    .text-primary, .brand-link:hover .brand-name {
+        color: var(--theme-primary) !important;
+    }
+    .brand-link {
+        text-decoration: none;
+    }
+    a {
+        color: var(--theme-primary);
+    }
+    a:hover {
+        color: var(--theme-accent-hover);
+    }
+    .stat-value {
+        color: var(--theme-primary) !important;
+    }
+    .nav-item-btn {
+        background-color: var(--theme-primary) !important;
+    }
+    .nav-item-btn:hover {
+        background-color: var(--theme-accent-hover) !important;
+    }
+    </style>
 </head>
 <body>
 
@@ -31,11 +132,11 @@ function central_portal_base(): string
         <div class="header-inner">
             <a class="brand-link" href="<?= e($app['base_path']) ?>/">
                 <div class="brand-logo-img">
-                    <img src="<?= e($app['base_path']) ?>/public/assets/logo.png" alt="วิทยาลัยการอาชีพพนมไพร" width="44" height="44">
+                    <img src="<?= e($logoSrc) ?>" alt="<?= e($collegeName) ?>" width="44" height="44">
                 </div>
                 <span class="brand-text">
-                    <span class="brand-name">ระบบขออนุญาตใช้รถยนต์/สั่งซื้อน้ำมันเชื้อเพลิง</span>
-                    <span class="brand-org">วิทยาลัยการอาชีพพนมไพร</span>
+                    <span class="brand-name"><?= e($systemName) ?></span>
+                    <span class="brand-org"><?= e($collegeName) ?></span>
                 </span>
             </a>
 

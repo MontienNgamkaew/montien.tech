@@ -9,6 +9,9 @@
         <a class="btn btn-outline-secondary btn-sm" href="<?= e(config('app')['base_path']) ?>/manage/vehicles">🚗 จัดการรถ</a>
         <a class="btn btn-outline-secondary btn-sm" href="<?= e(config('app')['base_path']) ?>/vendors">⛽ ร้านน้ำมัน</a>
         <?php endif; ?>
+        <?php if ($user['role'] === 'admin'): ?>
+        <a class="btn btn-outline-secondary btn-sm" href="<?= e(config('app')['base_path']) ?>/dashboard/settings">⚙️ ตั้งค่าระบบ</a>
+        <?php endif; ?>
         <a class="btn btn-outline-success btn-sm" href="<?= e(config('app')['base_path']) ?>/report">📊 รายงาน</a>
         <a class="btn btn-outline-primary" href="<?= e(config('app')['base_path']) ?>/profile">โปรไฟล์/ลายเซ็น</a>
         <form method="post" action="<?= e(config('app')['base_path']) ?>/logout" data-confirm data-confirm-title="ออกจากระบบ" data-confirm-text="ต้องการออกจากระบบผู้อนุมัติหรือไม่" data-confirm-button="ออกจากระบบ" data-confirm-icon="warning">
