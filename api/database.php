@@ -140,12 +140,10 @@ try {
         department_id INT NULL,
         job_id INT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        head_job_id INT GENERATED ALWAYS AS (IF(org_position = 'หัวหน้างาน', job_id, NULL)) STORED,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
         FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL,
-        UNIQUE KEY unique_user_assignment (user_id, org_position, department_id, job_id),
-        UNIQUE KEY unique_head_per_job (head_job_id)
+        UNIQUE KEY unique_user_assignment (user_id, org_position, department_id, job_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // 9. ทำการ Seed ข้อมูลเบื้องต้นลงในตารางฝ่ายและตารางงาน (หากยังไม่มีข้อมูล)
