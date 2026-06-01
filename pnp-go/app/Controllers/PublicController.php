@@ -123,7 +123,7 @@ final class PublicController
         $id = (int)($_GET['id'] ?? 0);
 
         if ($id <= 0) {
-            view('ไม่พบรายการ', '<h1 class="h4">ระบุรหัสคำขอไม่ถูกต้อง</h1>', 400);
+            redirect('/dashboard');
             return;
         }
 

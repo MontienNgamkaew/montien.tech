@@ -145,7 +145,11 @@ $activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
                 <a class="nav-item fw-medium" href="<?= e($app['base_path']) ?>/request">ยื่นคำขอ</a>
                 <a class="nav-item fw-medium" href="<?= e($app['base_path']) ?>/status">ตรวจสอบสถานะ</a>
                 <?php if ($user): ?>
-                    <a class="nav-item fw-medium text-primary" href="<?= e($app['base_path']) ?>/dashboard">แดชบอร์ดอนุมัติ</a>
+                    <?php if ($user['role'] === 'user'): ?>
+                        <a class="nav-item fw-medium text-primary" href="<?= e($app['base_path']) ?>/dashboard">แดชบอร์ดของฉัน</a>
+                    <?php else: ?>
+                        <a class="nav-item fw-medium text-primary" href="<?= e($app['base_path']) ?>/dashboard">แดชบอร์ดอนุมัติ</a>
+                    <?php endif; ?>
                     <div class="user-profile-menu d-inline-flex align-items-center gap-2 border-start ps-3 ms-2">
                         <?php if ($user['avatar_path']): ?>
                             <img src="<?= e(central_portal_base() . '/' . $user['avatar_path']) ?>" class="rounded-circle border" width="32" height="32" alt="avatar" style="object-fit: cover;">
@@ -175,7 +179,11 @@ $activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
             <a href="<?= e($app['base_path']) ?>/request">ยื่นคำขอใช้รถ</a>
             <a href="<?= e($app['base_path']) ?>/status">ตรวจสอบสถานะ</a>
             <?php if ($user): ?>
-                <a href="<?= e($app['base_path']) ?>/dashboard">แดชบอร์ดอนุมัติ</a>
+                <?php if ($user['role'] === 'user'): ?>
+                    <a href="<?= e($app['base_path']) ?>/dashboard">แดชบอร์ดของฉัน</a>
+                <?php else: ?>
+                    <a href="<?= e($app['base_path']) ?>/dashboard">แดชบอร์ดอนุมัติ</a>
+                <?php endif; ?>
                 <div class="p-3 border-top mt-2">
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <?php if ($user['avatar_path']): ?>

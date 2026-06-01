@@ -16,9 +16,12 @@ final class DashboardController
         if ($user['role'] === 'user') {
             $db = Database::connection();
             $stmt = $db->prepare('
-                SELECT r.*, v.vehicle_name, v.license_plate
+                SELECT r.*, 
+                       COALESCE(va.vehicle_name, vr.vehicle_name, \'ไม่ได้ระบุเจาะจง\') AS vehicle_name,
+                       va.license_plate
                 FROM requisitions r
-                LEFT JOIN vehicles v ON v.id = r.requested_vehicle_id
+                LEFT JOIN vehicles vr ON vr.id = r.requested_vehicle_id
+                LEFT JOIN vehicles va ON va.id = r.assigned_vehicle_id
                 WHERE r.user_id = :user_id OR r.requester_name = :full_name
                 ORDER BY r.created_at DESC
             ');
