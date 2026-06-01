@@ -32,7 +32,8 @@ final class DashboardController
                 'title' => 'แดชบอร์ดคำขอของฉัน',
                 'user' => $user,
                 'myRequisitions' => $myRequisitions,
-                'statusLabels' => $this->statusLabels()
+                'statusLabels' => $this->statusLabels(),
+                'vehicleStatus' => $this->vehicleStatus()
             ]);
             return;
         }

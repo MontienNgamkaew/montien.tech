@@ -192,7 +192,7 @@ body {
             <div class="action-desc">เขียนคำขอและจองรถผ่านระบบ</div>
         </a>
 
-        <a href="<?= e(config('app')['base_path']) ?>/status" class="action-card" id="btn-status">
+        <a href="<?= e(config('app')['base_path']) ?>/dashboard" class="action-card" id="btn-status">
             <div class="action-icon-wrap" style="background: rgba(209, 250, 229, 0.8);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" width="32" height="32">
                     <circle cx="11" cy="11" r="7"/>
@@ -201,7 +201,7 @@ body {
                 </svg>
             </div>
             <div class="action-label">ตรวจสอบสถานะ</div>
-            <div class="action-desc">ค้นหารายละเอียดคิวคำขอจอง</div>
+            <div class="action-desc">ประวัติจองและติดตามขั้นตอนอนุมัติ</div>
         </a>
 
         <a href="<?= e(config('app')['base_path']) ?>/login" class="action-card" id="btn-login">

@@ -42,7 +42,7 @@
             <h2 class="section-title">ข้อมูลเลขไมล์และหลักฐานรูปภาพ</h2>
             <form method="post" action="<?= e(config('app')['base_path']) ?>/report/submit" enctype="multipart/form-data" class="d-grid gap-3" data-confirm data-confirm-title="ยืนยันการส่งรายงาน" data-confirm-text="กรุณาตรวจสอบข้อมูลเลขไมล์ให้ถูกต้องก่อนยืนยัน" data-confirm-button="ส่งรายงาน">
                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                <input type="hidden" name="tracking_id" value="<?= e($requisition['tracking_id']) ?>">
+                <input type="hidden" name="id" value="<?= e($requisition['id']) ?>">
 
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -70,7 +70,7 @@
                 <hr class="my-2">
 
                 <div class="d-flex justify-content-end gap-2">
-                    <a class="btn btn-outline-secondary" href="<?= e(config('app')['base_path']) ?>/status?tracking_id=<?= urlencode($requisition['tracking_id']) ?>">ยกเลิก</a>
+                    <a class="btn btn-outline-secondary" href="<?= e(config('app')['base_path']) ?>/status?id=<?= urlencode($requisition['id']) ?>">ยกเลิก</a>
                     <button class="btn btn-primary px-4" type="submit">ส่งรายงานผล</button>
                 </div>
             </form>

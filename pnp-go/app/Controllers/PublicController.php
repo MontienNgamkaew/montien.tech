@@ -117,13 +117,42 @@ final class PublicController
         ]);
     }
 
-    public function statusForm(?array $result = null, ?string $trackingId = null, ?string $error = null): void
+    public function statusForm(): void
     {
+        $user = require_auth();
+        $id = (int)($_GET['id'] ?? 0);
+
+        if ($id <= 0) {
+            view('ไม่พบรายการ', '<h1 class="h4">ระบุรหัสคำขอไม่ถูกต้อง</h1>', 400);
+            return;
+        }
+
+        $db = Database::connection();
+        $stmt = $db->prepare('
+            SELECT r.*, v.vehicle_name, v.license_plate
+            FROM requisitions r
+            LEFT JOIN vehicles v ON v.id = r.assigned_vehicle_id
+            WHERE r.id = :id
+            LIMIT 1
+        ');
+        $stmt->execute(['id' => $id]);
+        $result = $stmt->fetch() ?: null;
+
+        if ($result === null) {
+            view('ไม่พบรายการ', '<h1 class="h4">ไม่พบคำขอที่คุณระบุ</h1>', 404);
+            return;
+        }
+
+        // Security check: regular users can only see their own requests!
+        if ($user['role'] === 'user' && (int)$result['user_id'] !== (int)$user['id']) {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์เข้าดูรายละเอียดคำขอของผู้อื่น</h1>', 403);
+            return;
+        }
+
         render('public/status', [
             'title'        => 'ตรวจสอบสถานะ',
             'result'       => $result,
-            'trackingId'   => $trackingId,
-            'error'        => $error,
+            'user'         => $user,
             'statusLabels' => $this->statusLabels(),
         ]);
     }
@@ -170,47 +199,38 @@ final class PublicController
 
     public function checkStatus(): void
     {
-        $trackingId = strtoupper(trim($_POST['tracking_id'] ?? ''));
-
-        if ($trackingId === '') {
-            $this->statusForm(null, '', 'กรุณากรอก Tracking ID');
-            return;
-        }
-
-        $statement = Database::connection()->prepare(
-            'SELECT r.*, v.vehicle_name, v.license_plate
-             FROM requisitions r
-             LEFT JOIN vehicles v ON v.id = r.assigned_vehicle_id
-             WHERE r.tracking_id = :tracking_id
-             LIMIT 1'
-        );
-        $statement->execute(['tracking_id' => $trackingId]);
-        $result = $statement->fetch() ?: null;
-
-        if ($result === null) {
-            $this->statusForm(null, $trackingId, 'ไม่พบคำขอจาก Tracking ID นี้');
-            return;
-        }
-
-        $this->statusForm($result, $trackingId);
+        // ย้ายการตรวจสอบทั้งหมดไปที่ ID-based statusForm แล้ว
+        redirect('/dashboard');
     }
 
     public function downloadPdf(): void
     {
-        $trackingId = strtoupper(trim($_GET['tracking_id'] ?? ''));
+        $user = require_auth();
+        $id = (int)($_GET['id'] ?? 0);
 
-        if ($trackingId === '') {
-            view('ไม่พบไฟล์ PDF', '<h1 class="h4">กรุณาระบุ Tracking ID</h1>', 404);
+        if ($id <= 0) {
+            view('ไม่พบไฟล์ PDF', '<h1 class="h4">กรุณาระบุรหัสคำขอที่ถูกต้อง</h1>', 400);
             return;
         }
 
         $statement = Database::connection()->prepare(
-            'SELECT id, tracking_id, status, pdf_path FROM requisitions WHERE tracking_id = :tracking_id LIMIT 1'
+            'SELECT id, user_id, tracking_id, status, pdf_path FROM requisitions WHERE id = :id LIMIT 1'
         );
-        $statement->execute(['tracking_id' => $trackingId]);
+        $statement->execute(['id' => $id]);
         $requisition = $statement->fetch();
 
-        if (!$requisition || $requisition['status'] !== 'approved') {
+        if (!$requisition) {
+            view('ไม่พบไฟล์ PDF', '<h1 class="h4">ไม่พบคำขอที่คุณระบุ</h1>', 404);
+            return;
+        }
+
+        // Security check: regular users can only download their own PDFs!
+        if ($user['role'] === 'user' && (int)$requisition['user_id'] !== (int)$user['id']) {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์ดาวน์โหลดไฟล์ PDF ของผู้อื่น</h1>', 403);
+            return;
+        }
+
+        if ($requisition['status'] !== 'approved') {
             view('ยังไม่สามารถดาวน์โหลดได้', '<h1 class="h4">คำขอยังไม่ได้รับอนุมัติสมบูรณ์</h1>', 403);
             return;
         }
@@ -372,10 +392,11 @@ final class PublicController
 
     public function reportForm(array $errors = [], array $old = []): void
     {
-        $trackingId = strtoupper(trim($_GET['tracking_id'] ?? ''));
+        $user = require_auth();
+        $id = (int)($_GET['id'] ?? 0);
 
-        if ($trackingId === '') {
-            view('ไม่พบรายการ', '<h1 class="h4">กรุณาระบุ Tracking ID</h1>', 400);
+        if ($id <= 0) {
+            view('ไม่พบรายการ', '<h1 class="h4">กรุณาระบุรหัสคำขอที่ถูกต้อง</h1>', 400);
             return;
         }
 
@@ -383,14 +404,20 @@ final class PublicController
             'SELECT r.*, v.vehicle_name, v.license_plate
              FROM requisitions r
              LEFT JOIN vehicles v ON v.id = r.assigned_vehicle_id
-             WHERE r.tracking_id = :tracking_id
+             WHERE r.id = :id
              LIMIT 1'
         );
-        $statement->execute(['tracking_id' => $trackingId]);
+        $statement->execute(['id' => $id]);
         $requisition = $statement->fetch();
 
         if (!$requisition) {
             view('ไม่พบรายการ', '<h1 class="h4">ไม่พบข้อมูลคำขอ</h1>', 404);
+            return;
+        }
+
+        // Security check: regular users can only report their own requests!
+        if ($user['role'] === 'user' && (int)$requisition['user_id'] !== (int)$user['id']) {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์ยื่นรายงานผลการเดินทางของคำขอของผู้อื่น</h1>', 403);
             return;
         }
 
@@ -400,7 +427,7 @@ final class PublicController
         }
 
         if (!empty($requisition['reported_at'])) {
-            redirect('/status?tracking_id=' . urlencode($trackingId));
+            redirect('/status?id=' . $requisition['id']);
         }
 
         render('public/report_form', [
@@ -413,15 +440,32 @@ final class PublicController
 
     public function submitReport(): void
     {
-        $trackingId = strtoupper(trim($_POST['tracking_id'] ?? ''));
+        $user = require_auth();
+        $id = (int)($_POST['id'] ?? 0);
+
+        if ($id <= 0) {
+            view('ไม่พบรายการ', '<h1 class="h4">กรุณาระบุรหัสคำขอที่ถูกต้อง</h1>', 400);
+            return;
+        }
 
         $statement = Database::connection()->prepare(
-            'SELECT * FROM requisitions WHERE tracking_id = :tracking_id LIMIT 1'
+            'SELECT * FROM requisitions WHERE id = :id LIMIT 1'
         );
-        $statement->execute(['tracking_id' => $trackingId]);
+        $statement->execute(['id' => $id]);
         $requisition = $statement->fetch();
 
-        if (!$requisition || $requisition['status'] !== 'approved' || !empty($requisition['reported_at'])) {
+        if (!$requisition) {
+            view('ไม่พบรายการ', '<h1 class="h4">ไม่พบข้อมูลคำขอ</h1>', 404);
+            return;
+        }
+
+        // Security check: regular users can only report their own requests!
+        if ($user['role'] === 'user' && (int)$requisition['user_id'] !== (int)$user['id']) {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์ยื่นรายงานผลการเดินทางของคำขอของผู้อื่น</h1>', 403);
+            return;
+        }
+
+        if ($requisition['status'] !== 'approved' || !empty($requisition['reported_at'])) {
             view('คำขอไม่ถูกต้อง', '<h1 class="h4">คำขอไม่ถูกต้องหรือได้รับการรายงานแล้ว</h1>', 400);
             return;
         }
@@ -469,7 +513,7 @@ final class PublicController
                     mkdir($targetDir, 0777, true);
                 }
                 $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                $fileName = 'report_' . $trackingId . '_' . time() . '.' . $ext;
+                $fileName = 'report_' . $requisition['tracking_id'] . '_' . time() . '.' . $ext;
                 $photoPath = 'storage/reports/' . $fileName;
 
                 if (!move_uploaded_file($file['tmp_name'], dirname(__DIR__, 2) . '/' . $photoPath)) {
@@ -502,6 +546,6 @@ final class PublicController
             'id' => $requisition['id'],
         ]);
 
-        redirect('/status?tracking_id=' . urlencode($trackingId) . '&reported=success');
+        redirect('/status?id=' . $requisition['id'] . '&reported=success');
     }
 }

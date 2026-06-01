@@ -265,66 +265,7 @@
     <?php endif; ?>
 </section>
 
-<div class="row g-3">
-    <div class="col-lg-6">
-        <section class="form-section h-100">
-            <h2 class="section-title">สถิติการใช้รถ</h2>
-            <?php if ($vehicleStats === []): ?>
-                <div class="text-secondary">ยังไม่มีข้อมูล</div>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle">
-                        <thead>
-                            <tr>
-                                <th>รถ</th>
-                                <th class="text-end">จำนวนคำขอ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($vehicleStats as $stat): ?>
-                                <tr>
-                                    <td><?= e($stat['vehicle_name'] . ' - ' . $stat['license_plate']) ?></td>
-                                    <td class="text-end fw-semibold"><?= e((string) $stat['total']) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </section>
-    </div>
-    <div class="col-lg-6">
-        <section class="form-section h-100">
-            <h2 class="section-title">สรุปน้ำมันรายเดือน</h2>
-            <?php if ($fuelSummary === []): ?>
-                <div class="text-secondary">ยังไม่มีข้อมูล</div>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle">
-                        <thead>
-                            <tr>
-                                <th>เดือน</th>
-                                <th>ชนิดน้ำมัน</th>
-                                <th class="text-end">จำนวนคำขอ</th>
-                                <th class="text-end">จำนวนเงินรวม</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($fuelSummary as $fuel): ?>
-                                <tr>
-                                    <td><?= e($fuel['month_key']) ?></td>
-                                    <td><?= e(DashboardController::fuelTypeLabel($fuel['fuel_type'] ?? null)) ?></td>
-                                    <td class="text-end"><?= e((string) $fuel['total_requests']) ?></td>
-                                    <td class="text-end fw-semibold"><?= e(number_format((float) $fuel['total_amount'], 2)) ?> บาท</td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </section>
-    </div>
-</div>
+
 <?php
 $content = ob_get_clean();
 require dirname(__DIR__) . '/layout.php';

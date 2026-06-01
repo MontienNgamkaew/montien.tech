@@ -4,7 +4,12 @@ final class ReportController
 {
     public function index(): void
     {
-        require_auth();
+        $user = require_auth();
+
+        if ($user['role'] === 'user') {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์เข้าถึงหน้ารายงานประจำเดือนและสถิติภาพรวม</h1>', 403);
+            return;
+        }
 
         $month = $_GET['month'] ?? date('Y-m');
         // Validate format YYYY-MM
