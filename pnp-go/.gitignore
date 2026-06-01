@@ -1,0 +1,31 @@
+# === Composer ===
+/vendor/
+composer.phar
+
+# === Storage (sessions, signatures, PDFs - ข้อมูลส่วนตัว) ===
+/storage/sessions/
+/storage/signatures/
+/storage/pdfs/
+/storage/mpdf-temp/
+/storage/*.log
+/storage/*.err
+
+# === Config ที่มีข้อมูลสำคัญ (ถ้ามี .env ใช้ในอนาคต) ===
+.env
+.env.*
+config/database.local.php
+
+# === ไฟล์ทดสอบ / ชั่วคราว ===
+test.php
+scripts/fix_vendor_charset.php
+
+# === OS / Editor ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# === Log ===
+*.log

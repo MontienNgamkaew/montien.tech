@@ -1,0 +1,16 @@
+/* app.css — font-face เดิม + override ที่จำเป็น */
+@font-face {
+    font-family: "THSarabunNew";
+    src: url("/carrequest/storage/fonts/THSarabunNew.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "THSarabunNew";
+    src: url("/carrequest/storage/fonts/THSarabunNew-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+/* Remaining styles handled by home.css */

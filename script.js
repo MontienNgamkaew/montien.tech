@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ลิงก์ระบบย่อยต้นฉบับดึงจาก Git
     const appLinks = {
-        'pnp-go': { link: document.getElementById('app-link-pnp-go'), pill: document.getElementById('role-pill-pnp-go'), base: 'https://pnp-go.montien.tech' },
+        'pnp-go': { link: document.getElementById('app-link-pnp-go'), pill: document.getElementById('role-pill-pnp-go'), base: './pnp-go/sso.php' },
         'pnp-man': { link: document.getElementById('app-link-pnp-man'), pill: document.getElementById('role-pill-pnp-man'), base: './pnpman/' },
         'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: 'https://pnp-edu.montien.tech' }
     };
