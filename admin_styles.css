@@ -452,7 +452,53 @@ body.light-theme .btn-add-user:hover {
 }
 
 .admin-users-table {
-    min-width: 1200px;
+    width: 100% !important;
+    min-width: 100% !important;
+    table-layout: fixed !important;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+    padding: 8px 6px !important; /* snuggier horizontal padding */
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+}
+
+/* Enforce compact exact column widths */
+.admin-users-table th:nth-child(1),
+.admin-users-table td:nth-child(1) {
+    width: 45px !important;
+    text-align: center !important;
+}
+.admin-users-table th:nth-child(2),
+.admin-users-table td:nth-child(2) {
+    width: 105px !important;
+}
+.admin-users-table th:nth-child(3),
+.admin-users-table td:nth-child(3) {
+    width: 135px !important;
+}
+.admin-users-table th:nth-child(4),
+.admin-users-table td:nth-child(4) {
+    width: 95px !important;
+}
+.admin-users-table th:nth-child(5),
+.admin-users-table td:nth-child(5) {
+    width: 65px !important; /* Shrunk from 75px */
+}
+.admin-users-table th:nth-child(6),
+.admin-users-table td:nth-child(6),
+.admin-users-table th:nth-child(7),
+.admin-users-table td:nth-child(7),
+.admin-users-table th:nth-child(8),
+.admin-users-table td:nth-child(8) {
+    width: 74px !important; /* Shrunk from 82px */
+    text-align: center !important;
+}
+.admin-users-table th:nth-child(9),
+.admin-users-table td:nth-child(9) {
+    width: 125px !important;
 }
 
 /* Avatar in table */
@@ -483,14 +529,14 @@ body.light-theme .btn-add-user:hover {
 
 /* Status Badges */
 .status-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
+    padding: 2px 6px !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
     font-weight: 700;
     font-family: var(--font-heading);
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 3px !important;
     white-space: nowrap;
 }
 
@@ -502,8 +548,8 @@ body.light-theme .btn-add-user:hover {
 
 .status-badge-active::before {
     content: '';
-    width: 6px;
-    height: 6px;
+    width: 4px !important;
+    height: 4px !important;
     border-radius: 50%;
     background: #2ecc71;
     animation: pulseGlow 2s infinite;
@@ -517,8 +563,8 @@ body.light-theme .btn-add-user:hover {
 
 .status-badge-suspended::before {
     content: '';
-    width: 6px;
-    height: 6px;
+    width: 4px !important;
+    height: 4px !important;
     border-radius: 50%;
     background: #ff4d4d;
 }
@@ -526,21 +572,22 @@ body.light-theme .btn-add-user:hover {
 /* Action Buttons */
 .action-btns {
     display: flex;
-    gap: 6px;
+    gap: 4px !important;
     align-items: center;
+    justify-content: center !important;
 }
 
 .action-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 27px !important;
+    height: 27px !important;
+    border-radius: 6px !important;
     border: 1px solid var(--border-color);
     background: rgba(255, 255, 255, 0.03);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 11px !important;
     transition: all 0.25s ease;
     position: relative;
     overflow: hidden;
@@ -554,7 +601,7 @@ body.light-theme .action-btn {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 10px;
+    border-radius: 6px !important;
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -1165,7 +1212,37 @@ body.light-theme .btn-submit-form {
    TABLE INLINE ROLE SELECTOR (in-table)
    ========================================== */
 .admin-users-table .admin-role-selector {
-    min-width: 120px;
+    min-width: 68px !important;
+    max-width: 72px !important;
+    font-size: 10.5px !important;
+    padding: 1px 2px !important;
+    height: 22px !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+}
+
+/* ==========================================
+   SORTABLE TABLE HEADERS
+   ========================================== */
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.sortable-header:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.light-theme .sortable-header:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.sortable-header .sort-icon {
+    font-size: 10px;
+    margin-left: 4px;
+    opacity: 0.7;
+    transition: transform 0.2s ease;
 }
 
 /* ==========================================
@@ -1552,23 +1629,32 @@ input:checked + .slider:before {
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 1) !important;
     color: #1a202c !important;
     width: 100%;
-    max-width: 650px !important;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-width: 580px !important;
+    max-height: 480px !important; /* Limit height so scrollbar is triggered on standard screens */
+    overflow-y: scroll !important; /* Force scrollbar to be always visible */
     padding: 40px;
+    scrollbar-width: auto; /* Standard size for maximum visibility */
+    scrollbar-color: #8a4fff rgba(0, 0, 0, 0.08); /* Firefox scrollbar */
 }
 
 .position-modal-card::-webkit-scrollbar {
-    width: 6px;
+    width: 10px; /* Make scrollbar wider and easier to see */
 }
 
 .position-modal-card::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.06) !important;
+    border-radius: 6px;
+    margin: 8px 0;
 }
 
 .position-modal-card::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15) !important;
-    border-radius: 3px;
+    background: #8a4fff !important; /* Solid high-contrast purple */
+    border-radius: 6px;
+    border: 2px solid #ffffff; /* Contrast gap */
+}
+
+.position-modal-card::-webkit-scrollbar-thumb:hover {
+    background: #6c2bd9 !important; /* Darker purple on hover */
 }
 
 .position-modal-card h3 {
@@ -1588,4 +1674,345 @@ input:checked + .slider:before {
     color: #1a202c !important;
     transform: rotate(90deg) scale(1.05);
 }
+
+/* ========================================================
+   18. DETAILED PROFILE VIEW MODAL STYLING
+   ======================================================== */
+.detail-modal-card {
+    max-width: 600px !important;
+    width: 90% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 30px 40px 40px 40px !important;
+    background: rgba(26, 32, 44, 0.9) !important;
+    backdrop-filter: blur(25px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+    color: #e2e8f0 !important;
+}
+
+.detail-modal-card::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+.detail-modal-card::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.detail-modal-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 3px !important;
+}
+
+body.light-theme .detail-modal-card::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Avatar container inside detail view */
+.detail-avatar-container .table-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 50% !important;
+    border: 3px solid #8a4fff !important;
+    box-shadow: 0 0 20px rgba(138, 79, 255, 0.4) !important;
+    object-fit: cover !important;
+}
+
+.detail-avatar-container .table-avatar-letter {
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 50% !important;
+    font-size: 40px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 3px solid #8a4fff !important;
+    box-shadow: 0 0 20px rgba(138, 79, 255, 0.4) !important;
+}
+
+/* Sub-system Privilege Badges in detail view */
+.detail-role-card {
+    transition: all 0.3s ease !important;
+}
+
+.detail-role-card:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Links inside detail view */
+#detail-phone-link:hover, #detail-email-link:hover {
+    color: #00f2fe !important;
+    text-shadow: 0 0 8px rgba(0, 242, 254, 0.4) !important;
+    text-decoration: underline !important;
+}
+
+/* ========================================================
+   19. PREMIUM TAB SWITCHER & DASHBOARD SYSTEM OVERVIEW
+   ======================================================== */
+
+.hidden {
+    display: none !important;
+}
+
+.admin-view-panel {
+    animation: dashboardFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dashboardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tab Switcher styling */
+.admin-tab-switcher {
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .admin-tab-switcher {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.tab-btn {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary) !important;
+    transform: translateY(-1px);
+}
+
+.tab-btn.active {
+    box-shadow: 0 4px 15px rgba(138, 79, 255, 0.35) !important;
+}
+
+/* New Neon KPI Cards (Dashboard) styling */
+.stat-card-academic::before {
+    background: linear-gradient(135deg, rgba(138, 79, 255, 0.4), rgba(0, 242, 254, 0.4)) !important;
+}
+.stat-card-academic:hover {
+    box-shadow: 0 12px 30px rgba(138, 79, 255, 0.2) !important;
+}
+.stat-card-academic .stat-glow {
+    background: #8a4fff !important;
+}
+
+.stat-card-go::before {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(52, 211, 153, 0.4)) !important;
+}
+.stat-card-go:hover {
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.2) !important;
+}
+.stat-card-go .stat-glow {
+    background: #10b981 !important;
+}
+
+.stat-card-avatar::before {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(251, 191, 36, 0.4)) !important;
+}
+.stat-card-avatar:hover {
+    box-shadow: 0 12px 30px rgba(245, 158, 11, 0.2) !important;
+}
+.stat-card-avatar .stat-glow {
+    background: #f59e0b !important;
+}
+
+/* Chart and Container responsiveness */
+@media (max-width: 1024px) {
+    .dash-charts-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .dash-audit-section {
+        grid-template-columns: 1fr !important;
+    }
+    .dash-audit-section .audit-left {
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding-right: 0 !important;
+        padding-bottom: 20px !important;
+        margin-bottom: 10px !important;
+    }
+}
+
+/* Light theme overrides for Dashboard components */
+body.light-theme .stat-card-academic,
+body.light-theme .stat-card-go,
+body.light-theme .stat-card-avatar,
+body.light-theme .dash-chart-card,
+body.light-theme .dash-audit-section {
+    background: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03) !important;
+}
+
+body.light-theme .health-meta-grid div {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Custom SVG Donut slice animation */
+.donut-segment {
+    transition: stroke-dasharray 0.8s ease-out, stroke-dashoffset 0.8s ease-out;
+}
+
+/* Bar Chart Custom Bars */
+.bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.bar-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.bar-bg {
+    background: rgba(255, 255, 255, 0.06);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+body.light-theme .bar-bg {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Log Item Hover Styles */
+.audit-log-item {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.audit-log-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.06);
+    transform: translateX(4px);
+}
+
+body.light-theme .audit-log-item {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.03);
+}
+
+body.light-theme .audit-log-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ========================================================
+   20. AGE DEMOGRAPHICS & RETIREMENT PLANNING PANEL
+   ======================================================== */
+.retirement-forecasting-container::-webkit-scrollbar {
+    width: 5px !important;
+}
+
+.retirement-forecasting-container::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.retirement-forecasting-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 3px !important;
+}
+
+body.light-theme .retirement-forecasting-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.08) !important;
+}
+
+.retirement-person-card {
+    padding: 12px 16px !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.retirement-person-card:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    transform: translateX(4px) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-theme .retirement-person-card {
+    background: rgba(0, 0, 0, 0.015) !important;
+    border-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+body.light-theme .retirement-person-card:hover {
+    background: rgba(0, 0, 0, 0.035) !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.retirement-badge {
+    padding: 3px 10px !important;
+    border-radius: 20px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    display: inline-block !important;
+}
+
+.retirement-badge-urgent {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.retirement-badge-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+@media (max-width: 1024px) {
+    .dash-demographics-section {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+body.light-theme .dash-demographics-section .dash-chart-card {
+    background: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03) !important;
+}
+
+
 

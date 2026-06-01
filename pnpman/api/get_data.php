@@ -6,8 +6,8 @@ header('Content-Type: application/json');
 try {
     $year = isset($_GET['year']) ? intval($_GET['year']) : 2569;
 
-    // Get all personnel from unified users table
-    $stmt = $pdo->query("SELECT id, CONCAT(title, first_name, ' ', last_name) AS name, primary_position AS main_title, avatar_path AS photo_path FROM users WHERE status = 'active'");
+    // Get all personnel from unified users table (excluding administrators)
+    $stmt = $pdo->query("SELECT id, CONCAT(title, first_name, ' ', last_name) AS name, primary_position AS main_title, avatar_path AS photo_path FROM users WHERE status = 'active' AND is_portal_admin != 1");
     $personnel = $stmt->fetchAll();
 
     // Get all departments

@@ -5,13 +5,11 @@ import { DragDropContext } from '@hello-pangea/dnd';
 import StaffPool from './components/StaffPool';
 import OrgChart from './components/OrgChart';
 import PersonnelModal from './components/PersonnelModal';
-import LoginModal from './components/LoginModal';
-import PersonnelAdminModal from './components/PersonnelAdminModal';
 import SettingsModal from './components/SettingsModal';
 import DashboardStats from './components/DashboardStats';
 import AdvancedAnalyticsModal from './components/AdvancedAnalyticsModal';
 import PrintReport from './components/PrintReport';
-import { Lock, LogOut, Users, Download, Trash2, Edit3, Save, Copy, Settings, Search, FileSpreadsheet } from 'lucide-react';
+import { Download, Trash2, Edit3, Save, Copy, Settings, Search, FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { sortAssignments } from './utils/sorting';
 import { BASE_URL, API_URL } from './utils/api';
@@ -148,8 +146,6 @@ function App() {
   });
   const [academicYear, setAcademicYear] = useState(2569);
   
-  const [showLogin, setShowLogin] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -467,17 +463,11 @@ function App() {
     }
   };
 
-  const handleLogin = (newToken) => {
-    setToken(newToken);
-    setShowLogin(false);
-    Swal.fire({ title: 'เข้าสู่ระบบสำเร็จ!', icon: 'success', timer: 1200, showConfirmButton: false });
+  const handleBackToPortal = () => {
+    window.location.href = '../index.html';
   };
 
-  const handleLogout = () => {
-    setToken(null);
-    setEditMode(false);
-    Swal.fire({ title: 'ออกจากระบบแล้ว', icon: 'info', timer: 1000, showConfirmButton: false });
-  };
+
 
   const handleSave = () => {
     setEditMode(false);
@@ -716,23 +706,15 @@ function App() {
                   <Edit3 size={16} /> แก้ไข
                 </button>
               )}
-              <button onClick={() => setShowAdmin(true)} className="btn-header bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/30 shadow-lg">
-                <Users size={16} /> จัดการบุคลากร
-              </button>
               <button onClick={() => setShowSettings(true)} className="btn-header bg-white/15 hover:bg-white/25 text-white border border-white/20">
                 <Settings size={16} /> ตั้งค่า
-              </button>
-              <button onClick={handleLogout} className="btn-header bg-white/15 hover:bg-white/25 text-white border border-white/20">
-                <LogOut size={16} /> ออกจากระบบ
               </button>
             </>
           )}
 
-          {!isAdmin && (
-            <button onClick={() => setShowLogin(true)} className="btn-header bg-white/20 hover:bg-white/30 text-white border border-white/30">
-              <Lock size={16} /> เข้าสู่ระบบ
-            </button>
-          )}
+          <button onClick={handleBackToPortal} className="btn-header bg-white/20 hover:bg-white/30 text-white border border-white/30">
+            <ArrowLeft size={16} /> กลับหน้าพอร์ทัล
+          </button>
         </div>
       </header>
 
@@ -829,8 +811,7 @@ function App() {
         />
       )}
       
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={handleLogin} />}
-      {showAdmin && <PersonnelAdminModal personnel={personnel} onClose={() => setShowAdmin(false)} onRefresh={fetchData} />}
+
       {showSettings && (
         <SettingsModal 
           onClose={() => setShowSettings(false)} 

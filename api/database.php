@@ -49,7 +49,11 @@ try {
         first_name VARCHAR(100) NOT NULL,
         last_name VARCHAR(100) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
+        birthdate VARCHAR(50) DEFAULT '',
+        nickname VARCHAR(50) DEFAULT '',
+        gender VARCHAR(20) DEFAULT '',
         phone VARCHAR(20) NULL,
+        education VARCHAR(255) DEFAULT '',
         avatar_path VARCHAR(255) NULL,
         primary_position ENUM(
             'ผู้ดูแลระบบ',
@@ -79,6 +83,15 @@ try {
     if (!in_array('title', $existingCols)) {
         $db->exec("ALTER TABLE users ADD COLUMN title VARCHAR(50) DEFAULT '' AFTER password_hash");
     }
+    if (!in_array('birthdate', $existingCols)) {
+        $db->exec("ALTER TABLE users ADD COLUMN birthdate VARCHAR(50) DEFAULT '' AFTER email");
+    }
+    if (!in_array('nickname', $existingCols)) {
+        $db->exec("ALTER TABLE users ADD COLUMN nickname VARCHAR(50) DEFAULT '' AFTER birthdate");
+    }
+    if (!in_array('gender', $existingCols)) {
+        $db->exec("ALTER TABLE users ADD COLUMN gender VARCHAR(20) DEFAULT '' AFTER nickname");
+    }
     if (!in_array('org_position', $existingCols)) {
         $db->exec("ALTER TABLE users ADD COLUMN org_position VARCHAR(100) DEFAULT '' AFTER primary_position");
     }
@@ -87,6 +100,9 @@ try {
     }
     if (!in_array('job', $existingCols)) {
         $db->exec("ALTER TABLE users ADD COLUMN job VARCHAR(100) DEFAULT '' AFTER department");
+    }
+    if (!in_array('education', $existingCols)) {
+        $db->exec("ALTER TABLE users ADD COLUMN education VARCHAR(255) DEFAULT '' AFTER phone");
     }
 
     // 5. สร้างตารางสิทธิ์ระบบย่อย: app_roles

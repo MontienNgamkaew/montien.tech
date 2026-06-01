@@ -41,6 +41,23 @@ if (!$adminPayload || (int)$adminPayload['is_portal_admin'] !== 1) {
     sendResponse(['error' => 'ไม่มีสิทธิ์การใช้งาน: เฉพาะผู้ดูแลระบบพอร์ทัลกลางเท่านั้น'], 403);
 }
 
+// Helper Function to parse Thai Prefixes from full name
+function parseThaiNameAndTitle($fullName) {
+    $fullName = trim($fullName);
+    $title = '';
+    $firstName = $fullName;
+    
+    $prefixes = ['นาย', 'นางสาว', 'นาง', 'ดร.', 'ดร', 'เด็กชาย', 'เด็กหญิง', 'พระครู', 'พระ'];
+    foreach ($prefixes as $prefix) {
+        if (strpos($fullName, $prefix) === 0) {
+            $title = $prefix;
+            $firstName = trim(substr($fullName, strlen($prefix)));
+            break;
+        }
+    }
+    return ['title' => $title, 'first_name' => $firstName];
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 // -------------------------------------------------------------
@@ -48,14 +65,17 @@ $method = $_SERVER['REQUEST_METHOD'];
 // -------------------------------------------------------------
 if ($method === 'GET') {
     try {
-        // ดึงรายชื่อผู้ใช้ทั้งหมดพร้อมตำแหน่งทั้ง 2 และฝ่าย/แผนก
-        $stmtUsers = $db->query("SELECT id, username, title, first_name, last_name, email, primary_position, org_position, department, job, status, is_portal_admin FROM users ORDER BY id ASC");
+        // ดึงรายชื่อผู้ใช้ทั้งหมดพร้อมตำแหน่งทั้ง 2 และฝ่าย/แผนก รวมถึง phone และ avatar_path
+        $stmtUsers = $db->query("SELECT id, username, title, first_name, last_name, email, birthdate, nickname, gender, phone, education, avatar_path, primary_position, org_position, department, job, status, is_portal_admin FROM users ORDER BY id ASC");
         $users = $stmtUsers->fetchAll();
 
         // แนบสิทธิ์รายระบบเข้าไปกับผู้ใช้แต่ละคน
         $stmtRoles = $db->prepare("SELECT app_id, role FROM app_roles WHERE user_id = :user_id");
         
         foreach ($users as &$u) {
+            // แมป avatar_path ไปยัง avatar ให้หน้าบ้านบริโภคได้ง่าย
+            $u['avatar'] = $u['avatar_path'];
+            
             $stmtRoles->execute([':user_id' => $u['id']]);
             $rolesRows = $stmtRoles->fetchAll();
             
@@ -111,8 +131,39 @@ if ($method === 'POST') {
         $job = isset($input['job']) ? trim($input['job']) : '';
         $isPortalAdmin = isset($input['is_portal_admin']) ? (int)$input['is_portal_admin'] : 0;
 
+        $birthdate = isset($input['birthdate']) ? trim($input['birthdate']) : '';
+        $nickname = isset($input['nickname']) ? trim($input['nickname']) : '';
+        $gender = isset($input['gender']) ? trim($input['gender']) : '';
+        $education = isset($input['education']) ? trim($input['education']) : '';
+
         if (empty($username) || empty($firstName) || empty($lastName)) {
             sendResponse(['error' => 'กรุณากรอกชื่อผู้ใช้ (เลขบัตรประชาชน) และชื่อ-นามสกุลจริง ให้ครบถ้วน'], 400);
+        }
+
+        // 3. แยก "คำนำหน้าชื่อ" และ "ชื่อจริง" ออกจากฟอร์ม "ชื่อจริง" โดยอัตโนมัติ (หากกรอกนำหน้ามาด้วย)
+        $parsedName = parseThaiNameAndTitle($firstName);
+        $title = $parsedName['title'];
+        $firstName = $parsedName['first_name'];
+
+        // 4. จัดการอัปโหลดไฟล์รูปโปรไฟล์ (Base64)
+        $avatar = isset($input['avatar']) ? $input['avatar'] : '';
+        $avatarPath = null;
+        if (!empty($avatar) && preg_match('/^data:image\/(\w+);base64,/', $avatar, $type)) {
+            $ext = strtolower($type[1]);
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $data = substr($avatar, strpos($avatar, ',') + 1);
+                $data = base64_decode($data);
+                if ($data !== false) {
+                    $filename = 'avatar_' . uniqid() . '.' . $ext;
+                    $dir = __DIR__ . '/../uploads/';
+                    if (!file_exists($dir)) {
+                        mkdir($dir, 0777, true);
+                    }
+                    if (file_put_contents($dir . $filename, $data)) {
+                        $avatarPath = 'uploads/' . $filename;
+                    }
+                }
+            }
         }
 
         // ตั้งค่าความปลอดภัยเริ่มต้นแบบง่าย
@@ -154,10 +205,9 @@ if ($method === 'POST') {
 
             $db->beginTransaction();
 
-            // 1. บันทึกลงตาราง users หลัก
             $stmtInsert = $db->prepare("
-                INSERT INTO users (username, password_hash, title, first_name, last_name, email, primary_position, org_position, department, job, is_portal_admin)
-                VALUES (:username, :password_hash, :title, :first_name, :last_name, :email, :primary_position, :org_position, :department, :job, :is_portal_admin)
+                INSERT INTO users (username, password_hash, title, first_name, last_name, email, birthdate, nickname, gender, phone, education, primary_position, org_position, department, job, is_portal_admin, avatar_path)
+                VALUES (:username, :password_hash, :title, :first_name, :last_name, :email, :birthdate, :nickname, :gender, :phone, :education, :primary_position, :org_position, :department, :job, :is_portal_admin, :avatar_path)
             ");
             $stmtInsert->execute([
                 ':username' => $username,
@@ -166,11 +216,17 @@ if ($method === 'POST') {
                 ':first_name' => $firstName,
                 ':last_name' => $lastName,
                 ':email' => $email,
+                ':birthdate' => $birthdate,
+                ':nickname' => $nickname,
+                ':gender' => $gender,
+                ':phone' => $phone,
+                ':education' => $education,
                 ':primary_position' => $primaryPos,
                 ':org_position' => $orgPos,
                 ':department' => $dept,
                 ':job' => $job,
-                ':is_portal_admin' => $isPortalAdmin
+                ':is_portal_admin' => $isPortalAdmin,
+                ':avatar_path' => $avatarPath
             ]);
 
             $newUserId = $db->lastInsertId();
@@ -211,15 +267,33 @@ if ($method === 'POST') {
                 ]);
             }
 
-            // 3. ตั้งค่าสิทธิ์แอปทั้ง 3 เป็น 'none'
-            $apps = ['pnp-go', 'pnp-academic', 'pnp-man'];
-            $stmtRoleInit = $db->prepare("INSERT INTO app_roles (user_id, app_id, role) VALUES (:user_id, :app_id, 'none')");
-            foreach ($apps as $app) {
-                $stmtRoleInit->execute([
-                    ':user_id' => $newUserId,
-                    ':app_id' => $app
-                ]);
+            // 3. ตั้งค่าเริ่มต้นสิทธิ์เข้าใช้ระบบย่อยทั้ง 3 ตัวตามกฎเริ่มต้น
+            $go_role = 'none';
+            $academic_role = 'none';
+            $man_role = 'none';
+
+            if (in_array($primaryPos, ['ข้าราชการครู', 'พนักงานราชการครู', 'ครูพิเศษสอน'])) {
+                $go_role = 'user';
+                $academic_role = 'user';
+                $man_role = 'user';
+            } elseif (in_array($primaryPos, ['เจ้าหน้าที่', 'นักการภารโรง', 'แม่บ้าน', 'พนักงานขับรถ'])) {
+                $go_role = 'user';
+                $academic_role = 'none';
+                $man_role = 'user';
             }
+
+            // ตรวจสอบตำแหน่งเฉพาะ (Job overrides)
+            if (($orgPos === 'หัวหน้างาน' && $job === 'งานบริหารและพัฒนาทรัพยากรบุคคล') || $job === 'หัวหน้างานบุคลากร' || strpos($job, 'หัวหน้างานบุคลากร') !== false) {
+                $man_role = 'admin';
+            }
+            if (($orgPos === 'หัวหน้างาน' && $job === 'งานพัสดุ') || $job === 'หัวหน้างานพัสดุ' || strpos($job, 'หัวหน้างานพัสดุ') !== false) {
+                $go_role = 'admin';
+            }
+
+            $stmtRoleInit = $db->prepare("INSERT INTO app_roles (user_id, app_id, role) VALUES (:user_id, :app_id, :role)");
+            $stmtRoleInit->execute([':user_id' => $newUserId, ':app_id' => 'pnp-go', ':role' => $go_role]);
+            $stmtRoleInit->execute([':user_id' => $newUserId, ':app_id' => 'pnp-academic', ':role' => $academic_role]);
+            $stmtRoleInit->execute([':user_id' => $newUserId, ':app_id' => 'pnp-man', ':role' => $man_role]);
 
             $db->commit();
 
@@ -247,9 +321,48 @@ if ($method === 'POST') {
         $email = isset($input['email']) ? trim($input['email']) : '';
         $phone = isset($input['phone']) ? trim($input['phone']) : '';
         $isPortalAdmin = isset($input['is_portal_admin']) ? (int)$input['is_portal_admin'] : 0;
+        
+        $birthdate = isset($input['birthdate']) ? trim($input['birthdate']) : '';
+        $nickname = isset($input['nickname']) ? trim($input['nickname']) : '';
+        $gender = isset($input['gender']) ? trim($input['gender']) : '';
+        $education = isset($input['education']) ? trim($input['education']) : '';
 
         if ($userId <= 0 || empty($firstName) || empty($lastName)) {
             sendResponse(['error' => 'กรุณากรอกข้อมูลส่วนตัวให้ครบถ้วน'], 400);
+        }
+
+        // 3. แยก "คำนำหน้าชื่อ" และ "ชื่อจริง" ออกจากฟอร์ม "ชื่อจริง" โดยอัตโนมัติ (หากกรอกนำหน้ามาด้วย)
+        $parsedName = parseThaiNameAndTitle($firstName);
+        $title = $parsedName['title'];
+        $firstName = $parsedName['first_name'];
+
+        // 4. จัดการอัปโหลดไฟล์รูปโปรไฟล์ (Base64)
+        $avatar = isset($input['avatar']) ? $input['avatar'] : '';
+        $avatarPath = null;
+        $hasNewAvatar = false;
+        
+        if (!empty($avatar)) {
+            if (preg_match('/^data:image\/(\w+);base64,/', $avatar, $type)) {
+                $ext = strtolower($type[1]);
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                    $data = substr($avatar, strpos($avatar, ',') + 1);
+                    $data = base64_decode($data);
+                    if ($data !== false) {
+                        $filename = 'avatar_' . uniqid() . '.' . $ext;
+                        $dir = __DIR__ . '/../uploads/';
+                        if (!file_exists($dir)) {
+                            mkdir($dir, 0777, true);
+                        }
+                        if (file_put_contents($dir . $filename, $data)) {
+                            $avatarPath = 'uploads/' . $filename;
+                            $hasNewAvatar = true;
+                        }
+                    }
+                }
+            }
+        } elseif (isset($input['remove_avatar']) && $input['remove_avatar'] == 1) {
+            $avatarPath = null;
+            $hasNewAvatar = true;
         }
 
         // ป้องกันแอดมินลบสิทธิ์แอดมินตัวเอง
@@ -270,22 +383,38 @@ if ($method === 'POST') {
             }
 
             // อัปเดตตาราง users หลัก (เฉพาะข้อมูลส่วนบุคคลพื้นฐาน)
-            $stmtUpdate = $db->prepare("
-                UPDATE users 
-                SET title = :title, first_name = :first_name, last_name = :last_name, email = :email, 
-                    phone = :phone, is_portal_admin = :is_portal_admin
-                WHERE id = :id
-            ");
+            $sql = "UPDATE users 
+                    SET title = :title, first_name = :first_name, last_name = :last_name, email = :email, 
+                        birthdate = :birthdate, nickname = :nickname, gender = :gender,
+                        phone = :phone, education = :education, is_portal_admin = :is_portal_admin";
             
-            $stmtUpdate->execute([
+            if ($hasNewAvatar) {
+                $sql .= ", avatar_path = :avatar_path";
+            }
+            
+            $sql .= " WHERE id = :id";
+            
+            $stmtUpdate = $db->prepare($sql);
+            
+            $params = [
                 ':title' => $title,
                 ':first_name' => $firstName,
                 ':last_name' => $lastName,
                 ':email' => $email,
+                ':birthdate' => $birthdate,
+                ':nickname' => $nickname,
+                ':gender' => $gender,
                 ':phone' => $phone,
+                ':education' => $education,
                 ':is_portal_admin' => $isPortalAdmin,
                 ':id' => $userId
-            ]);
+            ];
+            
+            if ($hasNewAvatar) {
+                $params[':avatar_path'] = $avatarPath;
+            }
+            
+            $stmtUpdate->execute($params);
 
             sendResponse([
                 'success' => true,
@@ -442,6 +571,31 @@ if ($method === 'POST') {
 
         } catch (PDOException $e) {
             sendResponse(['error' => 'เกิดข้อผิดพลาดในการลบข้อมูล: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: DELETE_ALL_USERS (ลบข้อมูลบุคลากรทั้งหมด ยกเว้น admin หลักและแอดมินที่กำลังใช้งาน)
+    // -------------------------------------------------------------
+    elseif ($action === 'delete_all_users') {
+        try {
+            $adminId = (int)$adminPayload['user_id'];
+            
+            // ดึงจำนวนผู้ใช้ที่จะโดนลบ (เพื่อรายงานผล)
+            $stmtCount = $db->prepare("SELECT COUNT(*) FROM users WHERE username != 'admin' AND id != :admin_id");
+            $stmtCount->execute([':admin_id' => $adminId]);
+            $count = $stmtCount->fetchColumn();
+            
+            // ทำการลบ
+            $stmtDeleteAll = $db->prepare("DELETE FROM users WHERE username != 'admin' AND id != :admin_id");
+            $stmtDeleteAll->execute([':admin_id' => $adminId]);
+            
+            sendResponse([
+                'success' => true,
+                'message' => "ลบข้อมูลบุคลากรทั้งหมดเรียบร้อยแล้ว (จำนวนที่ลบ: {$count} คน)"
+            ]);
+        } catch (PDOException $e) {
+            sendResponse(['error' => 'เกิดข้อผิดพลาดในการลบข้อมูลทั้งหมด: ' . $e->getMessage()], 500);
         }
     }
 
