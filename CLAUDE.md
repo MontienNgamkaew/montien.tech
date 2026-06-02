@@ -50,6 +50,10 @@ JWT engine อยู่ที่ `api/jwt.php` (HS256, dependency-free)
 - **pnp-go** แมประดับอนุมัติเพิ่มจาก `primary_position`/`org_position` (ดู `pnp-go/sso.php`):
   `director` → `deputy_director` (ฝ่ายบริหารทรัพยากร) → `supply_head` (หัวหน้างานพัสดุ) → `user`
   > ⚠️ การแมปนี้อ่อนไหวต่อการจับคู่สตริงภาษาไทย (เช่น "รองผู้อำนวยการ" vs "ผู้อำนวยการ") — แก้ไขด้วยความระมัดระวัง และทดสอบทุกระดับ
+- **ผู้อนุมัติ pnp-go มาจากบอร์ด pnpman อัตโนมัติ:** `api/login.php` คำนวณ `org_position` จากตาราง `assignments` (pnpman) ปีล่าสุดก่อน แล้ว fallback ไป `user_org_assignments` (หน้า admin portal) → การแต่งตั้งในบอร์ด pnpman กำหนดผู้อนุมัติ 3 ระดับของ pnp-go:
+  `ผู้อำนวยการวิทยาลัย`→director, งาน `รองผู้อำนวยการฝ่ายบริหารทรัพยากร`→deputy_director, `หัวหน้างาน` ของงาน `งานพัสดุ`→supply_head
+  (JWT คำนวณตอน login → เปลี่ยนตำแหน่งแล้วผู้ใช้ต้อง login ใหม่จึงมีผล)
+- pnp-go เข้าใช้งานผ่าน SSO เท่านั้น (ไม่มี local login แล้ว)
 
 ---
 
