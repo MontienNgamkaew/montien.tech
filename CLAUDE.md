@@ -68,6 +68,7 @@ JWT engine อยู่ที่ `api/jwt.php` (HS256, dependency-free)
 - `DB_HOST/DB_NAME/DB_USER/DB_PASS` — ฐานข้อมูล Portal กลาง
 - `PNPGO_DB_*` — ฐานข้อมูล pnp-go (`carrequest`)
 - `CORS_ALLOWED_ORIGINS` — รายการ origin คั่นจุลภาค (ว่าง/`*` = อนุญาตทุก origin)
+- `MAINTENANCE_KEY` — คีย์ลับสำหรับสคริปต์บำรุงรักษา (เช่น `pnp-go/sync_portal_users.php?key=...`)
 
 ---
 
@@ -98,6 +99,11 @@ JWT engine อยู่ที่ `api/jwt.php` (HS256, dependency-free)
 4. รูปแบบ response API: JSON `{ "status": "success"|"error", "message": ..., ... }`
 5. ฐานข้อมูลใช้ MySQL/PDO + prepared statements เสมอ (กัน SQL injection)
 6. ผู้ใช้ทั้งหมดเป็นข้อมูลร่วมในตาราง `pnp_portal.users` — อย่าสร้างตารางผู้ใช้ซ้ำ
+7. **ห้ามวางสคริปต์บำรุงรักษา/ดีบักที่เข้าถึงผ่านเว็บโดยไม่มีการป้องกัน** — สคริปต์ที่แก้ DB/รหัสผ่านต้องมีการ์ด (CLI-only หรือ `MAINTENANCE_KEY`)
+
+### การจัดการสคีมาฐานข้อมูล
+- สคีมาอ้างอิงอยู่ใน `pnp-go/database/*.sql` และ `pnpman/database/schema.sql` (ไม่เปิดผ่านเว็บ)
+- ตารางถูกสร้าง/ซ่อมอัตโนมัติแบบ **self-healing** ตอนเชื่อม DB (ดู `api/database.php`, `pnp-go/app/Database.php`, `pnpman/api/db.php`) — เพิ่มคอลัมน์/ตารางใหม่ที่นี่ ไม่ต้องเขียนสคริปต์ migrate แยก
 
 ---
 
@@ -106,5 +112,5 @@ JWT engine อยู่ที่ `api/jwt.php` (HS256, dependency-free)
 - **JWT ส่งผ่าน URL** (`?token=`) — เสี่ยงรั่วใน log/history ควรเปลี่ยนเป็น one-time code แลก session (ยังไม่ทำ เพราะกระทบ flow ทุกระบบ)
 - **ไม่มีกลไก revoke JWT** และอายุ token ยาว 7 วัน
 - **การแมปสิทธิ์จากสตริงตำแหน่ง** ใน `pnp-go/sso.php` เปราะบาง ควรย้ายมาใช้ตารางสิทธิ์ให้หมด
-- **migrate script กระจาย** (`pnpman/migrate_*.php`, `pnp-go/update_db_*`) ควรรวมเป็นระบบ migration เดียว
 - มีคอลัมน์ `users.auth_token` (จากระบบ login เก่าของ pnpman ที่ถอดออกแล้ว) — เลิกใช้ ปล่อยไว้ได้ ไม่กระทบ
+- (เก็บกวาดแล้ว) สคริปต์ migrate/repair/debug แบบ one-off ที่เข้าถึงผ่านเว็บถูกลบออก และ `sync_portal_users.php` ใส่การ์ด `MAINTENANCE_KEY` แล้ว

@@ -9,6 +9,19 @@ declare(strict_types=1);
  * Solves MySQL #1142 Select Denied across isolated databases on Hostinger.
  * ------------------------------------------------------------- */
 
+// ── การ์ดความปลอดภัย ──────────────────────────────────────────
+// สคริปต์บำรุงรักษานี้เปลี่ยนแปลงฐานข้อมูล จึงต้องมีคีย์ลับ (MAINTENANCE_KEY ใน .env)
+// เรียกใช้:  https://pnp-go.montien.tech/sync_portal_users.php?key=<MAINTENANCE_KEY>
+require_once __DIR__ . '/../api/env.php';
+$expectedKey = (string) env('MAINTENANCE_KEY', '');
+$providedKey = (string) ($_GET['key'] ?? '');
+if ($expectedKey === '' || !hash_equals($expectedKey, $providedKey)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    exit("Forbidden: ต้องระบุคีย์บำรุงรักษาที่ถูกต้อง (?key=...) และตั้งค่า MAINTENANCE_KEY ใน .env\n");
+}
+// ───────────────────────────────────────────────────────────────
+
 require_once __DIR__ . '/bootstrap.php';
 
 echo '<!doctype html>';

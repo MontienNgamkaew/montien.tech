@@ -1,6 +1,11 @@
 Options -Indexes
 DirectoryIndex index.php
 
+# ป้องกันการเข้าถึงไฟล์สคีมา/ดัมป์ฐานข้อมูลโดยตรงผ่านเว็บ (เช่น database/*.sql)
+<FilesMatch "\.(sql|bak)$">
+    Require all denied
+</FilesMatch>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
