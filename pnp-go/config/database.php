@@ -1,22 +1,26 @@
 <?php
 
+// อ่านค่าลับจากไฟล์ .env ที่ราก pnp-portal/ (ใช้ตัวช่วยกลางของ api/)
+require_once __DIR__ . '/../../api/env.php';
+
 $isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) || (php_sapi_name() === 'cli');
 
 $config = $isLocal ? [
     // === Local XAMPP ===
-    'host'     => '127.0.0.1',
-    'port'     => 3306,
-    'database' => 'carrequest',
-    'username' => 'root',
-    'password' => '',
+    'host'     => env('PNPGO_DB_HOST', '127.0.0.1'),
+    'port'     => (int) env('PNPGO_DB_PORT', 3306),
+    'database' => env('PNPGO_DB_NAME', 'carrequest'),
+    'username' => env('PNPGO_DB_USER', 'root'),
+    'password' => env('PNPGO_DB_PASS', ''),
     'charset'  => 'utf8mb4',
 ] : [
     // === Hostinger Production (pnp-go.montien.tech) ===
-    'host'     => 'localhost',
-    'port'     => 3306,
-    'database' => 'u651170081_pnpgo',
-    'username' => 'u651170081_pnpgo',
-    'password' => 'a1d9GH10%',
+    // รหัสผ่านอ่านจาก .env (PNPGO_DB_PASS) หรือไฟล์ database.local.php ด้านล่าง
+    'host'     => env('PNPGO_DB_HOST', 'localhost'),
+    'port'     => (int) env('PNPGO_DB_PORT', 3306),
+    'database' => env('PNPGO_DB_NAME', 'u651170081_pnpgo'),
+    'username' => env('PNPGO_DB_USER', 'u651170081_pnpgo'),
+    'password' => env('PNPGO_DB_PASS', ''),
     'charset'  => 'utf8mb4',
 ];
 

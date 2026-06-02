@@ -83,10 +83,12 @@ final class Database
 
         $config = config('database');
         $isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) || (php_sapi_name() === 'cli');
-        
-        $portalDbName = $isLocal ? 'pnp_portal' : 'u651170081_pnp_portal';
-        $portalUsername = $isLocal ? $config['username'] : 'u651170081_pnp_portal';
-        $portalPassword = $isLocal ? $config['password'] : 'a1d9GH10%';
+
+        // ข้อมูลเชื่อมต่อฐานข้อมูล Portal กลาง อ่านจาก .env (คีย์ DB_*) เป็นหลัก
+        // ค่าเริ่มต้นคงพฤติกรรมเดิมไว้ทั้ง local และ production
+        $portalDbName   = env('DB_NAME', $isLocal ? 'pnp_portal' : 'u651170081_pnp_portal');
+        $portalUsername = env('DB_USER', $isLocal ? $config['username'] : 'u651170081_pnp_portal');
+        $portalPassword = env('DB_PASS', $config['password']);
 
         $dsn = sprintf(
             'mysql:host=%s;port=%d;dbname=%s;charset=%s',

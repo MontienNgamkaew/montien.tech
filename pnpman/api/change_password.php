@@ -28,10 +28,17 @@ if (mb_strlen($new_password) < 4) {
 }
 
 try {
-    // Get current user from token
-    $token = str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION'] ?? '');
-    $stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE auth_token = ?");
-    $stmt->execute([$token]);
+    // ระบุผู้ใช้ปัจจุบันจาก JWT (SSO) แทนการค้นด้วย auth_token เดิม
+    require_once __DIR__ . '/../../api/sso_auth.php';
+    $userId = pnp_auth_user_id();
+    if ($userId === null) {
+        http_response_code(401);
+        echo json_encode(["status" => "error", "message" => "Unauthorized"]);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
     if (!$user) {

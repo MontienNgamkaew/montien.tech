@@ -1,0 +1,43 @@
+# -------------------------------------------------------------
+# PNP e-Service — Git Ignore
+# -------------------------------------------------------------
+
+# ความลับ / คอนฟิกเฉพาะเครื่อง (ห้าม commit ขึ้น git เด็ดขาด)
+.env
+.env.*
+!.env.example
+*.local.php
+config.local.php
+
+# ฐานข้อมูล SQLite เก่า (เลิกใช้แล้ว — ระบบใช้ MySQL)
+*.sqlite
+*.sqlite3
+api/pnp_users.db
+
+# ไฟล์ backup/dump ฐานข้อมูล (มี PII + รหัสผ่าน — ห้าม commit)
+Sample_DB/
+*.sql.bak
+backup*.sql
+
+# Dependencies (ติดตั้งใหม่ได้ด้วย composer/npm — ไม่ต้องเก็บใน git)
+/vendor/
+**/vendor/
+node_modules/
+**/node_modules/
+
+# ไฟล์ session / cache / log ที่สร้างตอนรันไทม์
+pnp-go/storage/sessions/
+pnp-go/storage/cache/
+*.log
+
+# ไฟล์ระบบปฏิบัติการ / เอดิเตอร์
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ไฟล์อัปโหลดของผู้ใช้ (ข้อมูลรันไทม์ ไม่ควรอยู่ใน git)
+# หมายเหตุ: หากต้องการเก็บรูปตัวอย่างเริ่มต้น ให้ใช้ !path/to/keep
+pnpman/uploads/*
+!pnpman/uploads/.gitkeep

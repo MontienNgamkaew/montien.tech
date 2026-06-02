@@ -7,19 +7,24 @@
 
 date_default_timezone_set('Asia/Bangkok');
 
+// โหลดตัวช่วยอ่านค่า .env (idempotent — เรียกซ้ำได้ปลอดภัย)
+require_once __DIR__ . '/env.php';
+
 // 1. Dynamic Environment Selection (XAMPP Local vs Hostinger Production)
 $isHostinger = isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'montien.tech') !== false || $_SERVER['HTTP_HOST'] === 'pnp-portal.montien.tech');
 
+// ค่าเชื่อมต่อฐานข้อมูลอ่านจาก .env เป็นหลัก (โดยเฉพาะรหัสผ่าน)
+// ค่าเริ่มต้น (default) ด้านล่างคงพฤติกรรมเดิมไว้ ยกเว้นรหัสผ่านที่ต้องตั้งใน .env
 if ($isHostinger) {
-    $dbHost = 'localhost';
-    $dbName = 'u651170081_pnp_portal';
-    $dbUser = 'u651170081_pnp_portal';
-    $dbPass = 'a1d9GH10%'; // รหัสผ่านสอดคล้องกับโปรเจกต์อื่นๆ ใน Hostinger
+    $dbHost = env('DB_HOST', 'localhost');
+    $dbName = env('DB_NAME', 'u651170081_pnp_portal');
+    $dbUser = env('DB_USER', 'u651170081_pnp_portal');
+    $dbPass = env('DB_PASS', ''); // ตั้งรหัสผ่าน production ใน .env เท่านั้น
 } else {
-    $dbHost = 'localhost';
-    $dbName = 'pnp_portal';
-    $dbUser = 'root';
-    $dbPass = '';
+    $dbHost = env('DB_HOST', 'localhost');
+    $dbName = env('DB_NAME', 'pnp_portal');
+    $dbUser = env('DB_USER', 'root');
+    $dbPass = env('DB_PASS', '');
 }
 
 try {
