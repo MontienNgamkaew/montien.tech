@@ -2,14 +2,6 @@
 
 final class VehicleController
 {
-    private const FUEL_OPTIONS = [
-        'diesel'      => 'ดีเซล',
-        'gasoline_91' => 'แก็สโซฮอล์ 91',
-        'gasoline_95' => 'แก็สโซฮอล์ 95',
-        'engine_oil'  => 'น้ำมันเครื่อง',
-        'other'       => 'อื่นๆ',
-    ];
-
     public function index(): void
     {
         $this->requireAdmin();
@@ -21,7 +13,7 @@ final class VehicleController
             'title'       => 'จัดการรถยนต์',
             'user'        => require_auth(),
             'vehicles'    => $vehicles,
-            'fuelOptions' => self::FUEL_OPTIONS,
+            'fuelOptions' => fuel_type_options(),
             'flash'       => $this->flash(),
         ]);
     }

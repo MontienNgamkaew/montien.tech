@@ -14,24 +14,10 @@ final class DashboardController
         $userRole = empty($user['role']) ? 'user' : $user['role'];
         $level = self::ROLE_LEVELS[$userRole] ?? null;
 
-        if ($userRole === 'user') {
-            $db = Database::connection();
-            $stmt = $db->prepare('
-                SELECT r.*, 
-                       COALESCE(va.vehicle_name, vr.vehicle_name, \'ไม่ได้ระบุเจาะจง\') AS vehicle_name,
-                       va.license_plate
-                FROM requisitions r
-                LEFT JOIN vehicles vr ON vr.id = r.requested_vehicle_id
-                LEFT JOIN vehicles va ON va.id = r.assigned_vehicle_id
-                WHERE r.user_id = :user_id OR r.requester_name = :full_name
-                ORDER BY r.created_at DESC
-            ');
-            $stmt->execute([
-                'user_id' => $user['id'],
-                'full_name' => $user['full_name']
-            ]);
-            $myRequisitions = $stmt->fetchAll();
+        // คำขอของผู้ใช้คนนี้ (ใช้ทั้งหน้าผู้ใช้ทั่วไปและหน้าผู้อนุมัติ)
+        $myRequisitions = $this->myRequisitions($user);
 
+        if ($userRole === 'user') {
             render('public/dashboard', [
                 'title' => 'แดชบอร์ดคำขอของฉัน',
                 'user' => $user,
@@ -42,33 +28,42 @@ final class DashboardController
             return;
         }
 
-        $db = Database::connection();
-        $stmt = $db->prepare('
-            SELECT r.*, 
-                   COALESCE(va.vehicle_name, vr.vehicle_name, \'ไม่ได้ระบุเจาะจง\') AS vehicle_name,
-                   va.license_plate
-            FROM requisitions r
-            LEFT JOIN vehicles vr ON vr.id = r.requested_vehicle_id
-            LEFT JOIN vehicles va ON va.id = r.assigned_vehicle_id
-            WHERE r.user_id = :user_id OR r.requester_name = :full_name
-            ORDER BY r.created_at DESC
-        ');
-        $stmt->execute([
-            'user_id' => $user['id'],
-            'full_name' => $user['full_name']
-        ]);
-        $myRequisitions = $stmt->fetchAll();
+        // รายการคำขอสำหรับหน้าอนุมัติ
+        //  - admin: เห็นทุกคำขอ พร้อมค้นหา/กรองสถานะ/แบ่งหน้า
+        //  - ผู้อนุมัติรายระดับ: เห็นเฉพาะคิวงานของระดับตนเอง
+        if ($userRole === 'admin') {
+            $search       = trim((string) ($_GET['q'] ?? ''));
+            $statusFilter = (string) ($_GET['status'] ?? '');
+            $page         = max(1, (int) ($_GET['page'] ?? 1));
+            $perPage      = 20;
+
+            [$pending, $totalRows] = $this->adminRequisitions($search, $statusFilter, $page, $perPage);
+
+            $pagination = [
+                'page'       => $page,
+                'perPage'    => $perPage,
+                'total'      => $totalRows,
+                'totalPages' => max(1, (int) ceil($totalRows / $perPage)),
+            ];
+            $filters = ['q' => $search, 'status' => $statusFilter];
+        } else {
+            $pending    = $this->pendingRequisitions($user);
+            $pagination = null;
+            $filters    = null;
+        }
 
         render('admin/dashboard', [
             'title'               => 'แดชบอร์ดผู้อนุมัติ',
             'user'                => $user,
-            'pendingRequisitions' => $this->pendingRequisitions($user),
+            'pendingRequisitions' => $pending,
             'vehicleStats'        => $this->vehicleStats(),
             'vehicleStatus'       => $this->vehicleStatus(),
             'fuelSummary'         => $this->fuelSummary(),
             'level'               => $level,
             'statusLabels'        => $this->statusLabels(),
-            'myRequisitions'      => $myRequisitions
+            'myRequisitions'      => $myRequisitions,
+            'pagination'          => $pagination,
+            'filters'             => $filters,
         ]);
     }
 
@@ -80,6 +75,12 @@ final class DashboardController
 
         if ($requisition === null) {
             view('ไม่พบคำขอ', '<h1 class="h4">ไม่พบคำขอที่ต้องการ</h1>', 404);
+            return;
+        }
+
+        // ผู้ใช้ทั่วไปดูรายละเอียดได้เฉพาะคำขอของตนเอง (กันการเดา ?id= ดูของผู้อื่น)
+        if (($user['role'] ?? 'user') === 'user' && (int) $requisition['user_id'] !== (int) $user['id']) {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์เข้าดูรายละเอียดคำขอของผู้อื่น</h1>', 403);
             return;
         }
 
@@ -119,6 +120,27 @@ final class DashboardController
                 if ($vehicleId === '' || $driverName === '') {
                     $db->rollBack();
                     $this->showWithError($user, $requisition, 'กรุณาเลือกรถและกรอกชื่อพนักงานขับรถก่อนอนุมัติ');
+                    return;
+                }
+
+                // กันการจองรถซ้อนช่วงเวลา: รถคันนี้ต้องว่างในช่วง travel_start_at–travel_end_at
+                $conflict = $db->prepare(
+                    'SELECT COUNT(*) FROM requisitions
+                     WHERE assigned_vehicle_id = :vehicle_id
+                       AND id <> :id
+                       AND status IN (\'pending_level_2\', \'pending_level_3\', \'approved\')
+                       AND travel_start_at < :travel_end
+                       AND travel_end_at   > :travel_start'
+                );
+                $conflict->execute([
+                    'vehicle_id'   => $vehicleId,
+                    'id'           => $id,
+                    'travel_end'   => $requisition['travel_end_at'],
+                    'travel_start' => $requisition['travel_start_at'],
+                ]);
+                if ((int) $conflict->fetchColumn() > 0) {
+                    $db->rollBack();
+                    $this->showWithError($user, $requisition, 'รถคันที่เลือกถูกจองในช่วงเวลาที่ทับซ้อนกับคำขออื่นแล้ว กรุณาเลือกคันอื่นหรือปรับช่วงเวลา');
                     return;
                 }
 
@@ -280,19 +302,72 @@ final class DashboardController
         $this->profile('บันทึกลายเซ็นเรียบร้อยแล้ว');
     }
 
+    private function myRequisitions(array $user): array
+    {
+        $stmt = Database::connection()->prepare('
+            SELECT r.*,
+                   COALESCE(va.vehicle_name, vr.vehicle_name, \'ไม่ได้ระบุเจาะจง\') AS vehicle_name,
+                   va.license_plate
+            FROM requisitions r
+            LEFT JOIN vehicles vr ON vr.id = r.requested_vehicle_id
+            LEFT JOIN vehicles va ON va.id = r.assigned_vehicle_id
+            WHERE r.user_id = :user_id OR r.requester_name = :full_name
+            ORDER BY r.created_at DESC
+        ');
+        $stmt->execute([
+            'user_id' => $user['id'],
+            'full_name' => $user['full_name'],
+        ]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * รายการคำขอทั้งหมดสำหรับ admin พร้อมค้นหา/กรองสถานะ/แบ่งหน้า
+     * @return array{0: array, 1: int}  [rows, totalCount]
+     */
+    private function adminRequisitions(string $search, string $status, int $page, int $perPage): array
+    {
+        $db = Database::connection();
+
+        $conditions = [];
+        $params = [];
+
+        if ($search !== '') {
+            $conditions[] = '(r.tracking_id LIKE :q OR r.requester_name LIKE :q OR r.destination LIKE :q)';
+            $params['q'] = '%' . $search . '%';
+        }
+        if ($status !== '' && array_key_exists($status, status_labels())) {
+            $conditions[] = 'r.status = :status';
+            $params['status'] = $status;
+        }
+        $whereSql = $conditions !== [] ? ('WHERE ' . implode(' AND ', $conditions)) : '';
+
+        $countStmt = $db->prepare("SELECT COUNT(*) FROM requisitions r {$whereSql}");
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetchColumn();
+
+        $offset = ($page - 1) * $perPage;
+        $listStmt = $db->prepare(
+            "SELECT r.*, v.vehicle_name, v.license_plate
+             FROM requisitions r
+             LEFT JOIN vehicles v ON v.id = r.requested_vehicle_id
+             {$whereSql}
+             ORDER BY r.created_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+        foreach ($params as $key => $value) {
+            $listStmt->bindValue(':' . $key, $value);
+        }
+        $listStmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $listStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $listStmt->execute();
+
+        return [$listStmt->fetchAll(), $total];
+    }
+
     private function pendingRequisitions(array $user): array
     {
-        if ($user['role'] === 'admin') {
-            $statement = Database::connection()->query(
-                'SELECT r.*, v.vehicle_name, v.license_plate
-                 FROM requisitions r
-                 LEFT JOIN vehicles v ON v.id = r.requested_vehicle_id
-                 ORDER BY r.created_at DESC
-                 LIMIT 50'
-            );
-            return $statement->fetchAll();
-        }
-
         $level = self::ROLE_LEVELS[$user['role']] ?? 0;
         $status = 'pending_level_' . $level;
         $statement = Database::connection()->prepare(
@@ -449,26 +524,12 @@ final class DashboardController
 
     private function statusLabels(): array
     {
-        return [
-            'submitted' => 'ส่งคำขอแล้ว',
-            'pending_level_1' => 'รอหัวหน้างานพัสดุอนุมัติ',
-            'pending_level_2' => 'รอรองผู้อำนวยการฝ่ายบริหารทรัพยากรอนุมัติ',
-            'pending_level_3' => 'รอผู้อำนวยการอนุมัติ',
-            'approved' => 'อนุมัติเรียบร้อย',
-            'rejected' => 'ไม่อนุมัติ',
-            'cancelled' => 'ยกเลิกคำขอ',
-        ];
+        return status_labels();
     }
 
     public static function fuelTypeLabel(?string $fuelType): string
     {
-        return [
-            'gasoline_95' => 'เบนซิน 95',
-            'gasoline_91' => 'เบนซิน 91',
-            'diesel' => 'ดีเซล',
-            'engine_oil' => 'น้ำมันเครื่อง',
-            'other' => 'น้ำมันเชื้อเพลิงประเภทอื่น',
-        ][$fuelType ?? ''] ?? '-';
+        return fuel_type_label($fuelType);
     }
 
     public function settingsForm(array $errors = []): void

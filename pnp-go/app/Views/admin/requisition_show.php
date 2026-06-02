@@ -73,8 +73,11 @@
             <div class="text-secondary">การสั่งซื้อน้ำมัน</div>
             <div class="fw-semibold">
                 <?php if ((int) $requisition['fuel_purchase_requested']): ?>
-                    <?= e(DashboardController::fuelTypeLabel($requisition['fuel_type'] ?? null)) ?> |
-                    สั่งซื้อ <?= e(number_format((float) $requisition['fuel_total_amount'], 2)) ?> บาท
+                    <?= e(DashboardController::fuelTypeLabel($requisition['fuel_type'] ?? null)) ?>
+                    <?php if (!empty($requisition['fuel_quantity'])): ?>
+                        | <?= e(rtrim(rtrim(number_format((float) $requisition['fuel_quantity'], 2), '0'), '.')) ?> <?= e($requisition['fuel_unit'] ?? '') ?>
+                    <?php endif; ?>
+                    | สั่งซื้อ <?= e(number_format((float) $requisition['fuel_total_amount'], 2)) ?> บาท
                 <?php else: ?>
                     ไม่สั่งซื้อ
                 <?php endif; ?>

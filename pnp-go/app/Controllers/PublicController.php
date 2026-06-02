@@ -82,8 +82,8 @@ final class PublicController
                 'fuel_purchase_requested' => $fuelPurchaseRequested ? 1 : 0,
                 'fuel_not_requested' => $fuelNotRequested ? 1 : 0,
                 'fuel_type' => $fuelPurchaseRequested ? $data['fuel_type'] : null,
-                'fuel_quantity' => null,
-                'fuel_unit' => null,
+                'fuel_quantity' => $fuelPurchaseRequested ? $data['fuel_quantity'] : null,
+                'fuel_unit' => $fuelPurchaseRequested ? $data['fuel_unit'] : null,
                 'fuel_total_amount' => $fuelPurchaseRequested ? $data['fuel_total_amount'] : null,
                 'status' => 'pending_level_1',
                 'current_level' => 1,
@@ -115,6 +115,70 @@ final class PublicController
             'title' => 'ส่งคำขอสำเร็จ',
             'trackingId' => $trackingId,
         ]);
+    }
+
+    public function cancelRequest(): void
+    {
+        verify_csrf();
+        $user = require_auth();
+        $id = (int) ($_POST['id'] ?? 0);
+
+        $statement = Database::connection()->prepare('SELECT * FROM requisitions WHERE id = :id LIMIT 1');
+        $statement->execute(['id' => $id]);
+        $requisition = $statement->fetch();
+
+        if (!$requisition) {
+            view('ไม่พบรายการ', '<h1 class="h4">ไม่พบคำขอที่ต้องการ</h1>', 404);
+            return;
+        }
+
+        // ยกเลิกได้เฉพาะคำขอของตนเองเท่านั้น
+        $isOwner = (int) $requisition['user_id'] === (int) $user['id']
+            || $requisition['requester_name'] === $user['full_name'];
+        if (!$isOwner) {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณสามารถยกเลิกได้เฉพาะคำขอของตนเอง</h1>', 403);
+            return;
+        }
+
+        // ยกเลิกได้เฉพาะคำขอที่ยังอยู่ระหว่างพิจารณา (ยังไม่อนุมัติ/ปฏิเสธ/ยกเลิก)
+        if (!str_starts_with($requisition['status'], 'pending_') && $requisition['status'] !== 'submitted') {
+            view('ยกเลิกไม่ได้', '<h1 class="h4">คำขอนี้ไม่อยู่ในสถานะที่ยกเลิกได้</h1>', 400);
+            return;
+        }
+
+        $db = Database::connection();
+        $db->beginTransaction();
+
+        try {
+            $update = $db->prepare('UPDATE requisitions SET status = :status WHERE id = :id');
+            $update->execute(['status' => 'cancelled', 'id' => $id]);
+
+            $log = $db->prepare(
+                'INSERT INTO approval_logs (
+                    requisition_id, approver_id, approval_level, action, status_from, status_to, comment, ip_address, user_agent
+                ) VALUES (
+                    :requisition_id, :approver_id, :approval_level, :action, :status_from, :status_to, :comment, :ip_address, :user_agent
+                )'
+            );
+            $log->execute([
+                'requisition_id' => $id,
+                'approver_id' => (int) $user['id'],
+                'approval_level' => (int) $requisition['current_level'],
+                'action' => 'cancelled',
+                'status_from' => $requisition['status'],
+                'status_to' => 'cancelled',
+                'comment' => 'ผู้ขอยกเลิกคำขอด้วยตนเอง',
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
+            ]);
+
+            $db->commit();
+        } catch (Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+
+        redirect('/dashboard');
     }
 
     public function statusForm(): void
@@ -197,12 +261,6 @@ final class PublicController
         ]);
     }
 
-    public function checkStatus(): void
-    {
-        // ย้ายการตรวจสอบทั้งหมดไปที่ ID-based statusForm แล้ว
-        redirect('/dashboard');
-    }
-
     public function downloadPdf(): void
     {
         $user = require_auth();
@@ -273,6 +331,8 @@ final class PublicController
             'requested_vehicle_id' => trim($_POST['requested_vehicle_id'] ?? ''),
             'fuel_purchase_requested' => ($_POST['fuel_purchase_requested'] ?? '0') === '1' ? '1' : '0',
             'fuel_type' => trim($_POST['fuel_type'] ?? ''),
+            'fuel_quantity' => trim($_POST['fuel_quantity'] ?? ''),
+            'fuel_unit' => trim($_POST['fuel_unit'] ?? ''),
             'fuel_total_amount' => trim($_POST['fuel_total_amount'] ?? ''),
         ];
     }
@@ -313,6 +373,16 @@ final class PublicController
         if ($data['fuel_purchase_requested'] === '1') {
             if (!array_key_exists($data['fuel_type'], $this->fuelTypeOptions())) {
                 $errors['fuel_type'] = 'กรุณาเลือกชนิดน้ำมันเชื้อเพลิง';
+            }
+
+            if ($data['fuel_quantity'] === '') {
+                $errors['fuel_quantity'] = 'กรุณากรอกปริมาณที่สั่งซื้อ';
+            } elseif (!is_numeric($data['fuel_quantity']) || (float) $data['fuel_quantity'] <= 0) {
+                $errors['fuel_quantity'] = 'ปริมาณต้องเป็นตัวเลขมากกว่า 0';
+            }
+
+            if ($data['fuel_unit'] === '') {
+                $errors['fuel_unit'] = 'กรุณาเลือกหน่วย';
             }
 
             if ($data['fuel_total_amount'] === '') {
@@ -368,26 +438,12 @@ final class PublicController
 
     private function fuelTypeOptions(): array
     {
-        return [
-            'gasoline_95' => 'เบนซิน 95',
-            'gasoline_91' => 'เบนซิน 91',
-            'diesel' => 'ดีเซล',
-            'engine_oil' => 'น้ำมันเครื่อง',
-            'other' => 'น้ำมันเชื้อเพลิงประเภทอื่น',
-        ];
+        return fuel_type_options();
     }
 
     private function statusLabels(): array
     {
-        return [
-            'submitted' => 'ส่งคำขอแล้ว',
-            'pending_level_1' => 'รอหัวหน้างานพัสดุอนุมัติ',
-            'pending_level_2' => 'รอรองผู้อำนวยการฝ่ายบริหารทรัพยากรอนุมัติ',
-            'pending_level_3' => 'รอผู้อำนวยการอนุมัติ',
-            'approved' => 'อนุมัติเรียบร้อย',
-            'rejected' => 'ไม่อนุมัติ',
-            'cancelled' => 'ยกเลิกคำขอ',
-        ];
+        return status_labels();
     }
 
     public function reportForm(array $errors = [], array $old = []): void
@@ -512,7 +568,9 @@ final class PublicController
                 if (!is_dir($targetDir)) {
                     mkdir($targetDir, 0777, true);
                 }
-                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                // กำหนดนามสกุลจากชนิดไฟล์จริง (mime) ที่ตรวจแล้ว ไม่ใช้ชื่อที่ผู้ใช้ส่งมา (กัน .php หลุด)
+                $extByMime = ['image/jpeg' => 'jpg', 'image/jpg' => 'jpg', 'image/png' => 'png'];
+                $ext = $extByMime[$fileType] ?? 'jpg';
                 $fileName = 'report_' . $requisition['tracking_id'] . '_' . time() . '.' . $ext;
                 $photoPath = 'storage/reports/' . $fileName;
 

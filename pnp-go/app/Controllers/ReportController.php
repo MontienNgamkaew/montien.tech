@@ -99,12 +99,6 @@ final class ReportController
 
     private function fuelLabels(): array
     {
-        return [
-            'gasoline_91' => 'แก็สโซฮอล์ 91',
-            'gasoline_95' => 'แก็สโซฮอล์ 95',
-            'diesel'      => 'ดีเซล',
-            'engine_oil'  => 'น้ำมันเครื่อง',
-            'other'       => 'อื่นๆ',
-        ];
+        return fuel_type_options();
     }
 }

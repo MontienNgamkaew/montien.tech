@@ -132,6 +132,41 @@ function status_badge_class(string $status): string
     ][$status] ?? 'status-info';
 }
 
+/**
+ * นิยามชนิดน้ำมันเชื้อเพลิงกลาง (แหล่งความจริงเดียว) — ใช้ร่วมทุก controller/view
+ */
+function fuel_type_options(): array
+{
+    return [
+        'gasoline_95' => 'แก๊สโซฮอล์ 95',
+        'gasoline_91' => 'แก๊สโซฮอล์ 91',
+        'diesel'      => 'ดีเซล',
+        'engine_oil'  => 'น้ำมันเครื่อง',
+        'other'       => 'น้ำมันเชื้อเพลิงประเภทอื่น',
+    ];
+}
+
+function fuel_type_label(?string $code): string
+{
+    return fuel_type_options()[$code ?? ''] ?? '-';
+}
+
+/**
+ * ป้ายสถานะคำขอกลาง (แหล่งความจริงเดียว)
+ */
+function status_labels(): array
+{
+    return [
+        'submitted'       => 'ส่งคำขอแล้ว',
+        'pending_level_1' => 'รอหัวหน้างานพัสดุอนุมัติ',
+        'pending_level_2' => 'รอรองผู้อำนวยการฝ่ายบริหารทรัพยากรอนุมัติ',
+        'pending_level_3' => 'รอผู้อำนวยการอนุมัติ',
+        'approved'        => 'อนุมัติเรียบร้อย',
+        'rejected'        => 'ไม่อนุมัติ',
+        'cancelled'       => 'ยกเลิกคำขอ',
+    ];
+}
+
 function redirect(string $path): void
 {
     $basePath = rtrim(config('app')['base_path'], '/');

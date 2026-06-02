@@ -118,6 +118,21 @@ ob_start();
                 </select>
                 <div class="invalid-feedback"><?= e($errors['fuel_type'] ?? '') ?></div>
             </div>
+            <div class="col-md-3" id="fuel_purchase_qty_group">
+                <label class="form-label required" for="fuel_quantity">ปริมาณ</label>
+                <input class="form-control <?= isset($errors['fuel_quantity']) ? 'is-invalid' : '' ?>" id="fuel_quantity" name="fuel_quantity" value="<?= e($old['fuel_quantity'] ?? '') ?>" inputmode="decimal" placeholder="เช่น 40">
+                <div class="invalid-feedback"><?= e($errors['fuel_quantity'] ?? '') ?></div>
+            </div>
+            <div class="col-md-3" id="fuel_purchase_unit_group">
+                <label class="form-label required" for="fuel_unit">หน่วย</label>
+                <select class="form-select <?= isset($errors['fuel_unit']) ? 'is-invalid' : '' ?>" id="fuel_unit" name="fuel_unit">
+                    <option value="">เลือกหน่วย</option>
+                    <?php foreach (['ลิตร', 'แกลลอน', 'ถัง', 'กระป๋อง'] as $unitOpt): ?>
+                        <option value="<?= e($unitOpt) ?>" <?= ($old['fuel_unit'] ?? '') === $unitOpt ? 'selected' : '' ?>><?= e($unitOpt) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="invalid-feedback"><?= e($errors['fuel_unit'] ?? '') ?></div>
+            </div>
             <div class="col-md-6" id="fuel_purchase_amount_group">
                 <label class="form-label required" for="fuel_total_amount">จำนวนเงินที่สั่งซื้อ (บาท)</label>
                 <input class="form-control <?= isset($errors['fuel_total_amount']) ? 'is-invalid' : '' ?>" id="fuel_total_amount" name="fuel_total_amount" value="<?= e($old['fuel_total_amount'] ?? '') ?>" inputmode="decimal">
@@ -134,22 +149,23 @@ ob_start();
 
 <script>
     const purchaseRadios = document.querySelectorAll('input[name="fuel_purchase_requested"]');
-    const typeGroup = document.getElementById('fuel_purchase_type_group');
-    const typeInput = document.getElementById('fuel_type');
-    const amountGroup = document.getElementById('fuel_purchase_amount_group');
-    const amountInput = document.getElementById('fuel_total_amount');
+    const fuelGroups = [
+        { group: 'fuel_purchase_type_group',   input: 'fuel_type' },
+        { group: 'fuel_purchase_qty_group',    input: 'fuel_quantity' },
+        { group: 'fuel_purchase_unit_group',   input: 'fuel_unit' },
+        { group: 'fuel_purchase_amount_group', input: 'fuel_total_amount' },
+    ].map((o) => ({ group: document.getElementById(o.group), input: document.getElementById(o.input) }));
 
     function toggleFuelAmount() {
         const shouldShow = document.getElementById('fuel_purchase_yes').checked;
-        typeGroup.classList.toggle('d-none', !shouldShow);
-        amountGroup.classList.toggle('d-none', !shouldShow);
-        typeInput.disabled = !shouldShow;
-        amountInput.disabled = !shouldShow;
-
-        if (!shouldShow) {
-            typeInput.value = '';
-            amountInput.value = '';
-        }
+        fuelGroups.forEach(({ group, input }) => {
+            if (!group || !input) return;
+            group.classList.toggle('d-none', !shouldShow);
+            input.disabled = !shouldShow;
+            if (!shouldShow) {
+                input.value = '';
+            }
+        });
     }
 
     purchaseRadios.forEach((radio) => radio.addEventListener('change', toggleFuelAmount));

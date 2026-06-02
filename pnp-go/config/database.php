@@ -15,7 +15,7 @@ $config = $isLocal ? [
     'charset'  => 'utf8mb4',
 ] : [
     // === Hostinger Production (pnp-go.montien.tech) ===
-    // รหัสผ่านอ่านจาก .env (PNPGO_DB_PASS) หรือไฟล์ database.local.php ด้านล่าง
+    // รหัสผ่านอ่านจาก .env (PNPGO_DB_PASS) เท่านั้น
     'host'     => env('PNPGO_DB_HOST', 'localhost'),
     'port'     => (int) env('PNPGO_DB_PORT', 3306),
     'database' => env('PNPGO_DB_NAME', 'u651170081_pnpgo'),
@@ -24,13 +24,7 @@ $config = $isLocal ? [
     'charset'  => 'utf8mb4',
 ];
 
-// โหลดค่าคอนฟิกส่วนตัว (เช่น รหัสผ่านฐานข้อมูลจริง) หากมีไฟล์ database.local.php
-$localConfigPath = __DIR__ . '/database.local.php';
-if (is_file($localConfigPath)) {
-    $localConfig = require $localConfigPath;
-    if (is_array($localConfig)) {
-        $config = array_merge($config, $localConfig);
-    }
-}
+// หมายเหตุ: ค่าเชื่อมต่อทั้งหมดมาจาก .env (PNPGO_DB_*) เป็นแหล่งเดียว
+// ไฟล์ pnp-go/config/database.local.php เดิมเลิกใช้แล้ว (ลบทิ้งได้)
 
 return $config;

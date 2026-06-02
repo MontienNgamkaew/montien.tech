@@ -1,0 +1,6 @@
+# ปิดการเข้าถึง/รันสคริปต์ในโฟลเดอร์ storage (กัน RCE จากไฟล์อัปโหลด)
+# อนุญาตเฉพาะไฟล์ static (รูป/ฟอนต์/PDF) ที่ถูกเรียกตรงๆ เท่านั้น
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|phps|phar|cgi|pl|py|sh|log|err)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes -ExecCGI

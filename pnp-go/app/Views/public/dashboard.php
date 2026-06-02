@@ -9,10 +9,6 @@
             <span>➕ เขียนคำขอใช้รถยนต์ใหม่</span>
         </a>
         <a class="btn btn-outline-primary" href="<?= e(config('app')['base_path']) ?>/profile" style="border-radius: 12px;">โปรไฟล์/ลายเซ็น</a>
-        <form method="post" action="<?= e(config('app')['base_path']) ?>/logout" data-confirm data-confirm-title="ออกจากระบบ" data-confirm-text="ต้องการออกจากระบบจัดจองรถยนต์หรือไม่" data-confirm-button="ออกจากระบบ" data-confirm-icon="warning">
-            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-            <button class="btn btn-outline-secondary" type="submit" style="border-radius: 12px;">ออกจากระบบ</button>
-        </form>
     </div>
 </div>
 
@@ -320,6 +316,14 @@ foreach ($myRequisitions as $item) {
                                         <a class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" href="<?= e(config('app')['base_path']) ?>/download?id=<?= e($item['id']) ?>" target="_blank">
                                             📄 PDF
                                         </a>
+                                    <?php endif; ?>
+
+                                    <?php if (str_starts_with($item['status'], 'pending_') || $item['status'] === 'submitted'): ?>
+                                        <form method="post" action="<?= e(config('app')['base_path']) ?>/request/cancel" class="d-inline mb-0" data-confirm data-confirm-title="ยกเลิกคำขอ" data-confirm-text="ต้องการยกเลิกคำขอนี้หรือไม่? เมื่อยกเลิกแล้วไม่สามารถย้อนกลับได้" data-confirm-button="ยกเลิกคำขอ" data-confirm-icon="warning">
+                                            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                            <input type="hidden" name="id" value="<?= e($item['id']) ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">✕ ยกเลิกคำขอ</button>
+                                        </form>
                                     <?php endif; ?>
                                 </div>
                             </td>

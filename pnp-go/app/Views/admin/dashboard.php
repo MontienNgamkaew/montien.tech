@@ -14,10 +14,6 @@
         <?php endif; ?>
         <a class="btn btn-outline-success btn-sm" href="<?= e(config('app')['base_path']) ?>/report">📊 รายงาน</a>
         <a class="btn btn-outline-primary" href="<?= e(config('app')['base_path']) ?>/profile">โปรไฟล์/ลายเซ็น</a>
-        <form method="post" action="<?= e(config('app')['base_path']) ?>/logout" data-confirm data-confirm-title="ออกจากระบบ" data-confirm-text="ต้องการออกจากระบบผู้อนุมัติหรือไม่" data-confirm-button="ออกจากระบบ" data-confirm-icon="warning">
-            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-            <button class="btn btn-outline-secondary" type="submit">ออกจากระบบ</button>
-        </form>
     </div>
 </div>
 
@@ -225,14 +221,41 @@
 
 <section class="form-section mb-3">
     <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0"><?= $user['role'] === 'admin' ? 'คำขอล่าสุด' : 'งานที่รออนุมัติ' ?></h2>
+        <h2 class="section-title mb-0">
+            <?= $user['role'] === 'admin' ? 'คำขอทั้งหมด' : 'งานที่รออนุมัติ' ?>
+            <?php if (!empty($pagination)): ?>
+                <span class="text-secondary fw-normal" style="font-size: 0.9rem;">(<?= e((string) $pagination['total']) ?> รายการ)</span>
+            <?php endif; ?>
+        </h2>
         <?php if ($level): ?>
             <span class="status-pill">Level <?= e((string) $level) ?></span>
         <?php endif; ?>
     </div>
 
+    <?php if (!empty($pagination)): ?>
+        <form method="get" action="<?= e(config('app')['base_path']) ?>/dashboard" class="row g-2 mb-3">
+            <div class="col-sm-6 col-md-5">
+                <input type="text" name="q" class="form-control" placeholder="ค้นหาเลขที่เอกสาร / ผู้ขอ / สถานที่" value="<?= e($filters['q'] ?? '') ?>">
+            </div>
+            <div class="col-sm-7 col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">— ทุกสถานะ —</option>
+                    <?php foreach ($statusLabels as $sKey => $sLabel): ?>
+                        <option value="<?= e($sKey) ?>" <?= ($filters['status'] ?? '') === $sKey ? 'selected' : '' ?>><?= e($sLabel) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-sm-5 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">ค้นหา</button>
+                <?php if (($filters['q'] ?? '') !== '' || ($filters['status'] ?? '') !== ''): ?>
+                    <a href="<?= e(config('app')['base_path']) ?>/dashboard" class="btn btn-outline-secondary">ล้าง</a>
+                <?php endif; ?>
+            </div>
+        </form>
+    <?php endif; ?>
+
     <?php if ($pendingRequisitions === []): ?>
-        <div class="text-secondary">ยังไม่มีคำขอในคิวนี้</div>
+        <div class="text-secondary"><?= !empty($filters) && (($filters['q'] ?? '') !== '' || ($filters['status'] ?? '') !== '') ? 'ไม่พบคำขอที่ตรงกับเงื่อนไขการค้นหา' : 'ยังไม่มีคำขอในคิวนี้' ?></div>
     <?php else: ?>
         <div class="table-responsive">
             <table class="table align-middle">
@@ -262,6 +285,30 @@
                 </tbody>
             </table>
         </div>
+
+        <?php if (!empty($pagination) && $pagination['totalPages'] > 1): ?>
+            <?php
+            $pageLink = function (int $p) use ($filters) {
+                return '?' . http_build_query([
+                    'q'      => $filters['q'] ?? '',
+                    'status' => $filters['status'] ?? '',
+                    'page'   => $p,
+                ]);
+            };
+            $dashBase = config('app')['base_path'] . '/dashboard';
+            ?>
+            <nav class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                <small class="text-secondary">หน้า <?= e((string) $pagination['page']) ?> / <?= e((string) $pagination['totalPages']) ?></small>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item <?= $pagination['page'] <= 1 ? 'disabled' : '' ?>">
+                        <a class="page-link" href="<?= e($dashBase . $pageLink($pagination['page'] - 1)) ?>">‹ ก่อนหน้า</a>
+                    </li>
+                    <li class="page-item <?= $pagination['page'] >= $pagination['totalPages'] ? 'disabled' : '' ?>">
+                        <a class="page-link" href="<?= e($dashBase . $pageLink($pagination['page'] + 1)) ?>">ถัดไป ›</a>
+                    </li>
+                </ul>
+            </nav>
+        <?php endif; ?>
     <?php endif; ?>
 </section>
 
@@ -344,6 +391,14 @@
                                     <a class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" href="<?= e(config('app')['base_path']) ?>/download?id=<?= e($item['id']) ?>" target="_blank">
                                         📄 PDF
                                     </a>
+                                <?php endif; ?>
+
+                                <?php if (str_starts_with($item['status'], 'pending_') || $item['status'] === 'submitted'): ?>
+                                    <form method="post" action="<?= e(config('app')['base_path']) ?>/request/cancel" class="d-inline mb-0" data-confirm data-confirm-title="ยกเลิกคำขอ" data-confirm-text="ต้องการยกเลิกคำขอนี้หรือไม่? เมื่อยกเลิกแล้วไม่สามารถย้อนกลับได้" data-confirm-button="ยกเลิกคำขอ" data-confirm-icon="warning">
+                                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                        <input type="hidden" name="id" value="<?= e($item['id']) ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">✕ ยกเลิกคำขอ</button>
+                                    </form>
                                 <?php endif; ?>
                             </div>
                         </td>
