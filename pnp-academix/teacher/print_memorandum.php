@@ -121,9 +121,10 @@ function toThaiNumerals($num): string
         /* Top Garuda Area - Absolute Positioned and Locked */
         .garuda-container {
             position: absolute;
-            top: 20px;
+            top: -15px;
             left: 20px;
             z-index: 10;
+            pointer-events: none;
         }
         .garuda-logo {
             width: 1.8cm; /* Enlarged slightly (1.8 cm) as requested, while keeping absolute positioning */

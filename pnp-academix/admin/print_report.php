@@ -402,9 +402,10 @@ function renderCategoryTable(string $title, array $teachersList) {
         /* Top Garuda Area - Absolute Positioned */
         .garuda-container {
             position: absolute;
-            top: 20px;
+            top: -15px;
             left: 20px;
             z-index: 10;
+            pointer-events: none;
         }
         .garuda-logo {
             width: 1.8cm;
