@@ -126,12 +126,8 @@ try {
     $_SESSION['role'] = $localRole;
     $_SESSION['login_at'] = time();
     
-    // Redirect based on localRole
-    if ($localRole === 'admin') {
-        header('Location: admin/overview.php');
-    } else {
-        header('Location: teacher/dashboard.php');
-    }
+    // Redirect to Academix landing page (index.php) after SSO login
+    header('Location: index.php');
     exit;
 
 } catch (Exception $e) {
