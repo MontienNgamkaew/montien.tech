@@ -110,6 +110,17 @@ final class DashboardController
         $level = (int) $requisition['current_level'];
         $comment = trim($_POST['comment'] ?? '');
         $db = Database::connection();
+
+        // ผู้ลงนามในเอกสาร: ถ้า admin อนุมัติแทน ให้ดึง "ผู้มีสิทธิ์อนุมัติจริง" ของระดับนั้นมาลงนามในใบ PDF
+        // (ฝั่ง audit log ยังบันทึก admin ผู้กดจริงไว้ตามเดิม)
+        $approverId = (int) $user['id'];
+        if ($user['role'] === 'admin') {
+            $designated = $this->designatedApproverId($db, $level);
+            if ($designated !== null) {
+                $approverId = $designated;
+            }
+        }
+
         $db->beginTransaction();
 
         try {
@@ -155,7 +166,7 @@ final class DashboardController
                     'status' => 'pending_level_2',
                     'vehicle_id' => $vehicleId,
                     'driver_name' => $driverName,
-                    'user_id' => $user['id'],
+                    'user_id' => $approverId,
                     'id' => $id,
                 ]);
                 $statusTo = 'pending_level_2';
@@ -168,7 +179,7 @@ final class DashboardController
                 );
                 $update->execute([
                     'status' => 'pending_level_3',
-                    'user_id' => $user['id'],
+                    'user_id' => $approverId,
                     'id' => $id,
                 ]);
                 $statusTo = 'pending_level_3';
@@ -181,7 +192,7 @@ final class DashboardController
                 );
                 $update->execute([
                     'status' => 'approved',
-                    'user_id' => $user['id'],
+                    'user_id' => $approverId,
                     'id' => $id,
                 ]);
                 $statusTo = 'approved';
@@ -380,6 +391,30 @@ final class DashboardController
         $statement->execute(['status' => $status, 'level' => $level]);
 
         return $statement->fetchAll();
+    }
+
+    /**
+     * หา user_id ของผู้มีสิทธิ์อนุมัติจริงประจำระดับ (ใช้เมื่อ admin อนุมัติแทน เพื่อให้ PDF ลงนามถูกคน)
+     * เลือกผู้ที่มีบทบาทตรงระดับ โดยให้ความสำคัญกับคนที่มีลายเซ็นก่อน
+     */
+    private function designatedApproverId(\PDO $db, int $level): ?int
+    {
+        $roleByLevel = [1 => 'supply_head', 2 => 'deputy_director', 3 => 'director'];
+        $role = $roleByLevel[$level] ?? null;
+        if ($role === null) {
+            return null;
+        }
+
+        $stmt = $db->prepare(
+            "SELECT id FROM users
+             WHERE role = :role AND is_active = 1
+             ORDER BY (signature_path IS NULL OR signature_path = '') ASC, id ASC
+             LIMIT 1"
+        );
+        $stmt->execute(['role' => $role]);
+        $id = $stmt->fetchColumn();
+
+        return $id !== false ? (int) $id : null;
     }
 
     private function canApprove(array $user, array $requisition): bool

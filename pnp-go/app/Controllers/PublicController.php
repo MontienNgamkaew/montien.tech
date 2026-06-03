@@ -24,8 +24,9 @@ final class PublicController
         $data = $this->requestData();
 
         // Auto-fill from central Portal session
+        // ตำแหน่งในแบบคำขอ = ตำแหน่งหลักของบุคคล (primary_position) ไม่ใช่ตำแหน่งในโครงสร้างงาน
         $data['requester_name'] = $user['full_name'];
-        $data['requester_position'] = $user['position_title'];
+        $data['requester_position'] = !empty($user['primary_position']) ? $user['primary_position'] : $user['position_title'];
         $data['odometer_before'] = ''; // นำออกไปกรอกหลังใช้รถยนต์เสร็จ
 
         $errors = $this->validateRequest($data);

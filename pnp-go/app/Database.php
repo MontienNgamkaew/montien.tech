@@ -33,6 +33,9 @@ final class Database
             if (!in_array('avatar_path', $usersCols)) {
                 self::$connection->exec("ALTER TABLE users ADD COLUMN avatar_path VARCHAR(255) NULL AFTER signature_path");
             }
+            if (!in_array('primary_position', $usersCols)) {
+                self::$connection->exec("ALTER TABLE users ADD COLUMN primary_position VARCHAR(150) NULL AFTER position_title");
+            }
 
             // Check 'requisitions' table columns
             $stmt = self::$connection->query("SHOW COLUMNS FROM requisitions");

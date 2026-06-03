@@ -90,19 +90,21 @@ try {
     if ($localUser) {
         // Update user profile details and role dynamically
         $updateStmt = $db->prepare('
-            UPDATE users 
-            SET full_name = :full_name, 
-                role = :role, 
-                position_title = :position_title, 
+            UPDATE users
+            SET full_name = :full_name,
+                role = :role,
+                position_title = :position_title,
+                primary_position = :primary_position,
                 avatar_path = :avatar_path,
                 is_active = 1,
-                last_login_at = NOW() 
+                last_login_at = NOW()
             WHERE id = :id
         ');
         $updateStmt->execute([
             'full_name' => $fullName,
             'role' => $localRole,
             'position_title' => $orgPosition ?: $primaryPosition,
+            'primary_position' => $primaryPosition,
             'avatar_path' => $avatar ?: null,
             'id' => $localUser['id']
         ]);
@@ -111,8 +113,8 @@ try {
         // Automatically register (Sync) user into local carrequest DB
         $randomPass = bin2hex(random_bytes(16));
         $insertStmt = $db->prepare('
-            INSERT INTO users (full_name, username, password_hash, role, position_title, avatar_path, is_active, last_login_at)
-            VALUES (:full_name, :username, :password_hash, :role, :position_title, :avatar_path, 1, NOW())
+            INSERT INTO users (full_name, username, password_hash, role, position_title, primary_position, avatar_path, is_active, last_login_at)
+            VALUES (:full_name, :username, :password_hash, :role, :position_title, :primary_position, :avatar_path, 1, NOW())
         ');
         $insertStmt->execute([
             'full_name' => $fullName,
@@ -120,6 +122,7 @@ try {
             'password_hash' => password_hash($randomPass, PASSWORD_BCRYPT),
             'role' => $localRole,
             'position_title' => $orgPosition ?: $primaryPosition,
+            'primary_position' => $primaryPosition,
             'avatar_path' => $avatar ?: null
         ]);
         $localUserId = (int)$db->lastInsertId();

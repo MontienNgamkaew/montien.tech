@@ -21,7 +21,7 @@ ob_start();
             </div>
             <div class="col-md-6">
                 <label class="form-label required" for="requester_position">ตำแหน่ง</label>
-                <input class="form-control" id="requester_position" name="requester_position" value="<?= e($user['position_title']) ?>" readonly>
+                <input class="form-control" id="requester_position" name="requester_position" value="<?= e(!empty($user['primary_position']) ? $user['primary_position'] : $user['position_title']) ?>" readonly>
             </div>
         </div>
     </section>
