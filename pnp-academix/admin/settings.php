@@ -208,11 +208,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'save_signatures') {
             $deputyDirector = trim((string)($_POST['deputy_director_name'] ?? ''));
             $director = trim((string)($_POST['director_name'] ?? ''));
+            $curriculumOfficer = trim((string)($_POST['curriculum_officer_name'] ?? ''));
+            $curriculumHead = trim((string)($_POST['curriculum_head_name'] ?? ''));
             
             try {
                 $stmt = $pdo->prepare("INSERT INTO branding_settings (meta_key, meta_value) VALUES (:key, :value) ON DUPLICATE KEY UPDATE meta_value = :value2");
                 $stmt->execute(['key' => 'deputy_director_name', 'value' => $deputyDirector, 'value2' => $deputyDirector]);
                 $stmt->execute(['key' => 'director_name', 'value' => $director, 'value2' => $director]);
+                $stmt->execute(['key' => 'curriculum_officer_name', 'value' => $curriculumOfficer, 'value2' => $curriculumOfficer]);
+                $stmt->execute(['key' => 'curriculum_head_name', 'value' => $curriculumHead, 'value2' => $curriculumHead]);
                 
                 $deptsQuery = $pdo->query("SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != ''")->fetchAll(PDO::FETCH_COLUMN);
                 foreach ($deptsQuery as $dept) {
@@ -566,6 +570,22 @@ $systemTypeLabels = [
                     <input type="text" name="director_name" id="director_name" value="<?= e($branding['director_name'] ?? ''); ?>"
                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 focus:bg-white transition"
                            placeholder="ตัวอย่างเช่น: นายวิชัย สมบูรณ์">
+                </div>
+
+                <!-- Curriculum Officer -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="curriculum_officer_name">เจ้าหน้าที่งานพัฒนาหลักสูตรการเรียนการสอน</label>
+                    <input type="text" name="curriculum_officer_name" id="curriculum_officer_name" value="<?= e($branding['curriculum_officer_name'] ?? ''); ?>"
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 focus:bg-white transition"
+                           placeholder="ระบบจะดึงจาก pnpman อัตโนมัติหากปล่อยว่าง">
+                </div>
+
+                <!-- Head of Curriculum -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="curriculum_head_name">หัวหน้างานพัฒนาหลักสูตรการเรียนการสอน</label>
+                    <input type="text" name="curriculum_head_name" id="curriculum_head_name" value="<?= e($branding['curriculum_head_name'] ?? ''); ?>"
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 focus:bg-white transition"
+                           placeholder="ระบบจะดึงจาก pnpman อัตโนมัติหากปล่อยว่าง">
                 </div>
             </div>
             

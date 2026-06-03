@@ -198,5 +198,63 @@ function get_teacher_departments(string $username): array {
     }
 }
 
+// Helper to query curriculum personnel from pnpman (job_id = 27)
+function get_curriculum_personnel(string $roleType): string {
+    $dbPortal = get_portal_db_connection();
+    if (!$dbPortal) {
+        return '';
+    }
+    try {
+        $stmt = $dbPortal->prepare("
+            SELECT u.first_name, u.last_name, a.role, a.comment
+            FROM assignments a
+            INNER JOIN users u ON u.id = a.personnel_id
+            WHERE a.job_id = 27
+        ");
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+        
+        $headName = '';
+        $officerName = '';
+        $anyName = '';
+        
+        foreach ($rows as $row) {
+            $fullname = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+            if (empty($anyName)) {
+                $anyName = $fullname;
+            }
+            
+            $role = $row['role'] ?? '';
+            $comment = $row['comment'] ?? '';
+            
+            if (mb_strpos($role, 'หัวหน้า') !== false || mb_strpos($comment, 'หัวหน้า') !== false) {
+                $headName = $fullname;
+            } elseif (mb_strpos($role, 'เจ้าหน้าที่') !== false || mb_strpos($comment, 'เจ้าหน้าที่') !== false) {
+                $officerName = $fullname;
+            }
+        }
+        
+        if ($roleType === 'head') {
+            return !empty($headName) ? $headName : $anyName;
+        } else { // officer
+            if (!empty($officerName)) {
+                return $officerName;
+            }
+            // Fallback to any assignment that is not the head
+            foreach ($rows as $row) {
+                $fullname = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+                if ($fullname !== $headName) {
+                    return $fullname;
+                }
+            }
+            return $anyName;
+        }
+    } catch (Exception $e) {
+        error_log('get_curriculum_personnel failed: ' . $e->getMessage());
+        return '';
+    }
+}
+
+
 
 

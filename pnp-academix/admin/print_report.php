@@ -323,6 +323,15 @@ $branding = get_branding_settings();
 $deputyDirectorName = $branding['deputy_director_name'] ?? '';
 $directorName = $branding['director_name'] ?? '';
 
+$curriculumOfficerName = trim($branding['curriculum_officer_name'] ?? '');
+if (empty($curriculumOfficerName)) {
+    $curriculumOfficerName = get_curriculum_personnel('officer');
+}
+$curriculumHeadName = trim($branding['curriculum_head_name'] ?? '');
+if (empty($curriculumHeadName)) {
+    $curriculumHeadName = get_curriculum_personnel('head');
+}
+
 // Helper to render category table beautifully
 function renderCategoryTable(string $title, array $teachersList) {
     ?>
@@ -398,7 +407,7 @@ function renderCategoryTable(string $title, array $teachersList) {
             z-index: 10;
         }
         .garuda-logo {
-            width: 1.5cm;
+            width: 1.8cm;
             height: auto;
             display: block;
         }
@@ -407,7 +416,7 @@ function renderCategoryTable(string $title, array $teachersList) {
             font-size: 29pt;
             font-weight: bold;
             text-align: center;
-            padding-top: 10px;
+            padding-top: 15px;
             margin-bottom: 25px;
             letter-spacing: 0.5px;
         }
@@ -541,6 +550,24 @@ function renderCategoryTable(string $title, array $teachersList) {
             .container {
                 padding: 0;
             }
+            .memo-title {
+                padding-top: 10px !important;
+                margin-bottom: 15px !important;
+            }
+            .paragraph {
+                margin-bottom: 8px !important;
+            }
+            .signature-block {
+                margin-top: 10px !important;
+                margin-bottom: 10px !important;
+            }
+            .approvals-container {
+                margin-top: 15px !important;
+                padding-top: 10px !important;
+            }
+            .approval-box {
+                padding: 8px !important;
+            }
         }
     </style>
 </head>
@@ -558,12 +585,7 @@ function renderCategoryTable(string $title, array $teachersList) {
 
     <!-- Page 1: Memorandum (บันทึกข้อความ) -->
     <div class="garuda-container">
-        <svg class="garuda-logo" viewBox="0 0 100 100" fill="#000" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 0c-.5 0-1 .2-1.3.6C47.4 2 43.9 6.8 41 8.8c-1.3.9-2.2 2.3-2.6 3.8-.4 1.5-.2 3.1.5 4.5l1.6 3.1c-.8.8-1.5 1.7-2 2.7l-3.3-.9c-1.5-.4-3.1-.1-4.4.7-1.3.8-2.1 2.2-2.3 3.7-.4 2.8-.7 6.4.3 8.7.6 1.3 1.6 2.3 2.9 2.8l3.1 1.2c-.2.6-.3 1.2-.3 1.8 0 1.2.3 2.3.8 3.3L34 45.4c-.6.6-1.5 1-2.4 1-1 0-1.9-.4-2.5-1.1-1.3-1.5-2.7-3.1-4.2-4.5-.9-.8-2.1-1.2-3.3-1.1-1.2.1-2.3.8-2.9 1.8-1.3 2.2-2.7 5.1-3 7.8-.2 1.5.3 3 1.3 4.1l2.4 2.5c-.3 1-.5 2-.5 3 0 .7.1 1.4.3 2.1l-3 1.3c-1.4.6-2.4 1.8-2.7 3.3-.3 1.5.1 3 .1 4.5.3 2.8.9 5.6 2.3 8.1 1 1.8 3 2.8 5 2.5l3.8-.6c1 .8 2 1.5 3.2 2l-1.3 3.3c-.6 1.5-.4 3.1.5 4.4 1 1.3 2.5 2 4.1 1.8 2.8-.3 6.3-1 8.2-2.5 1.3-1 2-2.6 2-4.2v-3.2c1 .2 2 .3 3 .3 1.4 0 2.8-.2 4.1-.7l1.9 2.9c.9 1.3 2.3 2.1 3.9 2.1 1.6 0 3-.8 3.8-2.2 1.8-3 3.8-6.9 4.3-9.8.3-1.5-.1-3.1-1.1-4.3l-2.4-2.8c.8-1 1.4-2.2 1.8-3.4l3.1.5c1 .2 2-.1 2.8-.7.8-.6 1.3-1.5 1.4-2.5.3-2.8.7-6.3.3-8.6-.2-1.3-.9-2.4-2.1-2.9l-2.8-1.3c.4-.9.6-1.9.6-3s-.2-2.1-.6-3.1l2.8-.9c1.4-.4 2.5-1.5 2.9-2.9.4-1.5.1-3-.7-4.3-1.8-2.7-4.4-5.3-6.6-7-1.3-1-3-1.3-4.5-1l-3.3 1c-.3-1-.9-1.9-1.6-2.6l1.2-3.1c.6-1.5.4-3.1-.5-4.4-1-1.3-2.5-2-4.1-1.8-2.8.3-6.3 1-8.2 2.5-1.3 1-2 2.6-2 4.2v3.1c-.8-.2-1.7-.3-2.5-.3zm3.7 10.6c.5 0 .9.2 1.2.6.5.6.8 1.4.8 2.2 0 1.2-.7 2.3-1.8 2.7l-2 .8c-.2-.6-.5-1.2-.9-1.7l1.5-2.7c.3-.6.7-.9 1.2-.9zm-7.4 0c.5 0 .9.3 1.2.9l1.5 2.7c-.4.5-.7 1.1-.9 1.7l-2-.8C45 14 44.3 13 44.3 11.8c0-.8.3-1.6.8-2.2.3-.4.7-.6 1.2-.6z"/>
-            <path d="M50 25c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm0 16c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z"/>
-            <path d="M50 49c-10.5 0-19 8.5-19 19 0 1.1.9 2 2 2h34c1.1 0 2-.9 2-2 0-10.5-8.5-19-19-19zm-14.8 17c1.3-6.2 6.8-11 13.3-11s12 4.8 13.3 11H35.2z"/>
-            <path d="M50 74c-1.7 0-3 1.3-3 3v13c0 1.7 1.3 3 3 3s3-1.3 3-3V77c0-1.7-1.3-3-3-3z"/>
-        </svg>
+        <img src="../uploads/branding/garuda.png" class="garuda-logo" alt="ตราครุฑ">
     </div>
 
     <div class="memo-title">บันทึกข้อความ</div>
@@ -607,7 +629,7 @@ function renderCategoryTable(string $title, array $teachersList) {
     <!-- Reporter Signature Area -->
     <div class="signature-block">
         <div class="signature-line" style="margin-bottom: 6px;">ลงชื่อ ..................................................... ผู้รายงาน</div>
-        <div>( <strong><?= e(current_user_fullname()); ?></strong> )</div>
+        <div>( <strong><?= htmlspecialchars($curriculumOfficerName ?: '.....................................................'); ?></strong> )</div>
         <div style="margin-top: 4px;">เจ้าหน้าที่งานพัฒนาหลักสูตรการเรียนการสอน</div>
     </div>
     
@@ -616,11 +638,26 @@ function renderCategoryTable(string $title, array $teachersList) {
     <!-- Approvals Block on Page 1 -->
     <div class="approvals-container">
         <div class="approval-grid">
+            <!-- Head of Curriculum Box -->
+            <div class="approval-box">
+                <div class="approval-header">๑. ความเห็นของหัวหน้างานพัฒนาหลักสูตรการจัดการเรียนรู้</div>
+                <div style="margin-bottom: 20px;">
+                    [ &nbsp; ] ตรวจสอบแล้ว เห็นควรเสนอรองผู้อำนวยการฝ่ายวิชาการ<br>
+                    [ &nbsp; ] อื่นๆ ............................................................................
+                </div>
+                <div style="text-align: center; margin-top: 25px;">
+                    ลงชื่อ ....................................................................<br>
+                    ( <?= htmlspecialchars($curriculumHeadName ?: '....................................................................'); ?> )<br>
+                    ตำแหน่ง หัวหน้างานพัฒนาหลักสูตรการจัดการเรียนรู้<br>
+                    วันที่ ...... / ................ / ...........
+                </div>
+            </div>
+
             <!-- Deputy Director Box -->
             <div class="approval-box">
-                <div class="approval-header">๑. ความเห็นของรองผู้อำนวยการฝ่ายวิชาการ</div>
+                <div class="approval-header">๒. ความเห็นของรองผู้อำนวยการฝ่ายวิชาการ</div>
                 <div style="margin-bottom: 20px;">
-                    [ &nbsp; ] ตรวจสอบแล้ว เห็นควรทราบและอนุมัติ<br>
+                    [ &nbsp; ] ตรวจสอบแล้ว เห็นควรเสนอผู้อำนวยการ<br>
                     [ &nbsp; ] อื่นๆ ............................................................................
                 </div>
                 <div style="text-align: center; margin-top: 25px;">
@@ -632,8 +669,8 @@ function renderCategoryTable(string $title, array $teachersList) {
             </div>
 
             <!-- Director Box -->
-            <div class="approval-box">
-                <div class="approval-header">๒. ผลการพิจารณาของผู้อำนวยการ</div>
+            <div class="approval-box" style="grid-column: span 2;">
+                <div class="approval-header">๓. ผลการพิจารณาของผู้อำนวยการ</div>
                 <div style="margin-bottom: 20px;">
                     [ &nbsp; ] ทราบและอนุมัติ<br>
                     [ &nbsp; ] อื่นๆ ............................................................................
