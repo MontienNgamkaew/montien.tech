@@ -21,9 +21,10 @@ backup*.sql
 
 # Dependencies (ติดตั้งใหม่ได้ด้วย composer/npm — ไม่ต้องเก็บใน git)
 /vendor/
-**/vendor/
 node_modules/
 **/node_modules/
+# หมายเหตุ: pnp-go/vendor ถูก commit ขึ้น git (mPDF) เพื่อให้ deploy ด้วย git pull/checkout
+#          ใช้ได้ทันทีโดยไม่ต้องรัน composer บน host — ดู pnp-go/.gitignore (ตัด ttfonts 88MB ออก)
 
 # ไฟล์ session / cache / log ที่สร้างตอนรันไทม์
 pnp-go/storage/sessions/

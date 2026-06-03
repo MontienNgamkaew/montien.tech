@@ -1,5 +1,8 @@
 # === Composer ===
-/vendor/
+# vendor/ ถูก commit ขึ้น git (mPDF) เพื่อให้ git pull/checkout บน host ใช้ได้ทันที
+# ยกเว้นฟอนต์ที่ mPDF แถมมา (88MB) ซึ่งไม่ได้ใช้ — เราใช้ THSarabunNew จาก storage/fonts
+/vendor/mpdf/mpdf/ttfonts/
+/vendor/mpdf/mpdf/tmp/
 composer.phar
 
 # === Storage (sessions, signatures, PDFs - ข้อมูลส่วนตัว) ===
