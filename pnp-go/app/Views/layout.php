@@ -21,7 +21,8 @@ function central_portal_base(): string
     return $isLocal ? '/pnp-portal' : '';
 }
 
-$logoSrc = !empty($logoPath) ? (central_portal_base() . '/' . $logoPath) : ($app['base_path'] . '/public/assets/logo.png');
+// โลโก้ดึงจากการตั้งค่ากลาง (college_settings) ที่อัปโหลดผ่าน pnpman — ไฟล์อยู่ใต้โฟลเดอร์ pnpman/
+$logoSrc = !empty($logoPath) ? (central_portal_base() . '/pnpman/' . ltrim($logoPath, '/')) : ($app['base_path'] . '/public/assets/logo.png');
 
 $themeVariables = [
     'rose' => [

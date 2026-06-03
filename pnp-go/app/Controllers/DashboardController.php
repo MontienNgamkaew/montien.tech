@@ -591,6 +591,45 @@ final class DashboardController
         ]);
     }
 
+    public function deleteRequisition(): void
+    {
+        verify_csrf();
+        $user = require_auth();
+        if (($user['role'] ?? '') !== 'admin') {
+            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">เฉพาะผู้ดูแลระบบที่ลบคำขอได้</h1>', 403);
+            return;
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $requisition = $this->findRequisition($id);
+        if ($requisition === null) {
+            view('ไม่พบคำขอ', '<h1 class="h4">ไม่พบคำขอที่ต้องการ</h1>', 404);
+            return;
+        }
+
+        $db = Database::connection();
+        $db->beginTransaction();
+        try {
+            // ลบไฟล์ที่เกี่ยวข้อง (PDF / รูปรายงาน) ถ้ามี
+            foreach (['pdf_path', 'report_photo_path'] as $col) {
+                if (!empty($requisition[$col])) {
+                    $path = dirname(__DIR__, 2) . '/' . ltrim($requisition[$col], '/');
+                    if (is_file($path)) {
+                        @unlink($path);
+                    }
+                }
+            }
+            // ลบคำขอ — approval_logs จะถูกลบอัตโนมัติด้วย FK ON DELETE CASCADE
+            $db->prepare('DELETE FROM requisitions WHERE id = :id')->execute(['id' => $id]);
+            $db->commit();
+        } catch (Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+
+        redirect('/dashboard');
+    }
+
     public function saveSettings(): void
     {
         verify_csrf();
@@ -601,16 +640,10 @@ final class DashboardController
         }
 
         $systemName = trim($_POST['system_name'] ?? '');
-        $themeColor = trim($_POST['theme_color'] ?? 'rose');
 
         $errors = [];
         if ($systemName === '') {
             $errors['system_name'] = 'กรุณาระบุชื่อระบบ';
-        }
-
-        $allowedThemes = ['rose', 'indigo', 'emerald', 'sky', 'amber', 'slate'];
-        if (!in_array($themeColor, $allowedThemes)) {
-            $themeColor = 'rose';
         }
 
         if ($errors !== []) {
@@ -618,12 +651,10 @@ final class DashboardController
             return;
         }
 
+        // ระบบใช้โทนน้ำเงินกรมท่าเดียว — บันทึกเฉพาะชื่อระบบ
         $db = Database::connection();
-        $stmt = $db->prepare('UPDATE system_settings SET system_name = :name, theme_color = :theme WHERE id = 1');
-        $stmt->execute([
-            'name' => $systemName,
-            'theme' => $themeColor
-        ]);
+        $stmt = $db->prepare('UPDATE system_settings SET system_name = :name WHERE id = 1');
+        $stmt->execute(['name' => $systemName]);
 
         redirect('/dashboard/settings?saved=success');
     }

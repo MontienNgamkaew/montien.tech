@@ -23,6 +23,7 @@ $router->get('/dashboard', [$dashboardController, 'index']);
 $router->get('/dashboard/requisition', [$dashboardController, 'show']);
 $router->post('/dashboard/requisition/approve', [$dashboardController, 'approve']);
 $router->post('/dashboard/requisition/reject', [$dashboardController, 'reject']);
+$router->post('/dashboard/requisition/delete', [$dashboardController, 'deleteRequisition']);
 $router->get('/dashboard/settings', [$dashboardController, 'settingsForm']);
 $router->post('/dashboard/settings', [$dashboardController, 'saveSettings']);
 $router->get('/profile', [$dashboardController, 'profile']);

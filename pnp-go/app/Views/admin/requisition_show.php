@@ -4,7 +4,16 @@
         <h1 class="h3 mb-1">รายละเอียดคำขอ</h1>
         <p class="text-secondary mb-0">Tracking ID: <?= e($requisition['tracking_id']) ?></p>
     </div>
-    <a class="btn btn-outline-secondary" href="<?= e(config('app')['base_path']) ?>/dashboard">กลับแดชบอร์ด</a>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary btn-sm" href="<?= e(config('app')['base_path']) ?>/dashboard">กลับแดชบอร์ด</a>
+        <?php if (($user['role'] ?? '') === 'admin'): ?>
+        <form method="post" action="<?= e(config('app')['base_path']) ?>/dashboard/requisition/delete" class="d-inline mb-0" data-confirm data-confirm-title="ลบคำขอถาวร" data-confirm-text="ต้องการลบคำขอนี้ออกจากระบบถาวรหรือไม่? การลบไม่สามารถย้อนกลับได้ (รวมประวัติการดำเนินการและไฟล์ PDF)" data-confirm-button="ลบถาวร" data-confirm-icon="warning">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="id" value="<?= e((string) $requisition['id']) ?>">
+            <button type="submit" class="btn btn-outline-danger btn-sm">🗑️ ลบคำขอ</button>
+        </form>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php if (!empty($error)): ?>
