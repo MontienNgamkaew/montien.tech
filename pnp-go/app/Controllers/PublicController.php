@@ -271,36 +271,50 @@ final class PublicController
             return;
         }
 
-        $statement = Database::connection()->prepare(
-            'SELECT id, user_id, tracking_id, status, pdf_path FROM requisitions WHERE id = :id LIMIT 1'
-        );
-        $statement->execute(['id' => $id]);
-        $requisition = $statement->fetch();
+        try {
+            $statement = Database::connection()->prepare(
+                'SELECT id, user_id, tracking_id, status, pdf_path FROM requisitions WHERE id = :id LIMIT 1'
+            );
+            $statement->execute(['id' => $id]);
+            $requisition = $statement->fetch();
 
-        if (!$requisition) {
-            view('ไม่พบไฟล์ PDF', '<h1 class="h4">ไม่พบคำขอที่คุณระบุ</h1>', 404);
-            return;
+            if (!$requisition) {
+                view('ไม่พบไฟล์ PDF', '<h1 class="h4">ไม่พบคำขอที่คุณระบุ</h1>', 404);
+                return;
+            }
+
+            // Security check: regular users can only download their own PDFs!
+            if ($user['role'] === 'user' && (int)$requisition['user_id'] !== (int)$user['id']) {
+                view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์ดาวน์โหลดไฟล์ PDF ของผู้อื่น</h1>', 403);
+                return;
+            }
+
+            if ($requisition['status'] !== 'approved') {
+                view('ยังไม่สามารถดาวน์โหลดได้', '<h1 class="h4">คำขอยังไม่ได้รับอนุมัติสมบูรณ์</h1>', 403);
+                return;
+            }
+
+            // Generate or retrieve PDF
+            $pdfPath = $requisition['pdf_path'];
+            if (empty($pdfPath) || !is_file(dirname(__DIR__, 2) . '/' . $pdfPath)) {
+                $pdfPath = (new PdfService())->generateForRequisition((int) $requisition['id']);
+            }
+
+            $fullPath = dirname(__DIR__, 2) . '/' . $pdfPath;
+
+            if (!is_file($fullPath)) {
+                view('ไฟล์ไม่พบ', '<h1 class="h4">ไม่สามารถค้นหาไฟล์ PDF ที่สร้างไว้</h1>', 500);
+                return;
+            }
+
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="requisition_' . $requisition['tracking_id'] . '.pdf"');
+            header('Content-Length: ' . filesize($fullPath));
+            readfile($fullPath);
+            exit;
+        } catch (Throwable $e) {
+            view('เกิดข้อผิดพลาด', '<h1 class="h4">ไม่สามารถสร้างหรือดาวน์โหลดไฟล์ PDF ได้</h1><p>' . htmlspecialchars($e->getMessage()) . '</p>', 500);
         }
-
-        // Security check: regular users can only download their own PDFs!
-        if ($user['role'] === 'user' && (int)$requisition['user_id'] !== (int)$user['id']) {
-            view('สิทธิ์ไม่เพียงพอ', '<h1 class="h4">คุณไม่มีสิทธิ์ดาวน์โหลดไฟล์ PDF ของผู้อื่น</h1>', 403);
-            return;
-        }
-
-        if ($requisition['status'] !== 'approved') {
-            view('ยังไม่สามารถดาวน์โหลดได้', '<h1 class="h4">คำขอยังไม่ได้รับอนุมัติสมบูรณ์</h1>', 403);
-            return;
-        }
-
-        $requisition['pdf_path'] = (new PdfService())->generateForRequisition((int) $requisition['id']);
-
-        $path = dirname(__DIR__, 2) . '/' . $requisition['pdf_path'];
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="requisition_' . $requisition['tracking_id'] . '.pdf"');
-        header('Content-Length: ' . filesize($path));
-        readfile($path);
-        exit;
     }
 
     private function activeVehicles(): array
