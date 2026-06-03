@@ -20,7 +20,8 @@ $dashboardUrl = '#';
 if ($isLoggedIn) {
     $dashboardUrl = (current_user_role() === 'admin') ? 'admin/overview.php' : 'teacher/dashboard.php';
 }
-$loginUrl = 'login.php';
+$portalUrl = get_portal_url();
+$loginUrl = $portalUrl;
 
 $semester = $pdo->query('SELECT id, semester_name FROM semesters WHERE is_active = 1 ORDER BY id DESC LIMIT 1')->fetch();
 $systemSettings = [];
@@ -155,16 +156,16 @@ $activeTheme = $themes[$themeColorKey] ?? $themes['dark-blue'];
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
                             <span>แดชบอร์ด</span>
                         </a>
-                        <a href="login.php?logout=1"
+                        <a href="<?= $portalUrl; ?>"
                            class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 border border-white/15 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl transition">
-                            ออกจากระบบ
+                            กลับสู่พอร์ทัลกลาง
                         </a>
                     </div>
                 <?php else: ?>
-                    <a href="<?= $loginUrl; ?>"
+                    <a href="<?= $portalUrl; ?>"
                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 <?= $activeTheme['btn_accent']; ?> text-white text-xs font-black rounded-xl transition-all shadow-lg">
                         <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
-                        <span>เข้าสู่ระบบ</span>
+                        <span>เข้าสู่ระบบผ่านพอร์ทัลกลาง</span>
                     </a>
                 <?php endif; ?>
             </div>
@@ -218,8 +219,8 @@ $activeTheme = $themes[$themeColorKey] ?? $themes['dark-blue'];
             $deadline = $setting && $setting['deadline_date'] ? date('d/m/Y H:i', strtotime($setting['deadline_date'])) : '-';
 
             // Dynamic label and target link logic
-            $btnLabel = 'เข้าสู่ระบบ';
-            $btnUrl = $loginUrl;
+            $btnLabel = 'เข้าสู่ระบบผ่านพอร์ทัลกลาง';
+            $btnUrl = $portalUrl;
 
             if ($isLoggedIn) {
                 $userRole = current_user_role();

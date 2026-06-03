@@ -49,35 +49,27 @@ function redirect_to(string $path): never
     exit;
 }
 
+/**
+ * Get the Portal base URL (works on both local XAMPP and Hostinger production).
+ * Local XAMPP: /pnp-portal/
+ * Hostinger:   / (portal is at document root)
+ */
+function get_portal_url(): string
+{
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    if (strpos($host, 'montien.tech') !== false) {
+        // Production: portal is at root
+        return '/';
+    }
+    // Local XAMPP: portal is under /pnp-portal/
+    return '/pnp-portal/';
+}
+
 function require_login(): void
 {
     if (!is_logged_in()) {
-        $baseUrl = '';
-        $docRoot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? '');
-        $authDir = str_replace('\\', '/', __DIR__);
-        $docRootLower = strtolower($docRoot);
-        $authDirLower = strtolower($authDir);
-        
-        if ($docRoot !== '' && strpos($authDirLower, $docRootLower) === 0) {
-            $basePath = substr($authDir, strlen($docRoot));
-            $basePath = '/' . trim(str_replace('\\', '/', $basePath), '/');
-            $baseUrl = $basePath === '/' ? '' : $basePath;
-        } else {
-            // Simple fallback based on current URL depth
-            $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-            if (preg_match('#/(admin|teacher)/#i', $script)) {
-                $baseUrl = '..';
-            } else {
-                $baseUrl = '.';
-            }
-        }
-        
-        $redirectPath = 'login.php';
-        if ($baseUrl !== '') {
-            $redirectPath = rtrim($baseUrl, '/') . '/login.php';
-        }
-        
-        redirect_to($redirectPath);
+        // Redirect to Portal for SSO authentication instead of local login
+        redirect_to(get_portal_url());
     }
 }
 

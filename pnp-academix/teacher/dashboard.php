@@ -252,7 +252,7 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                 <div class="w-[1px] h-8 bg-slate-200 hidden sm:block"></div>
                 <a href="../login.php?logout=1"
                    class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-semibold rounded-xl transition">
-                    ออกจากระบบ
+                    กลับสู่พอร์ทัลกลาง
                 </a>
             </div>
         </div>

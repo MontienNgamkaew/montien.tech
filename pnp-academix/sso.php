@@ -16,7 +16,7 @@ $token = $_GET['token'] ?? '';
 
 if (empty($token)) {
     // If no token is provided, redirect back to the Portal Home
-    header('Location: /pnp-portal/');
+    header('Location: ' . get_portal_url());
     exit;
 }
 
@@ -31,7 +31,7 @@ if (!$payload) {
     echo '<div class="text-danger fs-1 mb-3">⚠️</div>';
     echo '<h4 class="text-dark mb-3">โทเค็นการเชื่อมต่อไม่ถูกต้องหรือหมดอายุ</h4>';
     echo '<p class="text-muted mb-4">กรุณากลับไปที่พอร์ทัลกลางเพื่อลงชื่อเข้าใช้งานใหม่อีกครั้ง</p>';
-    echo '<a href="/pnp-portal/" class="btn btn-primary w-100 py-2.5" style="border-radius: 10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
+    echo '<a href="' . get_portal_url() . '" class="btn btn-primary w-100 py-2.5" style="border-radius: 10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
     echo '</div></body></html>';
     exit;
 }
@@ -61,7 +61,7 @@ if ($pnpAcademicRole === 'none') {
     echo '<div class="text-warning fs-1 mb-3">🛡️</div>';
     echo '<h4 class="text-dark mb-3">คุณไม่มีสิทธิ์เข้าใช้งานระบบวิชาการ</h4>';
     echo '<p class="text-muted mb-4">ระบบบริหารงานวิชาการจำกัดสิทธิ์เฉพาะบุคลากรที่ได้รับมอบหมายเท่านั้น หากต้องการใช้งาน กรุณาติดต่อผู้ดูแลระบบเพื่อขออนุมัติสิทธิ์</p>';
-    echo '<a href="/pnp-portal/" class="btn btn-outline-secondary w-100 py-2.5" style="border-radius: 10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
+    echo '<a href="' . get_portal_url() . '" class="btn btn-outline-secondary w-100 py-2.5" style="border-radius: 10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
     echo '</div></body></html>';
     exit;
 }
@@ -143,7 +143,7 @@ try {
     echo '<div class="text-danger fs-1 mb-3">❌</div>';
     echo '<h4 class="text-dark mb-3">ไม่สามารถเชื่อมโยงฐานข้อมูลวิชาการได้</h4>';
     echo '<p class="text-muted mb-4">พบปัญหาทางเทคนิค: ' . htmlspecialchars($e->getMessage()) . '</p>';
-    echo '<a href="/pnp-portal/" class="btn btn-primary w-100 py-2.5" style="border-radius: 10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
+    echo '<a href="' . get_portal_url() . '" class="btn btn-primary w-100 py-2.5" style="border-radius: 10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
     echo '</div></body></html>';
     exit;
 }
