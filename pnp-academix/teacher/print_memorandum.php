@@ -355,10 +355,30 @@ function toThaiNumerals($num): string
             }
             body {
                 background-color: #fff;
-                font-size: 16pt;
+                font-size: 15pt;
+                line-height: 1.1;
             }
             .container {
                 padding: 0;
+            }
+            .approval-box {
+                font-size: 10.5pt;
+                padding: 6px;
+            }
+            .memo-title {
+                font-size: 26pt;
+                margin-bottom: 15px;
+            }
+            .metadata-row {
+                margin-bottom: 4px;
+            }
+            .signature-block {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+            .approvals-container {
+                margin-top: 10px;
+                padding-top: 10px;
             }
         }
     </style>
@@ -440,58 +460,123 @@ function toThaiNumerals($num): string
 
     <!-- 8. Approvals Section (Standard Form) -->
     <div class="approvals-container">
-        <div class="approval-grid">
-            
-            <!-- Step 1: Head of Department -->
-            <div class="approval-box">
-                <div class="approval-header">๑. ความเห็นของหัวหน้าแผนกวิชา / ตรวจสอบ</div>
-                <div style="margin-bottom: 20px;">
-                    [ &nbsp; ] ตรวจสอบแล้ว ถูกต้อง ครบถ้วน เห็นควรอนุมัติ<br>
-                    [ &nbsp; ] ควรปรับปรุงแก้ไข ...............................................................
+        <?php if ($selectedSystemType === 'course_syllabus'): ?>
+            <!-- Syllabus Flow: 3 Steps (Dept Head -> Deputy Director -> Director) -->
+            <div class="approval-grid">
+                <!-- Step 1: Head of Department -->
+                <div class="approval-box">
+                    <div class="approval-header">๑. ความเห็นของหัวหน้าแผนกวิชา / ตรวจสอบ</div>
+                    <div style="margin-bottom: 20px;">
+                        [ &nbsp; ] ตรวจสอบแล้ว ถูกต้อง ครบถ้วน เห็นควรอนุมัติ<br>
+                        [ &nbsp; ] ควรปรับปรุงแก้ไข ...............................................................
+                    </div>
+                    <div style="text-align: center; margin-top: 25px;">
+                        ลงชื่อ ....................................................................<br>
+                        ( <?= htmlspecialchars($deptHeadName ?: '....................................................................'); ?> )<br>
+                        ตำแหน่ง หัวหน้าแผนกวิชา<?= htmlspecialchars($teacherDept); ?><br>
+                        วันที่ ...... / ................ / ...........
+                    </div>
                 </div>
-                <div style="text-align: center; margin-top: 25px;">
-                    ลงชื่อ ....................................................................<br>
-                    ( <?= htmlspecialchars($deptHeadName ?: '....................................................................'); ?> )<br>
-                    ตำแหน่ง หัวหน้าแผนกวิชา<?= htmlspecialchars($teacherDept); ?><br>
-                    วันที่ ...... / ................ / ...........
+
+                <!-- Step 2: Deputy Director -->
+                <div class="approval-box">
+                    <div class="approval-header">๒. ความเห็นของรองผู้อำนวยการฝ่ายวิชาการ</div>
+                    <div style="margin-bottom: 20px;">
+                        [ &nbsp; ] เห็นควรอนุมัติเพื่อใช้ในการเรียนการสอนต่อไป<br>
+                        [ &nbsp; ] อื่นๆ .................................................................................
+                    </div>
+                    <div style="text-align: center; margin-top: 25px;">
+                        ลงชื่อ ....................................................................<br>
+                        ( <?= htmlspecialchars($deputyDirectorName ?: '....................................................................'); ?> )<br>
+                        ตำแหน่ง รองผู้อำนวยการฝ่ายวิชาการ<br>
+                        วันที่ ...... / ................ / ...........
+                    </div>
                 </div>
             </div>
 
-            <!-- Step 2: Deputy Director or Curriculum Head or Academic Resources Head -->
-            <div class="approval-box">
-                <div class="approval-header"><?= htmlspecialchars($step2BoxHeader); ?></div>
-                <div style="margin-bottom: 20px;">
-                    [ &nbsp; ] เห็นควรอนุมัติเพื่อใช้ในการเรียนการสอนต่อไป<br>
-                    [ &nbsp; ] อื่นๆ .................................................................................
-                </div>
-                <div style="text-align: center; margin-top: 25px;">
-                    ลงชื่อ ....................................................................<br>
-                    ( <?= htmlspecialchars($step2Name ?: '....................................................................'); ?> )<br>
-                    ตำแหน่ง <?= htmlspecialchars($step2Title); ?><br>
-                    วันที่ ...... / ................ / ...........
-                </div>
-            </div>
-
-        </div>
-
-        <div class="approval-grid" style="margin-top: 20px; grid-template-cols: 1fr;">
-            
-            <!-- Step 3: Director -->
-            <div class="approval-box" style="width: 100%; box-sizing: border-box;">
-                <div class="approval-header">๓. ผลการพิจารณาอนุมัติจากผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?></div>
-                <div style="display: flex; justify-content: space-around; margin-bottom: 25px; margin-top: 15px;">
-                    <div>[ &nbsp; ] ทราบและอนุมัติ<?= htmlspecialchars($docLabel); ?></div>
-                    <div>[ &nbsp; ] ไม่อนุมัติ เนื่องจาก ......................................................................................</div>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    ลงชื่อ ......................................................................................................<br>
-                    ( <?= htmlspecialchars($directorName ?: '....................................................................'); ?> )<br>
-                    ผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?><br>
-                    วันที่ ...... / ......................... / ...........
+            <div class="approval-grid" style="margin-top: 20px; grid-template-cols: 1fr;">
+                <!-- Step 3: Director -->
+                <div class="approval-box" style="width: 100%; box-sizing: border-box;">
+                    <div class="approval-header">๓. ผลการพิจารณาอนุมัติจากผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?></div>
+                    <div style="display: flex; justify-content: space-around; margin-bottom: 25px; margin-top: 15px;">
+                        <div>[ &nbsp; ] ทราบและอนุมัติ<?= htmlspecialchars($docLabel); ?></div>
+                        <div>[ &nbsp; ] ไม่อนุมัติ เนื่องจาก ......................................................................................</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        ลงชื่อ ......................................................................................................<br>
+                        ( <?= htmlspecialchars($directorName ?: '....................................................................'); ?> )<br>
+                        ผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?><br>
+                        วันที่ ...... / ......................... / ...........
+                    </div>
                 </div>
             </div>
 
-        </div>
+        <?php else: ?>
+            <!-- Lesson Plan and Teaching Materials Flow: 4 Steps (Dept Head -> Work Head -> Deputy Director -> Director) -->
+            <div class="approval-grid">
+                <!-- Step 1: Head of Department -->
+                <div class="approval-box">
+                    <div class="approval-header">๑. ความเห็นของหัวหน้าแผนกวิชา / ตรวจสอบ</div>
+                    <div style="margin-bottom: 10px;">
+                        [ &nbsp; ] ตรวจสอบแล้ว ถูกต้อง ครบถ้วน เห็นควรอนุมัติ<br>
+                        [ &nbsp; ] ควรปรับปรุงแก้ไข ...............................................................
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        ลงชื่อ ....................................................................<br>
+                        ( <?= htmlspecialchars($deptHeadName ?: '....................................................................'); ?> )<br>
+                        ตำแหน่ง หัวหน้าแผนกวิชา<?= htmlspecialchars($teacherDept); ?><br>
+                        วันที่ ...... / ................ / ...........
+                    </div>
+                </div>
+
+                <!-- Step 2: Head of Work -->
+                <div class="approval-box">
+                    <div class="approval-header"><?= htmlspecialchars($step2BoxHeader); ?></div>
+                    <div style="margin-bottom: 10px;">
+                        [ &nbsp; ] ตรวจสอบแล้ว ถูกต้อง ครบถ้วน เห็นควรอนุมัติ<br>
+                        [ &nbsp; ] ควรปรับปรุงแก้ไข ...............................................................
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        ลงชื่อ ....................................................................<br>
+                        ( <?= htmlspecialchars($step2Name ?: '....................................................................'); ?> )<br>
+                        ตำแหน่ง <?= htmlspecialchars($step2Title); ?><br>
+                        วันที่ ...... / ................ / ...........
+                    </div>
+                </div>
+            </div>
+
+            <div class="approval-grid" style="margin-top: 15px;">
+                <!-- Step 3: Deputy Director of Academic Affairs -->
+                <div class="approval-box">
+                    <div class="approval-header">๓. ความเห็นของรองผู้อำนวยการฝ่ายวิชาการ</div>
+                    <div style="margin-bottom: 10px;">
+                        [ &nbsp; ] เห็นควรอนุมัติเพื่อใช้ในการเรียนการสอนต่อไป<br>
+                        [ &nbsp; ] อื่นๆ .................................................................................
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        ลงชื่อ ....................................................................<br>
+                        ( <?= htmlspecialchars($deputyDirectorName ?: '....................................................................'); ?> )<br>
+                        ตำแหน่ง รองผู้อำนวยการฝ่ายวิชาการ<br>
+                        วันที่ ...... / ................ / ...........
+                    </div>
+                </div>
+
+                <!-- Step 4: Director -->
+                <div class="approval-box">
+                    <div class="approval-header">๔. ผลการพิจารณาอนุมัติจากผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?></div>
+                    <div style="margin-bottom: 10px;">
+                        [ &nbsp; ] ทราบและอนุมัติ<?= htmlspecialchars($docLabel); ?><br>
+                        [ &nbsp; ] ไม่อนุมัติ เนื่องจาก ................................................................
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        ลงชื่อ ....................................................................<br>
+                        ( <?= htmlspecialchars($directorName ?: '....................................................................'); ?> )<br>
+                        ผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?><br>
+                        วันที่ ...... / ......................... / ...........
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 
     <!-- 9. Attachment Page (QR Code page) -->
