@@ -384,6 +384,12 @@ final class DashboardController
 
     private function canApprove(array $user, array $requisition): bool
     {
+        // admin สามารถอนุมัติแทนได้ทั้ง 1, 2, 3
+        if ($user['role'] === 'admin') {
+            return str_starts_with($requisition['status'], 'pending_level_');
+        }
+
+        // ผู้อนุมัติรายระดับ: ต้องตรงกับระดับ current_level
         if (!isset(self::ROLE_LEVELS[$user['role']])) {
             return false;
         }
