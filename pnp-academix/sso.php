@@ -81,7 +81,21 @@ try {
     $stmt->execute(['username' => $username]);
     $localUser = $stmt->fetch();
     
+    // Query all assigned departments from pnpman
+    $pnpmanDepts = get_teacher_departments($username);
+    
     $calculatedDepartment = $payload['department'] ?? '';
+    
+    // If user belongs to multiple departments and local department is one of them, keep it!
+    if ($localUser && !empty($localUser['department']) && count($pnpmanDepts) > 1 && in_array($localUser['department'], $pnpmanDepts, true)) {
+        $calculatedDepartment = $localUser['department'];
+    } elseif (count($pnpmanDepts) === 1) {
+        // If they only have 1 department in pnpman, force sync to that 1 department
+        $calculatedDepartment = $pnpmanDepts[0];
+    } elseif (count($pnpmanDepts) > 1 && !in_array($calculatedDepartment, $pnpmanDepts, true)) {
+        // If the payload's department is not in pnpman list, default to the first one in pnpman
+        $calculatedDepartment = $pnpmanDepts[0];
+    }
     
     if ($localUser) {
         // Update user profile details and role dynamically (Dynamic Role & Dept Sync)

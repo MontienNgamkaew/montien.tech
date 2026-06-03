@@ -129,4 +129,74 @@ function get_youtube_id(?string $url): ?string {
     return null;
 }
 
+// Helper to get connection to portal DB
+function get_portal_db_connection(): ?PDO {
+    global $portalPdoInstance;
+    if (isset($portalPdoInstance)) {
+        return $portalPdoInstance;
+    }
+    
+    // Path to central env.php
+    $envPath = dirname(__DIR__) . '/api/env.php';
+    if (!is_file($envPath)) {
+        $envPath = dirname(dirname(__DIR__)) . '/api/env.php';
+    }
+    
+    if (is_file($envPath)) {
+        require_once $envPath;
+    }
+    
+    $isHostinger = isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'montien.tech') !== false || $_SERVER['HTTP_HOST'] === 'pnp-portal.montien.tech');
+    
+    if ($isHostinger) {
+        $dbHost = function_exists('env') ? env('DB_HOST', 'localhost') : 'localhost';
+        $dbName = function_exists('env') ? env('DB_NAME', 'u651170081_pnp_portal') : 'u651170081_pnp_portal';
+        $dbUser = function_exists('env') ? env('DB_USER', 'u651170081_pnp_portal') : 'u651170081_pnp_portal';
+        $dbPass = function_exists('env') ? env('DB_PASS', '') : '';
+    } else {
+        $dbHost = function_exists('env') ? env('DB_HOST', 'localhost') : 'localhost';
+        $dbName = function_exists('env') ? env('DB_NAME', 'pnp_portal') : 'pnp_portal';
+        $dbUser = function_exists('env') ? env('DB_USER', 'root') : 'root';
+        $dbPass = function_exists('env') ? env('DB_PASS', '') : '';
+    }
+    
+    try {
+        $dsn = "mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4";
+        $portalPdoInstance = new PDO($dsn, $dbUser, $dbPass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+        ]);
+        return $portalPdoInstance;
+    } catch (Exception $e) {
+        error_log('Portal DB Connection failed: ' . $e->getMessage());
+        return null;
+    }
+}
+
+// Helper to query all assigned departments for a teacher according to pnpman
+function get_teacher_departments(string $username): array {
+    $dbPortal = get_portal_db_connection();
+    if (!$dbPortal) {
+        return [];
+    }
+    try {
+        $stmt = $dbPortal->prepare("
+            SELECT DISTINCT j.name AS dept_name
+            FROM assignments a
+            INNER JOIN jobs j ON j.id = a.job_id
+            INNER JOIN users u ON u.id = a.personnel_id
+            WHERE u.username = :username
+              AND (j.department_id = 4 OR j.name LIKE 'แผนกวิชา%')
+            ORDER BY j.name ASC
+        ");
+        $stmt->execute(['username' => $username]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        error_log('get_teacher_departments failed: ' . $e->getMessage());
+        return [];
+    }
+}
+
+
 

@@ -48,6 +48,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errorMessage = "เกิดข้อผิดพลาดในการลบครูผู้สอน: " . $e->getMessage();
                 }
             }
+        } elseif ($action === 'update_primary_dept') {
+            $teacherIdToUpdate = isset($_POST['teacher_id']) ? (int)$_POST['teacher_id'] : 0;
+            $newDept = trim((string)($_POST['department'] ?? ''));
+            if ($teacherIdToUpdate > 0 && $newDept !== '') {
+                try {
+                    $stmt = $pdo->prepare("UPDATE users SET department = :dept, updated_at = NOW() WHERE id = :id AND role = 'teacher'");
+                    $stmt->execute(['dept' => $newDept, 'id' => $teacherIdToUpdate]);
+                    $successMessage = 'อัปเดตแผนกวิชาหลักเรียบร้อยแล้ว';
+                } catch (Exception $e) {
+                    $errorMessage = 'เกิดข้อผิดพลาดในการอัปเดตแผนกวิชาหลัก: ' . $e->getMessage();
+                }
+            } else {
+                $errorMessage = 'ข้อมูลไม่ครบถ้วนหรือไม่ถูกต้อง';
+            }
         }
     }
 }
@@ -62,6 +76,27 @@ if (!$semester) {
 $stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE role = 'teacher' AND status = 'active' ORDER BY fullname ASC");
 $stmt->execute();
 $teachers = $stmt->fetchAll();
+
+// 2.5 Query all assigned departments from portal DB for active teachers
+$teacherDepartmentsMap = [];
+$dbPortal = get_portal_db_connection();
+if ($dbPortal) {
+    try {
+        $rows = $dbPortal->query("
+            SELECT u.username, j.name AS dept_name
+            FROM assignments a
+            INNER JOIN jobs j ON j.id = a.job_id
+            INNER JOIN users u ON u.id = a.personnel_id
+            WHERE j.department_id = 4 OR j.name LIKE 'แผนกวิชา%'
+            ORDER BY j.name ASC
+        ")->fetchAll();
+        foreach ($rows as $row) {
+            $teacherDepartmentsMap[$row['username']][] = $row['dept_name'];
+        }
+    } catch (Exception $e) {
+        error_log('Portal DB fetch in overview.php failed: ' . $e->getMessage());
+    }
+}
 
 // 3. For each teacher, calculate compliance statuses
 $teacherData = [];
@@ -798,7 +833,24 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
                                     <td class="py-4 px-6">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-slate-800"><?= e($td['teacher']['fullname']); ?></span>
-                                            <span class="text-[10px] text-slate-400 font-medium">@<?= e($td['teacher']['username']); ?><?= !empty($td['teacher']['department']) ? ' &middot; ' . e($td['teacher']['department']) : ''; ?></span>
+                                            <span class="text-[10px] text-slate-400 font-medium">
+                                                @<?= e($td['teacher']['username']); ?>
+                                                <?php 
+                                                $deptsList = $teacherDepartmentsMap[$td['teacher']['username']] ?? [];
+                                                $currentDept = $td['teacher']['department'];
+                                                if (!empty($currentDept)) {
+                                                    echo ' &middot; <span class="text-teal-700 font-bold">' . e($currentDept) . '</span>';
+                                                } else {
+                                                    echo ' &middot; <span class="text-slate-450 italic">ไม่ระบุแผนก</span>';
+                                                }
+                                                if (count($deptsList) > 1) {
+                                                    $jsName = json_encode($td['teacher']['fullname'], JSON_UNESCAPED_UNICODE);
+                                                    $jsDepts = json_encode($deptsList, JSON_UNESCAPED_UNICODE);
+                                                    $jsCurrent = json_encode($currentDept, JSON_UNESCAPED_UNICODE);
+                                                    echo '<button type="button" onclick=\'changePrimaryDept(' . $td['teacher']['id'] . ', ' . $jsName . ', ' . $jsDepts . ', ' . $jsCurrent . ')\' class="ml-1.5 px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-850 rounded border border-indigo-200 transition text-[9px] font-bold" title="สลับแผนกวิชาหลัก">สลับแผนกหลัก</button>';
+                                                }
+                                                ?>
+                                            </span>
                                         </div>
                                     </td>
                                     
@@ -1014,6 +1066,44 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
 </footer>
 
 <script>
+function changePrimaryDept(teacherId, fullname, deptsList, currentDept) {
+    const inputOptions = {};
+    deptsList.forEach(dept => {
+        inputOptions[dept] = dept;
+    });
+    
+    Swal.fire({
+        title: `เลือกแผนกวิชาหลักสำหรับ ${fullname}`,
+        input: 'select',
+        inputOptions: inputOptions,
+        inputValue: currentDept,
+        showCancelButton: true,
+        confirmButtonColor: '#0f172a',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'บันทึก',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            popup: 'rounded-3xl border border-slate-200 shadow-xl font-thai'
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'overview.php';
+            const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+            form.innerHTML = `
+                <input type="hidden" name="csrf_token" value="${csrfToken}">
+                <input type="hidden" name="action" value="update_primary_dept">
+                <input type="hidden" name="teacher_id" value="${teacherId}">
+                <input type="hidden" name="department" value="${result.value}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // 1. Success Message popup
     <?php if ($successMessage): ?>
