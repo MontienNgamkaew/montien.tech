@@ -87,6 +87,10 @@ JWT engine อยู่ที่ `api/jwt.php` (HS256, dependency-free)
    - แนะนำตั้ง `CORS_ALLOWED_ORIGINS` เป็นรายการโดเมน `*.montien.tech`
 2. `git pull` บนเซิร์ฟเวอร์
 3. ถ้าแก้ frontend ของ pnpman: build ใหม่ใน `pnpman/frontend/` (`npm run build`) — ผลลัพธ์อยู่ใน `dist/` (track ใน git)
+4. **pnp-go ใช้ Composer (mPDF):** `vendor/` ถูก `.gitignore` (ไม่ขึ้น git) — ต้องรัน `composer install` บนเซิร์ฟเวอร์เอง มิฉะนั้น PDF จะพัง (`Class "Mpdf\…" not found`)
+   - ครั้งแรก/หลังย้ายเซิร์ฟเวอร์: `cd <path>/pnp-go && composer install --no-dev --optimize-autoloader`
+   - `composer.json` + `composer.lock` track ใน git → ติดตั้ง version ตรงกับ local
+   - `git pull` ปกติ **ไม่ต้อง** รัน composer ซ้ำ — ยกเว้นเมื่อแก้ `composer.json` (เพิ่ม/เปลี่ยน dependency)
 
 ### การหมุน (rotate) ความลับ — ทำเมื่อพร้อม
 - เปลี่ยน `JWT_SECRET_KEY` → ผู้ใช้ทุกคนจะถูก logout (token เดิมใช้ไม่ได้) — แจ้งผู้ใช้ก่อน
