@@ -119,3 +119,14 @@ if (!function_exists('e')) {
     }
 }
 
+// Helper to extract YouTube video ID
+function get_youtube_id(?string $url): ?string {
+    if (empty($url)) return null;
+    $pattern = '/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|e\/|embed\/|user\/[^\/]+\/|u\/\d+\/|apps\/|shorts\/)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^"&?\/ ]{11})/i';
+    if (preg_match($pattern, $url, $matches)) {
+        return $matches[1];
+    }
+    return null;
+}
+
+

@@ -235,11 +235,22 @@ $containerClass = $isPdf ? 'max-w-7xl' : 'max-w-5xl';
                         </a>
 
                         <?php if ($submission['drive_link']): ?>
-                            <a href="<?= e($submission['drive_link']); ?>" target="_blank"
-                               class="w-full inline-flex items-center justify-center gap-2 py-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-xl transition no-underline">
-                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
-                                <span>เปิดใน Google Drive ↗</span>
-                            </a>
+                            <?php 
+                            $ytId = get_youtube_id($submission['drive_link']);
+                            if ($ytId): 
+                            ?>
+                                <a href="<?= e($submission['drive_link']); ?>" target="_blank"
+                                   class="w-full inline-flex items-center justify-center gap-2 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl transition no-underline">
+                                    <svg class="w-4 h-4 text-rose-600" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 00-2.11-2.107C19.533 3.545 12 3.545 12 3.545s-7.533 0-9.388.511a3.002 3.002 0 00-2.11 2.107C0 8.021 0 12 0 12s0 3.979.502 5.837a3.001 3.001 0 002.11 2.107c1.855.511 9.388.511 9.388.511s7.533 0 9.388-.511a3.002 3.002 0 002.11-2.107c.502-1.858.502-5.837.502-5.837s0-3.979-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                    <span>เปิดชมบน YouTube ↗</span>
+                                </a>
+                            <?php else: ?>
+                                <a href="<?= e($submission['drive_link']); ?>" target="_blank"
+                                   class="w-full inline-flex items-center justify-center gap-2 py-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-xl transition no-underline">
+                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                    <span>เปิดใน Google Drive ↗</span>
+                                </a>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -352,19 +363,55 @@ $containerClass = $isPdf ? 'max-w-7xl' : 'max-w-5xl';
                             <div class="h-[1px] bg-slate-100 my-6"></div>
                         <?php endif; ?>
                         
-                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                            DRIVE
-                        </div>
-                        <h4 class="text-sm font-black text-slate-800 mb-1">ลิงก์แนบ Google Drive</h4>
-                        <p class="text-[10px] text-slate-400 font-medium mb-6">ครูบันทึกแชร์ผ่านพื้นที่คลาวด์ภายนอก</p>
-                        
-                        <a href="<?= e($submission['drive_link']); ?>" target="_blank"
-                           class="w-full inline-flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-blue-600/10 no-underline">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
-                            <span>เปิดไฟล์ใน Google Drive ↗</span>
-                        </a>
+                        <?php 
+                        $youtubeId = get_youtube_id($submission['drive_link']);
+                        if ($youtubeId): 
+                        ?>
+                            <div class="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                                YT
+                            </div>
+                            <h4 class="text-sm font-black text-slate-800 mb-1">ลิงก์วิดีโอ YouTube</h4>
+                            <p class="text-[10px] text-slate-400 font-medium mb-6">ครูบันทึกแนบสื่อการสอนเป็นวิดีโอ</p>
+                            
+                            <a href="<?= e($submission['drive_link']); ?>" target="_blank"
+                               class="w-full inline-flex items-center justify-center gap-2 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-rose-600/10 no-underline">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 00-2.11-2.107C19.533 3.545 12 3.545 12 3.545s-7.533 0-9.388.511a3.002 3.002 0 00-2.11 2.107C0 8.021 0 12 0 12s0 3.979.502 5.837a3.001 3.001 0 002.11 2.107c1.855.511 9.388.511 9.388.511s7.533 0 9.388-.511a3.002 3.002 0 002.11-2.107c.502-1.858.502-5.837.502-5.837s0-3.979-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                <span>เปิดชมบน YouTube ↗</span>
+                            </a>
+                        <?php else: ?>
+                            <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                                DRIVE
+                            </div>
+                            <h4 class="text-sm font-black text-slate-800 mb-1">ลิงก์แนบ Google Drive</h4>
+                            <p class="text-[10px] text-slate-400 font-medium mb-6">ครูบันทึกแชร์ผ่านพื้นที่คลาวด์ภายนอก</p>
+                            
+                            <a href="<?= e($submission['drive_link']); ?>" target="_blank"
+                               class="w-full inline-flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-blue-600/10 no-underline">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                <span>เปิดไฟล์ใน Google Drive ↗</span>
+                            </a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
+
+                <?php 
+                $youtubeId = get_youtube_id($submission['drive_link']);
+                if ($youtubeId): 
+                ?>
+                    <div class="bg-white border border-slate-200 rounded-[32px] p-6 shadow-sm overflow-hidden mt-6">
+                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 text-center sm:text-left">ตัวอย่างวิดีโอ (Video Preview)</h4>
+                        <div class="aspect-video w-full rounded-2xl overflow-hidden border border-slate-150 shadow-inner">
+                            <iframe class="w-full h-full" 
+                                    src="https://www.youtube.com/embed/<?= e($youtubeId); ?>" 
+                                    title="YouTube video player" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                    referrerpolicy="strict-origin-when-cross-origin" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
             </div>
 

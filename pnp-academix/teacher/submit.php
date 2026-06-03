@@ -54,6 +54,17 @@ if ($selectedCourseId) {
     }
 }
 
+// Fetch existing submission if selected
+$existingSubmission = null;
+if ($selectedCourseId && $selectedSystemType) {
+    $stmt = $pdo->prepare('SELECT id, file_path, drive_link FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1');
+    $stmt->execute([
+        'course_id' => $selectedCourseId,
+        'system_type' => $selectedSystemType
+    ]);
+    $existingSubmission = $stmt->fetch();
+}
+
 // Check deadline and open status for the system type
 $systemSetting = null;
 $isOpen = false;
@@ -161,6 +172,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $postCourseId = isset($_POST['course_id']) ? (int) $_POST['course_id'] : 0;
             $postSystemType = isset($_POST['system_type']) ? $_POST['system_type'] : '';
             $driveLink = isset($_POST['drive_link']) ? trim($_POST['drive_link']) : '';
+            $youtubeLink = isset($_POST['youtube_link']) ? trim($_POST['youtube_link']) : '';
+            
+            if ($postSystemType === 'teaching_materials' && !empty($youtubeLink)) {
+                if (!empty($driveLink)) {
+                    $errorMessage = 'กรุณาเลือกใส่ลิงก์ Google Drive หรือลิงก์ YouTube อย่างใดอย่างหนึ่งเท่านั้น';
+                } else {
+                    $driveLink = $youtubeLink;
+                }
+            }
             
             // Validation
             $validPostCourse = false;
@@ -228,12 +248,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                     
-                    // Validation for having either a file or a Google Drive link
+                    // Validation for having either a file or a Google Drive link / YouTube link
                     if (!$errorMessage) {
                         if (!$fileUploaded && empty($driveLink)) {
-                            $errorMessage = 'กรุณาเลือกอัปโหลดไฟล์จากเครื่อง หรือใส่อัปโหลดผ่านลิงก์ Google Drive อย่างใดอย่างหนึ่ง';
+                            $errorMessage = ($postSystemType === 'teaching_materials')
+                                ? 'กรุณาเลือกอัปโหลดไฟล์จากเครื่อง หรือใส่ลิงก์ Google Drive หรือลิงก์ YouTube อย่างใดอย่างหนึ่ง'
+                                : 'กรุณาเลือกอัปโหลดไฟล์จากเครื่อง หรือใส่อัปโหลดผ่านลิงก์ Google Drive อย่างใดอย่างหนึ่ง';
                         } elseif (!empty($driveLink) && !filter_var($driveLink, FILTER_VALIDATE_URL)) {
-                            $errorMessage = 'รูปแบบลิงก์ Google Drive ไม่ถูกต้อง (กรุณากรอกในรูปแบบ URL)';
+                            $errorMessage = ($postSystemType === 'teaching_materials')
+                                ? 'รูปแบบลิงก์ไม่ถูกต้อง (กรุณากรอกในรูปแบบ URL)'
+                                : 'รูปแบบลิงก์ Google Drive ไม่ถูกต้อง (กรุณากรอกในรูปแบบ URL)';
                         } else {
                             // Check if a submission already exists for this course and system type in the active semester
                             $stmtCheck = $pdo->prepare("SELECT id, file_path FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1");
@@ -475,7 +499,7 @@ $branding = get_branding_settings();
                 <input type="hidden" name="course_id" value="<?= $selectedCourseId; ?>">
                 <input type="hidden" name="system_type" value="<?= $selectedSystemType; ?>">
 
-                <div class="grid gap-6 md:grid-cols-2">
+                <div class="grid gap-6 md:grid-cols-<?= $selectedSystemType === 'teaching_materials' ? '3' : '2'; ?>">
                     
                     <!-- File Upload Option -->
                     <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 hover:bg-slate-50 transition relative flex flex-col justify-between">
@@ -509,15 +533,34 @@ $branding = get_branding_settings();
                     </div>
 
                     <!-- Drive Link Option -->
-                    <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 hover:bg-slate-50 transition">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2" for="drive_link">ช่องทางที่ 2: แนบลิงก์ Google Drive</label>
-                        <input type="url" name="drive_link" id="drive_link" placeholder="https://drive.google.com/..."
-                               class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 transition"
-                               <?= !$isOpen ? 'disabled' : ''; ?>>
-                        <p class="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">
-                            กรุณาเปิดการแชร์ลิงก์ให้เป็น *"ทุกคนที่มีลิงก์มีสิทธิ์อ่าน"* เพื่อให้งานวิชาการสามารถเปิดตรวจได้
-                        </p>
+                    <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 hover:bg-slate-50 transition flex flex-col justify-between">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2" for="drive_link">ช่องทางที่ 2: แนบลิงก์ Google Drive</label>
+                            <input type="url" name="drive_link" id="drive_link" placeholder="https://drive.google.com/..."
+                                   value="<?= ($existingSubmission && $existingSubmission['drive_link'] && !get_youtube_id($existingSubmission['drive_link'])) ? e($existingSubmission['drive_link']) : ''; ?>"
+                                   class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 transition"
+                                   <?= !$isOpen ? 'disabled' : ''; ?>>
+                            <p class="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">
+                                กรุณาเปิดการแชร์ลิงก์ให้เป็น *"ทุกคนที่มีลิงก์มีสิทธิ์อ่าน"* เพื่อให้งานวิชาการสามารถเปิดตรวจได้
+                            </p>
+                        </div>
                     </div>
+
+                    <!-- YouTube Link Option (Only for Teaching Materials) -->
+                    <?php if ($selectedSystemType === 'teaching_materials'): ?>
+                        <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 hover:bg-slate-50 transition flex flex-col justify-between">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2" for="youtube_link">ช่องทางที่ 3: แนบลิงก์วิดีโอ YouTube</label>
+                                <input type="url" name="youtube_link" id="youtube_link" placeholder="https://www.youtube.com/watch?v=..."
+                                       value="<?= ($existingSubmission && $existingSubmission['drive_link'] && get_youtube_id($existingSubmission['drive_link'])) ? e($existingSubmission['drive_link']) : ''; ?>"
+                                       class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 transition"
+                                       <?= !$isOpen ? 'disabled' : ''; ?>>
+                                <p class="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">
+                                    คุณครูสามารถแนบลิงก์สื่อการเรียนการสอนที่เป็นวิดีโอจาก YouTube (เช่น คลิปวิดีโอบันทึกการสอน หรือสื่อแนะนำวิชา)
+                                </p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                 </div>
 
