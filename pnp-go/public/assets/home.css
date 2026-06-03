@@ -725,6 +725,64 @@ button, input, textarea, select,
     background-color: #f8fafc;
 }
 
+/* =============================================
+   APPROVAL STEPPER (หน้าตรวจสอบสถานะ)
+   ============================================= */
+.stepper-wrapper { position: relative; padding: 8px 0 4px; }
+.stepper-line {
+    position: absolute;
+    top: 28px;
+    left: 8%;
+    right: 8%;
+    height: 3px;
+    background: var(--line);
+    z-index: 1;
+}
+.stepper-line-fill {
+    height: 100%;
+    background: var(--brand-secondary);
+    transition: width 0.5s ease;
+}
+.stepper-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+.step-item { flex: 1; text-align: center; }
+.step-circle {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--line);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+}
+.step-item.active .step-circle { background: var(--brand-primary); border-color: var(--brand-primary); color: #fff; }
+.step-item.completed .step-circle { background: var(--brand-secondary); border-color: var(--brand-secondary); color: #fff; }
+.step-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.25; }
+.step-item.active .step-label, .step-item.completed .step-label { color: var(--brand-primary); }
+.step-desc { font-size: 11px; color: var(--muted); }
+
+/* ตารางข้อมูลแบบ key/value (รายละเอียดคำขอ) */
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.detail-item .di-label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+.detail-item .di-value { font-weight: 700; color: var(--ink); }
+@media (max-width: 767.98px) {
+    .detail-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .step-desc { display: none; }
+    .step-label { font-size: 11px; }
+}
+@media (max-width: 420px) {
+    .detail-grid { grid-template-columns: 1fr; }
+}
+
 /* LOGIN PANEL */
 .login-panel {
     max-width: 500px;
