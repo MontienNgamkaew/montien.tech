@@ -87,7 +87,7 @@ if ($dbPortal) {
             FROM assignments a
             INNER JOIN jobs j ON j.id = a.job_id
             INNER JOIN users u ON u.id = a.personnel_id
-            WHERE j.department_id = 4 OR j.name LIKE 'แผนกวิชา%'
+            WHERE j.name LIKE 'แผนกวิชา%'
             ORDER BY j.name ASC
         ")->fetchAll();
         foreach ($rows as $row) {

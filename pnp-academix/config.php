@@ -187,7 +187,7 @@ function get_teacher_departments(string $username): array {
             INNER JOIN jobs j ON j.id = a.job_id
             INNER JOIN users u ON u.id = a.personnel_id
             WHERE u.username = :username
-              AND (j.department_id = 4 OR j.name LIKE 'แผนกวิชา%')
+              AND j.name LIKE 'แผนกวิชา%'
             ORDER BY j.name ASC
         ");
         $stmt->execute(['username' => $username]);
