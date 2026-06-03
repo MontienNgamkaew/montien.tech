@@ -313,6 +313,10 @@ final class PublicController
             readfile($fullPath);
             exit;
         } catch (Throwable $e) {
+            // Log error for debugging
+            error_log('PDF Download Error: ' . $e->getMessage() . ' | File: ' . $e->getFile() . ' | Line: ' . $e->getLine());
+            error_log('Stack Trace: ' . $e->getTraceAsString());
+
             view('เกิดข้อผิดพลาด', '<h1 class="h4">ไม่สามารถสร้างหรือดาวน์โหลดไฟล์ PDF ได้</h1><p>' . htmlspecialchars($e->getMessage()) . '</p>', 500);
         }
     }
