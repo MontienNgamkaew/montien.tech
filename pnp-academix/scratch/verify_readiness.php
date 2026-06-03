@@ -74,7 +74,7 @@ try {
 echo "[4] Dry-running Base URL Dynamic Pathing:\n";
 try {
     $_SERVER['DOCUMENT_ROOT'] = 'C:/xampp/htdocs'; // Mock XAMPP Document Root
-    $_SERVER['SCRIPT_NAME'] = '/pnp-academic/admin/overview.php';
+    $_SERVER['SCRIPT_NAME'] = '/pnp-academix/admin/overview.php';
     
     $docRoot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
     $authDir = str_replace('\\', '/', dirname(__DIR__));
@@ -93,7 +93,7 @@ try {
     echo "      * DOCUMENT_ROOT: " . $_SERVER['DOCUMENT_ROOT'] . "\n";
     echo "      * Calculated Base URL: '$baseUrl'\n";
     echo "      * Redirect Target: '" . (rtrim($baseUrl, '/') . '/login.php') . "'\n";
-    echo "      * Expected: '/pnp-academic/login.php' - ✅ MATCHED\n\n";
+    echo "      * Expected: '/pnp-academix/login.php' - ✅ MATCHED\n\n";
     
     // Mock Production (Hostinger)
     $_SERVER['DOCUMENT_ROOT'] = '/home/u651170081/domains/montien.tech/public_html/pnp-edu';

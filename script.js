@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const appLinks = {
         'pnp-go': { link: document.getElementById('app-link-pnp-go'), pill: document.getElementById('role-pill-pnp-go'), base: './pnp-go/sso.php' },
         'pnp-man': { link: document.getElementById('app-link-pnp-man'), pill: document.getElementById('role-pill-pnp-man'), base: './pnpman/' },
-        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: isLocal ? './pnp-academic/sso.php' : 'https://pnp-edu.montien.tech/sso.php' }
+        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: isLocal ? './pnp-academix/sso.php' : 'https://pnp-edu.montien.tech/sso.php' }
     };
 
     // เปิด / ปิด ดรอปดาวน์โปรไฟล์
