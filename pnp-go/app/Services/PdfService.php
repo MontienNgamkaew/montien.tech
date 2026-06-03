@@ -7,6 +7,8 @@ final class PdfService
 {
     public function generateForRequisition(int $requisitionId): string
     {
+        $this->ensureMpdfLoaded();
+
         $requisition = $this->requisition($requisitionId);
 
         if ($requisition === null) {
@@ -76,6 +78,29 @@ final class PdfService
         $statement->execute(['id' => $id]);
 
         return $statement->fetch() ?: null;
+    }
+
+    /**
+     * โหลดไลบรารี mPDF (composer) แบบ defensive + แจ้ง error ที่ดำเนินการได้จริงหากไม่พบ
+     */
+    private function ensureMpdfLoaded(): void
+    {
+        if (class_exists(\Mpdf\Mpdf::class)) {
+            return;
+        }
+
+        $autoload = __DIR__ . '/../../vendor/autoload.php';
+        if (is_file($autoload)) {
+            require_once $autoload;
+        }
+
+        if (!class_exists(\Mpdf\Mpdf::class)) {
+            $vendorPath = realpath(__DIR__ . '/../..') . '/vendor';
+            throw new RuntimeException(
+                'ไม่พบไลบรารี mPDF ที่จำเป็นสำหรับสร้าง PDF — กรุณารัน "composer install --no-dev" ' .
+                'ในโฟลเดอร์ pnp-go บนเซิร์ฟเวอร์ (ตำแหน่งที่ตรวจสอบ: ' . $vendorPath . ')'
+            );
+        }
     }
 
     private function approvers(array $requisition): array
