@@ -29,6 +29,24 @@ $stmt->execute([
 ]);
 $courses = $stmt->fetchAll();
 
+// Fetch all existing submissions of this teacher for status mapping
+$stmt = $pdo->prepare("
+    SELECT s.course_id, s.system_type, s.status, s.submission_timing, s.submitted_at
+    FROM submissions s
+    INNER JOIN courses c ON c.id = s.course_id
+    WHERE c.teacher_id = :teacher_id AND c.semester_id = :semester_id
+");
+$stmt->execute([
+    'teacher_id' => $teacherId,
+    'semester_id' => $semester['id']
+]);
+$allSubmissions = $stmt->fetchAll();
+
+$submissionMap = [];
+foreach ($allSubmissions as $sub) {
+    $submissionMap[(int)$sub['course_id']][$sub['system_type']] = $sub;
+}
+
 // Get input parameters
 $selectedCourseId = isset($_GET['course_id']) ? (int) $_GET['course_id'] : 0;
 $selectedSystemType = isset($_GET['system_type']) ? $_GET['system_type'] : '';
@@ -325,6 +343,48 @@ $systemTypeLabels = [
     'teaching_materials' => 'สื่อการเรียนการสอน (Teaching Materials)'
 ];
 $branding = get_branding_settings();
+
+// Helper to render submission status badge in overview table
+function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
+    if (!$sub) {
+        ?>
+        <a href="submit.php?course_id=<?= $courseId; ?>&system_type=<?= $systemType; ?>" 
+           class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-xl transition duration-150 group w-full sm:w-auto">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover:scale-110 transition-transform"></span>
+            <span>ยังไม่ได้ส่ง</span>
+        </a>
+        <?php
+        return;
+    }
+
+    $timingText = ($sub['submission_timing'] === 'late') ? ' (ล่าช้า)' : '';
+    
+    if ($sub['status'] === 'approved') {
+        ?>
+        <a href="submit.php?course_id=<?= $courseId; ?>&system_type=<?= $systemType; ?>" 
+           class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-xl transition duration-150 w-full sm:w-auto">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/></svg>
+            <span>อนุมัติแล้ว<?= $timingText; ?></span>
+        </a>
+        <?php
+    } elseif ($sub['status'] === 'pending') {
+        ?>
+        <a href="submit.php?course_id=<?= $courseId; ?>&system_type=<?= $systemType; ?>" 
+           class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] font-bold rounded-xl transition duration-150 w-full sm:w-auto">
+            <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+            <span>รอตรวจประเมิน<?= $timingText; ?></span>
+        </a>
+        <?php
+    } else { // rejected
+        ?>
+        <a href="submit.php?course_id=<?= $courseId; ?>&system_type=<?= $systemType; ?>" 
+           class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold rounded-xl transition duration-150 w-full sm:w-auto">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <span>ไม่ผ่าน/แก้ไข<?= $timingText; ?></span>
+        </a>
+        <?php
+    }
+}
 ?>
 <!doctype html>
 <html lang="th">
@@ -578,9 +638,77 @@ $branding = get_branding_settings();
             </form>
 
         <?php else: ?>
-            <div class="py-12 text-center text-slate-400 font-medium">
-                <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
-                <span>กรุณาเลือกรายวิชาและประเภทของเอกสารด้านบนเพื่อทำการยื่นส่งงานครับ</span>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider">ภาพรวมสถานะการส่งภารกิจแยกตามวิชาสอน</h3>
+                    <span class="text-xs text-slate-400 font-medium">จำนวนทั้งหมด <?= count($courses); ?> วิชา</span>
+                </div>
+                
+                <?php if (count($courses) === 0): ?>
+                    <div class="py-12 text-center text-slate-400 font-medium bg-slate-50 border border-slate-200/60 rounded-2xl">
+                        <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                        <span>ยังไม่มีรายวิชาสอนในระบบของท่าน กรุณากดปุ่ม "จัดการรายวิชา" เพื่อเพิ่มวิชาที่สอนก่อนครับ</span>
+                    </div>
+                <?php else: ?>
+                    <div class="overflow-hidden border border-slate-200/80 rounded-2xl bg-white shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                                        <th class="py-3.5 px-5 w-4/10">รายวิชาที่สอน</th>
+                                        <th class="py-3.5 px-4 text-center w-2/10">โครงการสอน (Syllabus)</th>
+                                        <th class="py-3.5 px-4 text-center w-2/10">แผนการสอน (Lesson Plan)</th>
+                                        <th class="py-3.5 px-4 text-center w-2/10">สื่อการสอน (Materials)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <?php foreach ($courses as $c): 
+                                        $cId = (int)$c['id'];
+                                    ?>
+                                        <tr class="hover:bg-slate-50/40 transition-colors">
+                                            <td class="py-4 px-5 align-middle">
+                                                <div class="font-bold text-slate-800 text-xs sm:text-sm">
+                                                    [<?= e($c['course_code']); ?>]
+                                                </div>
+                                                <div class="text-xs text-slate-400 font-medium mt-0.5">
+                                                    <?= e($c['course_name']); ?>
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Syllabus Status -->
+                                            <td class="py-4 px-4 text-center align-middle">
+                                                <?php 
+                                                $sub = $submissionMap[$cId]['course_syllabus'] ?? null;
+                                                renderStatusBadge($sub, $cId, 'course_syllabus');
+                                                ?>
+                                            </td>
+                                            
+                                            <!-- Lesson Plan Status -->
+                                            <td class="py-4 px-4 text-center align-middle">
+                                                <?php 
+                                                $sub = $submissionMap[$cId]['lesson_plan'] ?? null;
+                                                renderStatusBadge($sub, $cId, 'lesson_plan');
+                                                ?>
+                                            </td>
+                                            
+                                            <!-- Teaching Materials Status -->
+                                            <td class="py-4 px-4 text-center align-middle">
+                                                <?php 
+                                                $sub = $submissionMap[$cId]['teaching_materials'] ?? null;
+                                                renderStatusBadge($sub, $cId, 'teaching_materials');
+                                                ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-2.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.028M12 18.75h.007v.008H12v-.008zM12 3a9 9 0 100 18 9 9 0 000-18z"/></svg>
+                        <span>คุณครูสามารถคลิกที่ปุ่มสถานะของวิชาใด ๆ เพื่อเข้าสู่ฟอร์มและหน้าต่างแนบหลักฐานยื่นส่งเอกสารประเภทนั้นได้โดยตรงครับ</span>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 
