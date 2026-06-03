@@ -9,7 +9,8 @@ $collegeName = $colSet['college_name'] ?? 'วิทยาลัยการอ�
 $logoPath = $colSet['logo_path'] ?? '';
 
 $pageTitle = isset($title) ? $title . ' | ' . $systemName : $systemName;
-$assetVersion = file_exists(__DIR__ . '/../../public/assets/app.css') ? filemtime(__DIR__ . '/../../public/assets/app.css') : time();
+$cssFiles = [__DIR__ . '/../../public/assets/app.css', __DIR__ . '/../../public/assets/home.css'];
+$assetVersion = max(array_map(fn ($f) => file_exists($f) ? filemtime($f) : 0, $cssFiles)) ?: time();
 $mainClass = isset($mainClass) ? $mainClass : 'container app-shell py-4 py-md-5';
 
 $user = current_user();
@@ -61,7 +62,14 @@ $themeVariables = [
     ]
 ];
 
-$activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
+// โทนทางการเดียวของระบบ: น้ำเงินกรมท่า (navy) ให้สอดคล้องกับ home.css ทั้งหมด
+// (ยกเลิกการชนกันระหว่างธีม rose ที่ฉีดจาก layout กับ navy ใน home.css)
+$activeVars = [
+    'primary'          => '#1e3a8a',
+    'primary_gradient' => '#1e3a8a',
+    'accent'           => '#dbeafe',
+    'accent_hover'     => '#1d4ed8',
+];
 ?>
 <!doctype html>
 <html lang="th">
@@ -83,17 +91,16 @@ $activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
         --theme-accent-hover: <?= $activeVars['accent_hover'] ?>;
     }
     
-    /* Override primary brand/button styles dynamically */
+    /* ===== โทนทางการ navy: header ทึบเรียบ + คุมสีลิงก์/หัวข้อ (ปล่อยให้ home.css คุมปุ่ม) ===== */
     .site-header {
-        background: var(--theme-gradient) !important;
+        background: var(--theme-primary) !important;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
     }
-    .btn-primary, .action-primary, .status-active {
-        background-color: var(--theme-primary) !important;
-        border-color: var(--theme-primary) !important;
-    }
-    .btn-primary:hover {
-        background-color: var(--theme-accent-hover) !important;
-        border-color: var(--theme-accent-hover) !important;
+    .brand-link { text-decoration: none; }
+    .text-primary, .brand-link:hover .brand-name {
+        color: var(--theme-primary) !important;
     }
     .btn-outline-primary {
         color: var(--theme-primary) !important;
@@ -103,27 +110,12 @@ $activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
         background-color: var(--theme-primary) !important;
         color: #fff !important;
     }
-    .text-primary, .brand-link:hover .brand-name {
-        color: var(--theme-primary) !important;
-    }
-    .brand-link {
-        text-decoration: none;
-    }
-    a {
-        color: var(--theme-primary);
-    }
-    a:hover {
-        color: var(--theme-accent-hover);
-    }
-    .stat-value {
-        color: var(--theme-primary) !important;
-    }
-    .nav-item-btn {
-        background-color: var(--theme-primary) !important;
-    }
-    .nav-item-btn:hover {
-        background-color: var(--theme-accent-hover) !important;
-    }
+    a { color: var(--brand-secondary); }
+    a:hover { color: var(--theme-accent-hover); }
+    /* เมนู/ชื่อผู้ใช้บนแถบ header navy ต้องเป็นสีอ่อนเสมอ (กัน .text-primary/.text-secondary ทำให้กลืนพื้น) */
+    .site-header .main-nav .nav-item:not(.nav-item-btn) { color: rgba(255, 255, 255, 0.85) !important; }
+    .site-header .main-nav .nav-item:not(.nav-item-btn):hover { color: #ffffff !important; }
+    .site-header .user-profile-menu .text-secondary { color: rgba(255, 255, 255, 0.9) !important; }
     </style>
 </head>
 <body>
@@ -142,7 +134,6 @@ $activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
 
             <nav class="main-nav d-none d-lg-flex align-items-center gap-3">
                 <a class="nav-item text-secondary fw-medium" href="<?= e(central_portal_base()) ?>/">🏠 กลับสู่พอร์ทัลหลัก</a>
-                <a class="nav-item fw-medium" href="<?= e($app['base_path']) ?>/request">ยื่นคำขอ</a>
                 <a class="nav-item fw-medium" href="<?= e($app['base_path']) ?>/status">ตรวจสอบสถานะ</a>
                 <?php if ($user): ?>
                     <?php if ($user['role'] === 'user'): ?>
@@ -175,8 +166,8 @@ $activeVars = $themeVariables[$themeColor] ?? $themeVariables['rose'];
         </div>
 
         <div class="mobile-nav" id="mobileNav">
+            <a href="<?= e($app['base_path']) ?>/request" class="mobile-cta">➕ ยื่นคำขอใช้รถ</a>
             <a href="<?= e(central_portal_base()) ?>/">🏠 กลับสู่พอร์ทัลหลัก</a>
-            <a href="<?= e($app['base_path']) ?>/request">ยื่นคำขอใช้รถ</a>
             <a href="<?= e($app['base_path']) ?>/status">ตรวจสอบสถานะ</a>
             <?php if ($user): ?>
                 <?php if ($user['role'] === 'user'): ?>

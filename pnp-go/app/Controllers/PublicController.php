@@ -83,8 +83,8 @@ final class PublicController
                 'fuel_purchase_requested' => $fuelPurchaseRequested ? 1 : 0,
                 'fuel_not_requested' => $fuelNotRequested ? 1 : 0,
                 'fuel_type' => $fuelPurchaseRequested ? $data['fuel_type'] : null,
-                'fuel_quantity' => $fuelPurchaseRequested ? $data['fuel_quantity'] : null,
-                'fuel_unit' => $fuelPurchaseRequested ? $data['fuel_unit'] : null,
+                'fuel_quantity' => null,
+                'fuel_unit' => null,
                 'fuel_total_amount' => $fuelPurchaseRequested ? $data['fuel_total_amount'] : null,
                 'status' => 'pending_level_1',
                 'current_level' => 1,
@@ -350,8 +350,6 @@ final class PublicController
             'requested_vehicle_id' => trim($_POST['requested_vehicle_id'] ?? ''),
             'fuel_purchase_requested' => ($_POST['fuel_purchase_requested'] ?? '0') === '1' ? '1' : '0',
             'fuel_type' => trim($_POST['fuel_type'] ?? ''),
-            'fuel_quantity' => trim($_POST['fuel_quantity'] ?? ''),
-            'fuel_unit' => trim($_POST['fuel_unit'] ?? ''),
             'fuel_total_amount' => trim($_POST['fuel_total_amount'] ?? ''),
         ];
     }
@@ -392,16 +390,6 @@ final class PublicController
         if ($data['fuel_purchase_requested'] === '1') {
             if (!array_key_exists($data['fuel_type'], $this->fuelTypeOptions())) {
                 $errors['fuel_type'] = 'กรุณาเลือกชนิดน้ำมันเชื้อเพลิง';
-            }
-
-            if ($data['fuel_quantity'] === '') {
-                $errors['fuel_quantity'] = 'กรุณากรอกปริมาณที่สั่งซื้อ';
-            } elseif (!is_numeric($data['fuel_quantity']) || (float) $data['fuel_quantity'] <= 0) {
-                $errors['fuel_quantity'] = 'ปริมาณต้องเป็นตัวเลขมากกว่า 0';
-            }
-
-            if ($data['fuel_unit'] === '') {
-                $errors['fuel_unit'] = 'กรุณาเลือกหน่วย';
             }
 
             if ($data['fuel_total_amount'] === '') {

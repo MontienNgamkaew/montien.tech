@@ -5,10 +5,8 @@
         <p class="text-secondary mb-0"><?= e($user['full_name']) ?> | ครูผู้ยื่นคำขอ</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a class="btn btn-primary d-flex align-items-center gap-2" href="<?= e(config('app')['base_path']) ?>/request" style="border-radius: 12px; font-weight: 500;">
-            <span>➕ เขียนคำขอใช้รถยนต์ใหม่</span>
-        </a>
-        <a class="btn btn-outline-primary" href="<?= e(config('app')['base_path']) ?>/profile" style="border-radius: 12px;">โปรไฟล์/ลายเซ็น</a>
+        <a class="btn btn-primary" href="<?= e(config('app')['base_path']) ?>/request">➕ ยื่นคำขอใช้รถ</a>
+        <a class="btn btn-outline-primary" href="<?= e(config('app')['base_path']) ?>/profile">โปรไฟล์/ลายเซ็น</a>
     </div>
 </div>
 
