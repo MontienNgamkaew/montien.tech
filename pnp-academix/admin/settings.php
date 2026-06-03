@@ -210,6 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $director = trim((string)($_POST['director_name'] ?? ''));
             $curriculumOfficer = trim((string)($_POST['curriculum_officer_name'] ?? ''));
             $curriculumHead = trim((string)($_POST['curriculum_head_name'] ?? ''));
+            $academicResourcesHead = trim((string)($_POST['academic_resources_head_name'] ?? ''));
             
             try {
                 $stmt = $pdo->prepare("INSERT INTO branding_settings (meta_key, meta_value) VALUES (:key, :value) ON DUPLICATE KEY UPDATE meta_value = :value2");
@@ -217,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute(['key' => 'director_name', 'value' => $director, 'value2' => $director]);
                 $stmt->execute(['key' => 'curriculum_officer_name', 'value' => $curriculumOfficer, 'value2' => $curriculumOfficer]);
                 $stmt->execute(['key' => 'curriculum_head_name', 'value' => $curriculumHead, 'value2' => $curriculumHead]);
+                $stmt->execute(['key' => 'academic_resources_head_name', 'value' => $academicResourcesHead, 'value2' => $academicResourcesHead]);
                 
                 $deptsQuery = $pdo->query("SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != ''")->fetchAll(PDO::FETCH_COLUMN);
                 foreach ($deptsQuery as $dept) {
@@ -584,6 +586,14 @@ $systemTypeLabels = [
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="curriculum_head_name">หัวหน้างานพัฒนาหลักสูตรและการจัดการเรียนรู้</label>
                     <input type="text" name="curriculum_head_name" id="curriculum_head_name" value="<?= e($branding['curriculum_head_name'] ?? ''); ?>"
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 focus:bg-white transition"
+                           placeholder="ระบบจะดึงจาก pnpman อัตโนมัติหากปล่อยว่าง">
+                </div>
+
+                <!-- Head of Academic Resources -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="academic_resources_head_name">หัวหน้างานวิทยบริการและเทคโนโลยีการศึกษา</label>
+                    <input type="text" name="academic_resources_head_name" id="academic_resources_head_name" value="<?= e($branding['academic_resources_head_name'] ?? ''); ?>"
                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 focus:bg-white transition"
                            placeholder="ระบบจะดึงจาก pnpman อัตโนมัติหากปล่อยว่าง">
                 </div>

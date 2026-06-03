@@ -328,7 +328,7 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                 </a>
                 
                 <?php if ($syllabusApproved > 0): ?>
-                    <a href="print_memorandum.php"
+                    <a href="print_memorandum.php?system_type=course_syllabus"
                        class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition">
                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.82l-.24-.24c-1.89-1.89-1.89-4.97 0-6.86l2.1-2.1c1.89-1.89 4.97-1.89 6.86 0l1.1 1.1m-11.8 1.1l1.1 1.1m10.7-1.1h.01m-2.1-2.1v.01M6.72 13.82c1.89 1.89 4.97 1.89 6.86 0l2.1-2.1c1.89-1.89 1.89-4.97 0-6.86l-1.1-1.1m-11.8 1.1h.01M16.5 16.5h.01m-2.1-2.1v.01M12 18.75c-3.728 0-6.75-3.022-6.75-6.75h13.5c0 3.728-3.022 6.75-6.75 6.75z"/></svg>
                         <span>พิมพ์บันทึกข้อความรวม (<?= $syllabusApproved; ?> วิชา)</span>
@@ -361,11 +361,18 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                     </div>
                 </div>
             </div>
-            <div class="pt-4 border-t border-slate-100">
+            <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
                 <a href="submit.php?system_type=lesson_plan" 
                    class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-amber-600/10">
                     <span>ยื่นส่งแผนการเรียนรู้</span>
                 </a>
+                <?php if ($planApproved > 0): ?>
+                    <a href="print_memorandum.php?system_type=lesson_plan"
+                       class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.82l-.24-.24c-1.89-1.89-1.89-4.97 0-6.86l2.1-2.1c1.89-1.89 4.97-1.89 6.86 0l1.1 1.1m-11.8 1.1l1.1 1.1m10.7-1.1h.01m-2.1-2.1v.01M6.72 13.82c1.89 1.89 4.97 1.89 6.86 0l2.1-2.1c1.89-1.89 1.89-4.97 0-6.86l-1.1-1.1m-11.8 1.1h.01M16.5 16.5h.01m-2.1-2.1v.01M12 18.75c-3.728 0-6.75-3.022-6.75-6.75h13.5c0 3.728-3.022 6.75-6.75 6.75z"/></svg>
+                        <span>พิมพ์บันทึกข้อความรวม (<?= $planApproved; ?> วิชา)</span>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -393,11 +400,18 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                     </div>
                 </div>
             </div>
-            <div class="pt-4 border-t border-slate-100">
+            <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
                 <a href="submit.php?system_type=teaching_materials" 
                    class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-slate-900/10">
                     <span>ยื่นส่งสื่อการสอน</span>
                 </a>
+                <?php if ($matApproved > 0): ?>
+                    <a href="print_memorandum.php?system_type=teaching_materials"
+                       class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.82l-.24-.24c-1.89-1.89-1.89-4.97 0-6.86l2.1-2.1c1.89-1.89 4.97-1.89 6.86 0l1.1 1.1m-11.8 1.1l1.1 1.1m10.7-1.1h.01m-2.1-2.1v.01M6.72 13.82c1.89 1.89 4.97 1.89 6.86 0l2.1-2.1c1.89-1.89 1.89-4.97 0-6.86l-1.1-1.1m-11.8 1.1h.01M16.5 16.5h.01m-2.1-2.1v.01M12 18.75c-3.728 0-6.75-3.022-6.75-6.75h13.5c0 3.728-3.022 6.75-6.75 6.75z"/></svg>
+                        <span>พิมพ์บันทึกข้อความรวม (<?= $matApproved; ?> วิชา)</span>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 

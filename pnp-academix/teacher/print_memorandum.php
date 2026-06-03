@@ -44,27 +44,56 @@ $deptHeadName = $branding[$deptHeadKey] ?? '';
 $deputyDirectorName = $branding['deputy_director_name'] ?? '';
 $directorName = $branding['director_name'] ?? '';
 
-// 2. Fetch approved courses for Syllabus
+// Determine system type and map labels
+$selectedSystemType = isset($_GET['system_type']) ? $_GET['system_type'] : 'course_syllabus';
+if (!in_array($selectedSystemType, ['course_syllabus', 'lesson_plan', 'teaching_materials'], true)) {
+    $selectedSystemType = 'course_syllabus';
+}
+
+$systemTypeLabels = [
+    'course_syllabus' => 'โครงการสอน',
+    'lesson_plan' => 'แผนการจัดการเรียนรู้',
+    'teaching_materials' => 'สื่อการเรียนการสอน'
+];
+$docLabel = $systemTypeLabels[$selectedSystemType];
+
+// Determine signatory for Step 2
+$step2BoxHeader = '๒. ความเห็นของรองผู้อำนวยการฝ่ายวิชาการ';
+$step2Name = $deputyDirectorName;
+$step2Title = 'รองผู้อำนวยการฝ่ายวิชาการ';
+
+if ($selectedSystemType === 'lesson_plan') {
+    $step2BoxHeader = '๒. ความเห็นของหัวหน้างานพัฒนาหลักสูตรและการจัดการเรียนรู้';
+    $step2Name = ($branding['curriculum_head_name'] ?? '') ?: get_curriculum_personnel('head');
+    $step2Title = 'หัวหน้างานพัฒนาหลักสูตรและการจัดการเรียนรู้';
+} elseif ($selectedSystemType === 'teaching_materials') {
+    $step2BoxHeader = '๒. ความเห็นของหัวหน้างานวิทยบริการและเทคโนโลยีการศึกษา';
+    $step2Name = ($branding['academic_resources_head_name'] ?? '') ?: get_academic_resources_head();
+    $step2Title = 'หัวหน้างานวิทยบริการและเทคโนโลยีการศึกษา';
+}
+
+// 2. Fetch approved courses for selected system_type
 $stmt = $pdo->prepare("
-    SELECT c.*, s_sub.submitted_at 
+    SELECT c.*, s_sub.submitted_at, s_sub.file_path, s_sub.drive_link
     FROM courses c
     INNER JOIN (
         SELECT s1.* FROM submissions s1
         INNER JOIN (
-            SELECT MAX(id) as max_id FROM submissions WHERE system_type = 'course_syllabus' GROUP BY course_id
+            SELECT MAX(id) as max_id FROM submissions WHERE system_type = :system_type GROUP BY course_id
         ) s2 ON s1.id = s2.max_id
     ) s_sub ON c.id = s_sub.course_id
     WHERE c.teacher_id = :teacher_id AND c.semester_id = :semester_id AND s_sub.status = 'approved'
     ORDER BY c.course_code ASC
 ");
 $stmt->execute([
+    'system_type' => $selectedSystemType,
     'teacher_id' => $teacherId,
     'semester_id' => $semester['id']
 ]);
 $approvedCourses = $stmt->fetchAll();
 
 if (count($approvedCourses) === 0) {
-    exit('ยังไม่มีรายวิชาใดที่โครงการสอน (Syllabus) ได้รับการอนุมัติ จึงยังไม่สามารถจัดพิมพ์บันทึกข้อความได้');
+    exit('ยังไม่มีรายวิชาใดที่ ' . htmlspecialchars($docLabel) . ' ได้รับการอนุมัติ จึงยังไม่สามารถจัดพิมพ์บันทึกข้อความได้');
 }
 
 // Format Thai Date Helper
@@ -94,7 +123,7 @@ function toThaiNumerals($num): string
 <html lang="th">
 <head>
     <meta charset="utf-8">
-    <title>บันทึกข้อความ - ขออนุมัติส่งโครงการสอน</title>
+    <title>บันทึกข้อความ - ขออนุมัติส่ง<?= htmlspecialchars($docLabel); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Outfit:wght@400;600;850&display=swap" rel="stylesheet">
@@ -260,6 +289,66 @@ function toThaiNumerals($num): string
             font-size: 14px;
             font-weight: bold;
         }
+        
+        /* Attachment page styles */
+        .attachment-page {
+            page-break-before: always;
+            break-before: page;
+            margin-top: 30px;
+            border-top: 1px dashed #666;
+            padding-top: 25px;
+        }
+        .attachment-title {
+            font-size: 18pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .qr-grid {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .qr-item {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            background-color: #f8fafc;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-code-img {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+            padding: 6px;
+            background: #fff;
+        }
+        .qr-course-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .qr-link-text {
+            font-size: 9pt;
+            color: #64748b;
+            word-break: break-all;
+            max-width: 255px;
+            margin-top: 6px;
+            line-height: 1.2;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
         @media print {
             .no-print {
                 display: none;
@@ -316,7 +405,7 @@ function toThaiNumerals($num): string
         </div>
         <div class="metadata-row">
             <span class="metadata-label" style="min-width: 50px;">เรื่อง</span>
-            <span class="metadata-value">ขอส่งโครงการสอน ประจำภาคเรียนที่ <?= toThaiNumerals($semester['semester_name']); ?></span>
+            <span class="metadata-value">ขอส่ง<?= htmlspecialchars($docLabel); ?> ประจำภาคเรียนที่ <?= toThaiNumerals($semester['semester_name']); ?></span>
         </div>
     </div>
 
@@ -325,7 +414,7 @@ function toThaiNumerals($num): string
 
     <!-- 5. Body Context -->
     <div class="paragraph">
-        ด้วยข้าพเจ้า <strong><?= e(current_user_fullname()); ?></strong> ตำแหน่ง ครูผู้สอน ได้รับมอบหมายให้ปฏิบัติหน้าที่จัดการเรียนการสอนในภาคเรียนที่ <?= toThaiNumerals($semester['semester_name']); ?> บัดนี้ ข้าพเจ้าได้ดำเนินการจัดเตรียมเอกสารและจัดทำโครงการสอนเรียบร้อย จำนวน <strong><?= toThaiNumerals(count($approvedCourses)); ?></strong> รายวิชา ดังรายการต่อไปนี้</div>
+        ด้วยข้าพเจ้า <strong><?= e(current_user_fullname()); ?></strong> ตำแหน่ง ครูผู้สอน ได้รับมอบหมายให้ปฏิบัติหน้าที่จัดการเรียนการสอนในภาคเรียนที่ <?= toThaiNumerals($semester['semester_name']); ?> บัดนี้ ข้าพเจ้าได้ดำเนินการจัดเตรียมเอกสารและจัดทำ<?= htmlspecialchars($docLabel); ?>เรียบร้อย จำนวน <strong><?= toThaiNumerals(count($approvedCourses)); ?></strong> รายวิชา ดังรายการต่อไปนี้</div>
 
     <!-- 6. List of Courses -->
     <ul class="course-list">
@@ -368,17 +457,17 @@ function toThaiNumerals($num): string
                 </div>
             </div>
 
-            <!-- Step 2: Deputy Director -->
+            <!-- Step 2: Deputy Director or Curriculum Head or Academic Resources Head -->
             <div class="approval-box">
-                <div class="approval-header">๒. ความเห็นของรองผู้อำนวยการฝ่ายวิชาการ</div>
+                <div class="approval-header"><?= htmlspecialchars($step2BoxHeader); ?></div>
                 <div style="margin-bottom: 20px;">
                     [ &nbsp; ] เห็นควรอนุมัติเพื่อใช้ในการเรียนการสอนต่อไป<br>
                     [ &nbsp; ] อื่นๆ .................................................................................
                 </div>
                 <div style="text-align: center; margin-top: 25px;">
                     ลงชื่อ ....................................................................<br>
-                    ( <?= htmlspecialchars($deputyDirectorName ?: '....................................................................'); ?> )<br>
-                    ตำแหน่ง รองผู้อำนวยการฝ่ายวิชาการ<br>
+                    ( <?= htmlspecialchars($step2Name ?: '....................................................................'); ?> )<br>
+                    ตำแหน่ง <?= htmlspecialchars($step2Title); ?><br>
                     วันที่ ...... / ................ / ...........
                 </div>
             </div>
@@ -391,7 +480,7 @@ function toThaiNumerals($num): string
             <div class="approval-box" style="width: 100%; box-sizing: border-box;">
                 <div class="approval-header">๓. ผลการพิจารณาอนุมัติจากผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?></div>
                 <div style="display: flex; justify-content: space-around; margin-bottom: 25px; margin-top: 15px;">
-                    <div>[ &nbsp; ] ทราบและอนุมัติโครงการสอน</div>
+                    <div>[ &nbsp; ] ทราบและอนุมัติ<?= htmlspecialchars($docLabel); ?></div>
                     <div>[ &nbsp; ] ไม่อนุมัติ เนื่องจาก ......................................................................................</div>
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
@@ -402,6 +491,38 @@ function toThaiNumerals($num): string
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- 9. Attachment Page (QR Code page) -->
+    <div class="attachment-page">
+        <div class="attachment-title">เอกสารแนบท้ายบันทึกข้อความ</div>
+        <p style="text-align: center; margin-bottom: 10px; font-size: 14pt;">
+            รายการ QR Code สำหรับสแกนเข้าถึงไฟล์และหลักฐานการยื่นส่งแบบออนไลน์ (ผ่านการอนุมัติระดับวิชาการแล้ว)
+        </p>
+        
+        <div class="qr-grid">
+            <?php $i = 1; foreach ($approvedCourses as $ac): 
+                $qrUrl = "";
+                $isLocalFile = !empty($ac['file_path']);
+                if ($isLocalFile) {
+                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                    $qrUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/pnp-portal/pnp-academix/' . $ac['file_path'];
+                    $btnLabel = "ไฟล์เอกสาร PDF ในระบบ";
+                } else {
+                    $qrUrl = $ac['drive_link'];
+                    $btnLabel = get_youtube_id($qrUrl) ? "ลิงก์วิดีโอ YouTube" : "ลิงก์ Google Drive";
+                }
+                $qrImgSrc = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrUrl);
+            ?>
+                <div class="qr-item">
+                    <div class="qr-course-title"><?= toThaiNumerals($i); ?>. [<?= toThaiNumerals(e($ac['course_code'])); ?>]</div>
+                    <div style="font-size: 11pt; font-weight: bold; color: #334155; margin-bottom: 10px; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<?= e($ac['course_name']); ?>"><?= e($ac['course_name']); ?></div>
+                    <img src="<?= $qrImgSrc; ?>" class="qr-code-img" alt="QR Code">
+                    <div style="font-size: 10pt; font-weight: bold; color: #0f766e; margin-top: 5px;"><?= $btnLabel; ?></div>
+                    <div class="qr-link-text"><?= htmlspecialchars($qrUrl); ?></div>
+                </div>
+            <?php $i++; endforeach; ?>
         </div>
     </div>
 

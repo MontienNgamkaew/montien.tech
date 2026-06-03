@@ -255,6 +255,47 @@ function get_curriculum_personnel(string $roleType): string {
     }
 }
 
+// Helper to query head of academic resources from pnpman (job_id = 30)
+function get_academic_resources_head(): string {
+    $dbPortal = get_portal_db_connection();
+    if (!$dbPortal) {
+        return '';
+    }
+    try {
+        $stmt = $dbPortal->prepare("
+            SELECT u.first_name, u.last_name, a.role, a.comment
+            FROM assignments a
+            INNER JOIN users u ON u.id = a.personnel_id
+            WHERE a.job_id = 30
+        ");
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+        
+        $headName = '';
+        $anyName = '';
+        
+        foreach ($rows as $row) {
+            $fullname = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+            if (empty($anyName)) {
+                $anyName = $fullname;
+            }
+            
+            $role = $row['role'] ?? '';
+            $comment = $row['comment'] ?? '';
+            
+            if (mb_strpos($role, 'หัวหน้า') !== false || mb_strpos($comment, 'หัวหน้า') !== false) {
+                $headName = $fullname;
+            }
+        }
+        
+        return !empty($headName) ? $headName : $anyName;
+    } catch (Exception $e) {
+        error_log('get_academic_resources_head failed: ' . $e->getMessage());
+        return '';
+    }
+}
+
+
 
 
 
