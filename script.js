@@ -184,10 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSubmitLogin = document.getElementById('btn-submit-login');
 
     // ลิงก์ระบบย่อยต้นฉบับดึงจาก Git
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
     const appLinks = {
         'pnp-go': { link: document.getElementById('app-link-pnp-go'), pill: document.getElementById('role-pill-pnp-go'), base: './pnp-go/sso.php' },
         'pnp-man': { link: document.getElementById('app-link-pnp-man'), pill: document.getElementById('role-pill-pnp-man'), base: './pnpman/' },
-        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: 'https://pnp-edu.montien.tech' }
+        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: isLocal ? './pnp-academic/sso.php' : 'https://pnp-edu.montien.tech/sso.php' }
     };
 
     // เปิด / ปิด ดรอปดาวน์โปรไฟล์
