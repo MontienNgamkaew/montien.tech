@@ -1,10 +1,5 @@
 <?php
 
-// Ensure composer autoload is loaded (mPDF and other dependencies)
-if (is_file(__DIR__ . '/../../vendor/autoload.php')) {
-    require_once __DIR__ . '/../../vendor/autoload.php';
-}
-
 use Mpdf\Mpdf;
 use Mpdf\Output\Destination;
 
