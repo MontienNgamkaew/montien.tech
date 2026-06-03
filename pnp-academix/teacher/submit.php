@@ -75,7 +75,7 @@ if ($selectedCourseId) {
 // Fetch existing submission if selected
 $existingSubmission = null;
 if ($selectedCourseId && $selectedSystemType) {
-    $stmt = $pdo->prepare('SELECT id, file_path, drive_link FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, file_path, drive_link, status FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1');
     $stmt->execute([
         'course_id' => $selectedCourseId,
         'system_type' => $selectedSystemType
@@ -186,6 +186,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $errorMessage = 'ไม่พบรายวิชาที่ต้องการลบ หรือคุณไม่มีสิทธิ์ลบรายวิชานี้';
             }
+        } elseif ($action === 'delete_submission') {
+            $postCourseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+            $postSystemType = isset($_POST['system_type']) ? $_POST['system_type'] : '';
+            
+            // Verify ownership first for security
+            $stmt = $pdo->prepare('SELECT id FROM courses WHERE id = :course_id AND teacher_id = :t_id AND semester_id = :sem_id LIMIT 1');
+            $stmt->execute([
+                'course_id' => $postCourseId,
+                't_id' => $teacherId,
+                'sem_id' => $semester['id']
+            ]);
+            if ($stmt->fetch()) {
+                // Fetch submission to delete file on disk
+                $stmtSub = $pdo->prepare('SELECT file_path FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1');
+                $stmtSub->execute([
+                    'course_id' => $postCourseId,
+                    'system_type' => $postSystemType
+                ]);
+                $subToDelete = $stmtSub->fetch();
+                
+                if ($subToDelete) {
+                    if (!empty($subToDelete['file_path'])) {
+                        $oldFile = dirname(__DIR__) . '/' . $subToDelete['file_path'];
+                        if (file_exists($oldFile)) {
+                            @unlink($oldFile);
+                        }
+                    }
+                    
+                    // Delete from database
+                    $stmtDel = $pdo->prepare('DELETE FROM submissions WHERE course_id = :course_id AND system_type = :system_type');
+                    $stmtDel->execute([
+                        'course_id' => $postCourseId,
+                        'system_type' => $postSystemType
+                    ]);
+                    
+                    $_SESSION['success_flash'] = 'ลบข้อมูลการส่งเดิมเรียบร้อยแล้ว ท่านสามารถกรอกและส่งเอกสารใหม่ได้ทันที';
+                    redirect_to("submit.php?course_id={$postCourseId}&system_type={$postSystemType}");
+                }
+            } else {
+                $errorMessage = 'ไม่พบข้อมูลการส่ง หรือคุณไม่มีสิทธิ์ลบข้อมูลการส่งนี้';
+            }
         } elseif ($action === 'submit_document') {
             $postCourseId = isset($_POST['course_id']) ? (int) $_POST['course_id'] : 0;
             $postSystemType = isset($_POST['system_type']) ? $_POST['system_type'] : '';
@@ -214,8 +255,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (!in_array($postSystemType, $validSystemTypes, true)) {
                 $errorMessage = 'กรุณาเลือกประเภทระบบส่งงานให้ถูกต้อง';
             } else {
-                // Get system settings for validation
-                $stmt = $pdo->prepare('SELECT deadline_date, is_open FROM system_settings WHERE system_type = :system_type AND semester_id = :semester_id LIMIT 1');
+                // Check if a submission already exists for this course and system type
+                $stmtCheck = $pdo->prepare("SELECT status FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1");
+                $stmtCheck->execute([
+                    'course_id' => $postCourseId,
+                    'system_type' => $postSystemType
+                ]);
+                $existingSub = $stmtCheck->fetch();
+                
+                if ($existingSub) {
+                    if ($existingSub['status'] === 'approved') {
+                        $errorMessage = 'เอกสารนี้ได้รับการอนุมัติเรียบร้อยแล้ว ไม่สามารถแก้ไขได้ ต้องทำการลบข้อมูลการส่งเดิมก่อนเท่านั้น';
+                    } else {
+                        $confirmOverwrite = isset($_POST['confirm_overwrite']) && (int)$_POST['confirm_overwrite'] === 1;
+                        if (!$confirmOverwrite) {
+                            $errorMessage = 'กรุณาทำเครื่องหมายถูกที่ช่อง "ยืนยันการลบไฟล์/ข้อมูลเดิมเพื่อส่งใหม่" ด้านล่างก่อนกดส่งครับ';
+                        }
+                    }
+                }
+
+                if (!$errorMessage) {
+                    // Get system settings for validation
+                    $stmt = $pdo->prepare('SELECT deadline_date, is_open FROM system_settings WHERE system_type = :system_type AND semester_id = :semester_id LIMIT 1');
                 $stmt->execute([
                     'system_type' => $postSystemType,
                     'semester_id' => $semester['id']
@@ -334,6 +395,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+}
 }
 
 // Label display helper
@@ -500,7 +562,56 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
             </div>
         </form>
 
-        <?php if ($selectedCourseId && $selectedSystemType): ?>
+        <?php if ($selectedCourseId && $selectedSystemType): 
+            $existingStatus = $existingSubmission['status'] ?? '';
+            $isApproved = ($existingStatus === 'approved');
+            $isPendingOrRejected = ($existingStatus === 'pending' || $existingStatus === 'rejected');
+            $isFormDisabled = $isApproved;
+        ?>
+            
+            <?php if ($isApproved): ?>
+                <!-- Approved Warning Banner -->
+                <div class="bg-rose-50 border border-rose-200 rounded-2xl p-5 text-rose-800 mb-6">
+                    <div class="flex items-start gap-3">
+                        <span class="p-1 rounded-lg bg-rose-100 text-rose-700">
+                            <svg class="w-5 h-5 text-rose-750 font-bold" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/></svg>
+                        </span>
+                        <div class="flex-1">
+                            <h4 class="text-xs sm:text-sm font-black text-rose-900">เอกสารได้รับการอนุมัติเรียบร้อยแล้ว</h4>
+                            <p class="text-[11px] sm:text-xs text-rose-700 font-medium mt-1 leading-relaxed">
+                                เนื่องจากเอกสารนี้ได้รับการพิจารณาและอนุมัติผ่านเกณฑ์วิชาการแล้ว ท่านจึง **ไม่สามารถทำการแก้ไขหรือยื่นส่งไฟล์/ลิงก์ทับข้อมูลเดิมได้** หากมีความจำเป็นต้องการแก้ไขหรือส่งใหม่ ท่านจำเป็นต้องกดปุ่มด้านล่างเพื่อทำการลบข้อมูลเดิมออกก่อน แล้วจึงยื่นส่งเอกสารชุดใหม่เข้ามาครับ
+                            </p>
+                            
+                            <form method="post" action="submit.php?course_id=<?= $selectedCourseId; ?>&system_type=<?= $selectedSystemType; ?>" class="mt-4 delete-submission-form">
+                                <input type="hidden" name="csrf_token" value="<?= e(create_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="delete_submission">
+                                <input type="hidden" name="course_id" value="<?= $selectedCourseId; ?>">
+                                <input type="hidden" name="system_type" value="<?= $selectedSystemType; ?>">
+                                <button type="submit" 
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-rose-600/10 hover:scale-[1.02] active:scale-[0.98]">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                    <span>ลบข้อมูลการส่งเดิมเพื่อส่งใหม่</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <?php elseif ($isPendingOrRejected): ?>
+                <!-- Pending/Rejected overwrite instructions -->
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 text-blue-800 mb-6">
+                    <div class="flex items-start gap-3">
+                        <span class="p-1 rounded-lg bg-blue-100 text-blue-700">
+                            <svg class="w-5 h-5 text-blue-750 font-bold" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </span>
+                        <div>
+                            <h4 class="text-xs sm:text-sm font-black text-blue-900">ตรวจพบเอกสารเดิมในระบบแล้ว (รอตรวจ/ไม่ผ่าน)</h4>
+                            <p class="text-[11px] sm:text-xs text-blue-700 font-medium mt-1 leading-relaxed">
+                                วิชานี้เคยส่งเอกสารประเภทนี้แล้วและอยู่ในขั้นตอนการตรวจประเมิน ท่านสามารถทำการแก้ไขหรืออัปโหลดเอกสารใหม่เขียนทับได้ แต่ **จำเป็นต้องยืนยันการลบไฟล์/ข้อมูลชุดเดิม** โดยทำเครื่องหมายถูกในกล่องยืนยันด้านล่างนี้ก่อนกดปุ่มยืนยันการส่งครับ
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
             
             <!-- Real-time Deadline Box -->
             <div class="mb-8">
@@ -567,7 +678,7 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ช่องทางที่ 1: อัปโหลดไฟล์จากเครื่องโดยตรง</label>
                             <input type="file" name="file_upload" id="file_upload" accept="application/pdf"
                                    class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition cursor-pointer"
-                                   <?= !$isOpen ? 'disabled' : ''; ?>>
+                                   <?= (!$isOpen || $isFormDisabled) ? 'disabled' : ''; ?>>
                             <p class="text-[10px] text-rose-500 font-bold mt-2 leading-relaxed">
                                 ⚠️ รับเฉพาะไฟล์รูปแบบ PDF เท่านั้น (ขนาดไฟล์สูงสุดไม่เกิน 100 MB)
                             </p>
@@ -599,7 +710,7 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
                             <input type="url" name="drive_link" id="drive_link" placeholder="https://drive.google.com/..."
                                    value="<?= ($existingSubmission && $existingSubmission['drive_link'] && !get_youtube_id($existingSubmission['drive_link'])) ? e($existingSubmission['drive_link']) : ''; ?>"
                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 transition"
-                                   <?= !$isOpen ? 'disabled' : ''; ?>>
+                                   <?= (!$isOpen || $isFormDisabled) ? 'disabled' : ''; ?>>
                             <p class="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">
                                 กรุณาเปิดการแชร์ลิงก์ให้เป็น *"ทุกคนที่มีลิงก์มีสิทธิ์อ่าน"* เพื่อให้งานวิชาการสามารถเปิดตรวจได้
                             </p>
@@ -614,7 +725,7 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
                                 <input type="url" name="youtube_link" id="youtube_link" placeholder="https://www.youtube.com/watch?v=..."
                                        value="<?= ($existingSubmission && $existingSubmission['drive_link'] && get_youtube_id($existingSubmission['drive_link'])) ? e($existingSubmission['drive_link']) : ''; ?>"
                                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 transition"
-                                       <?= !$isOpen ? 'disabled' : ''; ?>>
+                                       <?= (!$isOpen || $isFormDisabled) ? 'disabled' : ''; ?>>
                                 <p class="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">
                                     คุณครูสามารถแนบลิงก์สื่อการเรียนการสอนที่เป็นวิดีโอจาก YouTube (เช่น คลิปวิดีโอบันทึกการสอน หรือสื่อแนะนำวิชา)
                                 </p>
@@ -624,13 +735,22 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
 
                 </div>
 
+                <?php if ($isPendingOrRejected): ?>
+                    <div class="p-4 bg-amber-50/50 border border-amber-200 rounded-2xl mb-4 flex items-start gap-3">
+                        <input type="checkbox" name="confirm_overwrite" id="confirm_overwrite" value="1" class="w-4.5 h-4.5 text-amber-600 border-slate-350 rounded focus:ring-amber-500 mt-0.5" required>
+                        <label for="confirm_overwrite" class="text-xs sm:text-sm text-amber-800 font-bold leading-normal cursor-pointer select-none">
+                            ฉันยืนยันการลบไฟล์และข้อมูลเดิมในระบบ และส่งไฟล์ใหม่เข้าไปเขียนทับแทนชุดเดิม
+                        </label>
+                    </div>
+                <?php endif; ?>
+
                 <div class="pt-4 flex items-center justify-end gap-3">
                     <a href="dashboard.php" class="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold rounded-xl transition">
                         ยกเลิก
                     </a>
                     <button type="submit" 
-                            class="px-6 py-2.5 text-xs font-black text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed rounded-xl transition shadow-md shadow-slate-900/10"
-                            <?= !$isOpen ? 'disabled' : ''; ?>>
+                            class="px-6 py-2.5 text-xs font-black text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed rounded-xl transition shadow-md shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98]"
+                            <?= (!$isOpen || $isFormDisabled) ? 'disabled' : ''; ?>>
                         ยืนยันการส่งเอกสาร
                     </button>
                 </div>
@@ -852,6 +972,31 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
                     confirmButtonColor: '#e11d48', // Rose 600
                     cancelButtonColor: '#64748b',  // Slate 500
                     confirmButtonText: 'ใช่, ลบรายวิชาออก',
+                    cancelButtonText: 'ยกเลิก',
+                    customClass: {
+                        popup: 'rounded-3xl border border-slate-200 shadow-xl font-thai'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
+        });
+
+        // 4. Intercept Submission Deletion Form
+        const deleteSubForms = document.querySelectorAll('.delete-submission-form');
+        deleteSubForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: '⚠️ ยืนยันการลบข้อมูลเดิม?',
+                    html: `คุณครูแน่ใจหรือไม่ว่าต้องการลบเอกสารและไฟล์เดิมออกจากระบบ?<br><br><span class="text-rose-600 font-bold">⚠️ การดำเนินการนี้จะลบไฟล์ที่อัปโหลดและล้างสถิติผลงานเดิมทันที และไม่สามารถกู้คืนกลับมาได้!</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48', // Rose 600
+                    cancelButtonColor: '#64748b',  // Slate 500
+                    confirmButtonText: 'ใช่, ลบข้อมูลเดิมทิ้ง',
                     cancelButtonText: 'ยกเลิก',
                     customClass: {
                         popup: 'rounded-3xl border border-slate-200 shadow-xl font-thai'
