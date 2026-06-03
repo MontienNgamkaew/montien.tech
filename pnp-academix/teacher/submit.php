@@ -386,8 +386,8 @@ $branding = get_branding_settings();
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider" for="course_select">1. เลือกรายวิชา</label>
-                    <button type="button" onclick="openManageCoursesModal()" class="text-xs font-bold text-teal-700 hover:text-teal-900 transition flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
+                    <button type="button" onclick="openManageCoursesModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 hover:bg-teal-600 border border-teal-200 hover:border-teal-600 text-teal-700 hover:text-white text-xs font-bold rounded-xl transition-all duration-200 shadow-sm active:scale-[0.97]">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                         <span>จัดการรายวิชา</span>
                     </button>
                 </div>
