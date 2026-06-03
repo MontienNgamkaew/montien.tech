@@ -111,12 +111,17 @@
                 <span class="text-secondary small d-block">เลขไมล์หลังเดินทาง</span>
                 <span class="fw-semibold"><?= e(number_format((float)$requisition['odometer_after'])) ?> กม.</span>
             </div>
-            <?php if (!empty($requisition['report_photo_path'])): ?>
+            <?php $reportPhotos = array_filter([$requisition['report_photo_path'] ?? null, $requisition['report_photo_path_2'] ?? null]); ?>
+            <?php if ($reportPhotos): ?>
                 <div class="col-12 mt-3 pt-3 border-top">
                     <span class="text-secondary small d-block mb-2">📸 รูปภาพหน้าปัดไมล์ / สภาพรถยนต์</span>
-                    <a href="<?= e(config('app')['base_path'] . '/' . $requisition['report_photo_path']) ?>" target="_blank">
-                        <img src="<?= e(config('app')['base_path'] . '/' . $requisition['report_photo_path']) ?>" class="img-thumbnail" style="max-height: 250px;">
-                    </a>
+                    <div class="d-flex flex-wrap gap-2">
+                        <?php foreach ($reportPhotos as $photo): ?>
+                            <a href="<?= e(config('app')['base_path'] . '/' . $photo) ?>" target="_blank">
+                                <img src="<?= e(config('app')['base_path'] . '/' . $photo) ?>" class="img-thumbnail" style="max-height: 220px;">
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>

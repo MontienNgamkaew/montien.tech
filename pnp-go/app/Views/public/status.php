@@ -135,7 +135,7 @@
             <div class="mt-3 pt-3 border-top d-flex flex-wrap gap-2">
                 <a class="btn btn-success" href="<?= e(config('app')['base_path'] . '/download?id=' . urlencode($result['id'])) ?>" target="_blank" rel="noopener">📥 ดาวน์โหลด PDF</a>
                 <?php if (empty($result['reported_at'])): ?>
-                    <a class="btn btn-primary" href="<?= e(config('app')['base_path'] . '/report/submit?id=' . urlencode($result['id'])) ?>">📝 รายงานผลการใช้รถ</a>
+                    <a class="btn btn-primary" href="<?= e(config('app')['base_path'] . '/report/submit?id=' . urlencode($result['id'])) ?>">📝 รายงานการใช้รถ</a>
                 <?php else: ?>
                     <button class="btn btn-outline-secondary" disabled>✅ ส่งรายงานแล้ว</button>
                 <?php endif; ?>
@@ -149,12 +149,17 @@
                         <div class="detail-item"><span class="di-label">📟 เลขไมล์ก่อนออก</span><span class="di-value"><?= e(number_format((float) $result['odometer_before'])) ?> กม.</span></div>
                         <div class="detail-item"><span class="di-label">📟 เลขไมล์หลังเดินทาง</span><span class="di-value"><?= e(number_format((float) $result['odometer_after'])) ?> กม.</span></div>
                     </div>
-                    <?php if (!empty($result['report_photo_path'])): ?>
+                    <?php $reportPhotos = array_filter([$result['report_photo_path'] ?? null, $result['report_photo_path_2'] ?? null]); ?>
+                    <?php if ($reportPhotos): ?>
                         <div class="mt-3">
                             <span class="di-label">📸 รูปเลขไมล์ / สภาพรถ</span>
-                            <a href="<?= e(config('app')['base_path'] . '/' . $result['report_photo_path']) ?>" target="_blank" title="คลิกเพื่อขยาย" class="d-inline-block mt-1">
-                                <img src="<?= e(config('app')['base_path'] . '/' . $result['report_photo_path']) ?>" class="img-fluid rounded border" style="max-height: 160px;">
-                            </a>
+                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                <?php foreach ($reportPhotos as $photo): ?>
+                                    <a href="<?= e(config('app')['base_path'] . '/' . $photo) ?>" target="_blank" title="คลิกเพื่อขยาย">
+                                        <img src="<?= e(config('app')['base_path'] . '/' . $photo) ?>" class="img-fluid rounded border" style="max-height: 150px;">
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>

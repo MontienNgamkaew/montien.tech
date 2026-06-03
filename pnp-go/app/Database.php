@@ -55,6 +55,9 @@ final class Database
             if (!in_array('report_photo_path', $reqsCols)) {
                 self::$connection->exec("ALTER TABLE requisitions ADD COLUMN report_photo_path VARCHAR(255) NULL AFTER pdf_path");
             }
+            if (!in_array('report_photo_path_2', $reqsCols)) {
+                self::$connection->exec("ALTER TABLE requisitions ADD COLUMN report_photo_path_2 VARCHAR(255) NULL AFTER report_photo_path");
+            }
             if (!in_array('reported_at', $reqsCols)) {
                 self::$connection->exec("ALTER TABLE requisitions ADD COLUMN reported_at DATETIME NULL AFTER report_photo_path");
             }

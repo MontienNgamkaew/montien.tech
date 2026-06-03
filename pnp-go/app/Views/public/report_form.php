@@ -59,11 +59,18 @@
                         <span class="text-secondary small">ระบุตัวเลขเลขไมล์เมื่อเดินทางกลับถึงวิทยาลัย</span>
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label required" for="report_photo">📸 ภาพถ่ายหน้าปัดไมล์ หรือ ภาพถ่ายสภาพรถยนต์ตอนส่งคืน</label>
+                    <div class="col-md-6">
+                        <label class="form-label required" for="report_photo">📸 รูปภาพที่ 1 (หน้าปัดไมล์ / สภาพรถ)</label>
                         <input type="file" class="form-control <?= isset($errors['report_photo']) ? 'is-invalid' : '' ?>" id="report_photo" name="report_photo" accept="image/png, image/jpeg, image/jpg" required>
                         <div class="invalid-feedback"><?= e($errors['report_photo'] ?? '') ?></div>
-                        <span class="text-secondary small d-block mt-1">รองรับเฉพาะภาพถ่ายนามสกุล .png, .jpg, .jpeg ขนาดสูงสุด 5MB</span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="report_photo_2">📸 รูปภาพที่ 2 <span class="text-muted fw-normal">(ถ้ามี)</span></label>
+                        <input type="file" class="form-control <?= isset($errors['report_photo_2']) ? 'is-invalid' : '' ?>" id="report_photo_2" name="report_photo_2" accept="image/png, image/jpeg, image/jpg">
+                        <div class="invalid-feedback"><?= e($errors['report_photo_2'] ?? '') ?></div>
+                    </div>
+                    <div class="col-12">
+                        <span class="text-secondary small">แนบได้ 1-2 รูป • รองรับ .png, .jpg, .jpeg ขนาดสูงสุด 5MB ต่อรูป</span>
                     </div>
                 </div>
 

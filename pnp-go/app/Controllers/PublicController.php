@@ -555,34 +555,25 @@ final class PublicController
             }
         }
 
-        // Handle file upload
+        // Handle file uploads — รูปที่ 1 บังคับ, รูปที่ 2 ไม่บังคับ (แนบได้ 1-2 รูป)
         $photoPath = null;
+        $photoPath2 = null;
+        $hasPhoto2 = !empty($_FILES['report_photo_2']['name']);
+
         if (empty($_FILES['report_photo']['name'])) {
-            $errors['report_photo'] = 'กรุณาอัปโหลดรูปภาพเลขไมล์หรือสภาพรถยนต์';
-        } else {
-            $file = $_FILES['report_photo'];
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-            $fileType = mime_content_type($file['tmp_name']);
-            if (!in_array($fileType, $allowedTypes, true)) {
-                $errors['report_photo'] = 'รองรับเฉพาะไฟล์รูปภาพ .png, .jpg, .jpeg เท่านั้น';
-            }
-            if ($file['size'] > 5 * 1024 * 1024) {
-                $errors['report_photo'] = 'ขนาดไฟล์ห้ามเกิน 5MB';
+            $errors['report_photo'] = 'กรุณาอัปโหลดรูปภาพอย่างน้อย 1 รูป';
+        }
+
+        if ($errors === []) {
+            [$photoPath, $err1] = $this->saveReportPhoto($_FILES['report_photo'], $requisition['tracking_id'], '_1');
+            if ($err1 !== null) {
+                $errors['report_photo'] = $err1;
             }
 
-            if ($errors === []) {
-                $targetDir = dirname(__DIR__, 2) . '/storage/reports';
-                if (!is_dir($targetDir)) {
-                    mkdir($targetDir, 0777, true);
-                }
-                // กำหนดนามสกุลจากชนิดไฟล์จริง (mime) ที่ตรวจแล้ว ไม่ใช้ชื่อที่ผู้ใช้ส่งมา (กัน .php หลุด)
-                $extByMime = ['image/jpeg' => 'jpg', 'image/jpg' => 'jpg', 'image/png' => 'png'];
-                $ext = $extByMime[$fileType] ?? 'jpg';
-                $fileName = 'report_' . $requisition['tracking_id'] . '_' . time() . '.' . $ext;
-                $photoPath = 'storage/reports/' . $fileName;
-
-                if (!move_uploaded_file($file['tmp_name'], dirname(__DIR__, 2) . '/' . $photoPath)) {
-                    $errors['report_photo'] = 'เกิดข้อผิดพลาดระหว่างอัปโหลดรูปภาพ';
+            if ($errors === [] && $hasPhoto2) {
+                [$photoPath2, $err2] = $this->saveReportPhoto($_FILES['report_photo_2'], $requisition['tracking_id'], '_2');
+                if ($err2 !== null) {
+                    $errors['report_photo_2'] = $err2;
                 }
             }
         }
@@ -597,20 +588,55 @@ final class PublicController
 
         // Update database
         $update = Database::connection()->prepare('
-            UPDATE requisitions 
-            SET odometer_before = :odometer_before, 
-                odometer_after = :odometer_after, 
-                report_photo_path = :report_photo_path, 
-                reported_at = NOW() 
+            UPDATE requisitions
+            SET odometer_before = :odometer_before,
+                odometer_after = :odometer_after,
+                report_photo_path = :report_photo_path,
+                report_photo_path_2 = :report_photo_path_2,
+                reported_at = NOW()
             WHERE id = :id
         ');
         $update->execute([
             'odometer_before' => (int)$odometerBefore,
             'odometer_after' => (int)$odometerAfter,
             'report_photo_path' => $photoPath,
+            'report_photo_path_2' => $photoPath2,
             'id' => $requisition['id'],
         ]);
 
         redirect('/status?id=' . $requisition['id'] . '&reported=success');
+    }
+
+    /**
+     * ตรวจสอบและบันทึกรูปรายงาน 1 ไฟล์
+     * @return array{0: ?string, 1: ?string}  [relativePath, errorMessage]
+     */
+    private function saveReportPhoto(array $file, string $tracking, string $suffix): array
+    {
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        $fileType = mime_content_type($file['tmp_name']);
+
+        if (!in_array($fileType, $allowedTypes, true)) {
+            return [null, 'รองรับเฉพาะไฟล์รูปภาพ .png, .jpg, .jpeg เท่านั้น'];
+        }
+        if ($file['size'] > 5 * 1024 * 1024) {
+            return [null, 'ขนาดไฟล์ห้ามเกิน 5MB'];
+        }
+
+        $targetDir = dirname(__DIR__, 2) . '/storage/reports';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        // กำหนดนามสกุลจากชนิดไฟล์จริง (mime) ที่ตรวจแล้ว ไม่ใช้ชื่อที่ผู้ใช้ส่งมา (กัน .php หลุด)
+        $extByMime = ['image/jpeg' => 'jpg', 'image/jpg' => 'jpg', 'image/png' => 'png'];
+        $ext = $extByMime[$fileType] ?? 'jpg';
+        $path = 'storage/reports/report_' . $tracking . '_' . time() . $suffix . '.' . $ext;
+
+        if (!move_uploaded_file($file['tmp_name'], dirname(__DIR__, 2) . '/' . $path)) {
+            return [null, 'เกิดข้อผิดพลาดระหว่างอัปโหลดรูปภาพ'];
+        }
+
+        return [$path, null];
     }
 }

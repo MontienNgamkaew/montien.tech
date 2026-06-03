@@ -194,7 +194,7 @@
 
                                 <?php if ($item['status'] === 'approved' && empty($item['reported_at'])): ?>
                                     <a class="btn btn-sm btn-success text-white" href="<?= e(config('app')['base_path']) ?>/report/submit?id=<?= e($item['id']) ?>">
-                                        📝 รายงานผลไมล์
+                                        📝 รายงานการใช้รถ
                                     </a>
                                 <?php elseif ($item['status'] === 'approved' && !empty($item['reported_at'])): ?>
                                     <span class="btn btn-sm btn-outline-secondary disabled" style="cursor: default;">
