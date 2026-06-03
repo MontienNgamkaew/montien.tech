@@ -574,7 +574,7 @@ $systemTypeLabels = [
 
                 <!-- Curriculum Officer -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="curriculum_officer_name">เจ้าหน้าที่งานพัฒนาหลักสูตรการเรียนการสอน</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="curriculum_officer_name">เจ้าหน้าที่งานพัฒนาหลักสูตรและการจัดการเรียนรู้</label>
                     <input type="text" name="curriculum_officer_name" id="curriculum_officer_name" value="<?= e($branding['curriculum_officer_name'] ?? ''); ?>"
                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 focus:bg-white transition"
                            placeholder="ระบบจะดึงจาก pnpman อัตโนมัติหากปล่อยว่าง">
@@ -582,7 +582,7 @@ $systemTypeLabels = [
 
                 <!-- Head of Curriculum -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="curriculum_head_name">หัวหน้างานพัฒนาหลักสูตรการเรียนการสอน</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2" for="curriculum_head_name">หัวหน้างานพัฒนาหลักสูตรและการจัดการเรียนรู้</label>
                     <input type="text" name="curriculum_head_name" id="curriculum_head_name" value="<?= e($branding['curriculum_head_name'] ?? ''); ?>"
                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-700 focus:bg-white transition"
                            placeholder="ระบบจะดึงจาก pnpman อัตโนมัติหากปล่อยว่าง">

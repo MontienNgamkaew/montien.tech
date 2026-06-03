@@ -594,7 +594,7 @@ function renderCategoryTable(string $title, array $teachersList) {
     <div class="metadata-section">
         <div class="metadata-row">
             <span class="metadata-label" style="min-width: 90px;">ส่วนราชการ</span>
-            <span class="metadata-value">งานพัฒนาหลักสูตรการเรียนการสอน ฝ่ายวิชาการ <?= htmlspecialchars($branding['college_name']); ?></span>
+            <span class="metadata-value">งานพัฒนาหลักสูตรและการจัดการเรียนรู้ ฝ่ายวิชาการ <?= htmlspecialchars($branding['college_name']); ?></span>
         </div>
         <div class="metadata-row" style="display: flex; justify-content: space-between;">
             <div style="width: 45%; display: flex; align-items: flex-end;">
@@ -618,7 +618,7 @@ function renderCategoryTable(string $title, array $teachersList) {
     <div class="salutation">เรียน &nbsp;&nbsp;ผู้อำนวยการ<?= htmlspecialchars($branding['college_name']); ?></div>
 
     <div class="paragraph">
-        ด้วย งานพัฒนาหลักสูตรการเรียนการสอน ฝ่ายวิชาการ ได้ดำเนินการติดตามความพร้อมของเอกสารและการจัดส่งภารกิจบริหารจัดการเรียนการสอนของครูผู้สอน ประจำภาคเรียนที่ <?= toThaiNumerals($semester['semester_name']); ?> ประกอบด้วย (๑) โครงการสอน (Syllabus) (๒) แผนการจัดการเรียนรู้ (Lesson Plan) และ (๓) สื่อการจัดการเรียนรู้ เพื่อตรวจประเมินความสมบูรณ์และเกณฑ์กำหนดเวลาในการจัดส่งผลงานของสถานศึกษา
+        ด้วย งานพัฒนาหลักสูตรและการจัดการเรียนรู้ ฝ่ายวิชาการ ได้ดำเนินการติดตามความพร้อมของเอกสารและการจัดส่งภารกิจบริหารจัดการเรียนการสอนของครูผู้สอน ประจำภาคเรียนที่ <?= toThaiNumerals($semester['semester_name']); ?> ประกอบด้วย (๑) โครงการสอน (Syllabus) (๒) แผนการจัดการเรียนรู้ (Lesson Plan) และ (๓) สื่อการจัดการเรียนรู้ เพื่อตรวจประเมินความสมบูรณ์และเกณฑ์กำหนดเวลาในการจัดส่งผลงานของสถานศึกษา
     </div>
     <div class="paragraph">
         บัดนี้ ฝ่ายวิชาการได้ดำเนินการรวบรวมและวิเคราะห์ผลสัมฤทธิ์การจัดส่งเอกสารของคณะครูในระบบวิชาการเป็นที่เรียบร้อยแล้ว โดยมีครูผู้สอนที่ได้รับมอบหมายจัดสอนทั้งสิ้นจำนวน <strong><?= toThaiNumerals($totalTeachersCount); ?></strong> ราย มีครูที่สามารถจัดส่งเอกสารผ่านเกณฑ์การประเมินอนุมัติครบถ้วนทั้ง ๓ ด้าน จำนวน <strong><?= toThaiNumerals($fullyCompliantCount); ?></strong> ราย รายละเอียดผลการจัดส่งเอกสารจำแนกตามประเภทและเกณฑ์กำหนดเวลา ปรากฏตามตารางสรุปผลงานในเอกสารแนบท้ายบันทึกข้อความนี้
@@ -631,7 +631,7 @@ function renderCategoryTable(string $title, array $teachersList) {
     <div class="signature-block">
         <div class="signature-line" style="margin-bottom: 6px;">ลงชื่อ ..................................................... ผู้รายงาน</div>
         <div>( <strong><?= htmlspecialchars($curriculumOfficerName ?: '.....................................................'); ?></strong> )</div>
-        <div style="margin-top: 4px;">เจ้าหน้าที่งานพัฒนาหลักสูตรการเรียนการสอน</div>
+        <div style="margin-top: 4px;">เจ้าหน้าที่งานพัฒนาหลักสูตรและการจัดการเรียนรู้</div>
     </div>
     
     <div class="clearfix"></div>
@@ -641,7 +641,7 @@ function renderCategoryTable(string $title, array $teachersList) {
         <div class="approval-grid">
             <!-- Head of Curriculum Box -->
             <div class="approval-box">
-                <div class="approval-header">๑. ความเห็นของหัวหน้างานพัฒนาหลักสูตรการจัดการเรียนรู้</div>
+                <div class="approval-header">๑. ความเห็นของหัวหน้างานพัฒนาหลักสูตรและการจัดการเรียนรู้</div>
                 <div style="margin-bottom: 20px;">
                     [ &nbsp; ] ตรวจสอบแล้ว เห็นควรเสนอรองผู้อำนวยการฝ่ายวิชาการ<br>
                     [ &nbsp; ] อื่นๆ ............................................................................
@@ -649,7 +649,7 @@ function renderCategoryTable(string $title, array $teachersList) {
                 <div style="text-align: center; margin-top: 25px;">
                     ลงชื่อ ....................................................................<br>
                     ( <?= htmlspecialchars($curriculumHeadName ?: '....................................................................'); ?> )<br>
-                    ตำแหน่ง หัวหน้างานพัฒนาหลักสูตรการจัดการเรียนรู้<br>
+                    ตำแหน่ง หัวหน้างานพัฒนาหลักสูตรและการจัดการเรียนรู้<br>
                     วันที่ ...... / ................ / ...........
                 </div>
             </div>
