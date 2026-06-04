@@ -263,15 +263,17 @@ try {
             
             $newUserId = $db->lastInsertId();
             
-            // ตั้งค่าเริ่มต้นสิทธิ์เข้าใช้ระบบย่อยทั้ง 3 ตัวตามกฎเริ่มต้น
+            // ตั้งค่าเริ่มต้นสิทธิ์เข้าใช้ระบบย่อยตามกฎเริ่มต้น
             $go_role = 'none';
             $academic_role = 'none';
             $man_role = 'none';
+            $lesson_plan_role = 'none';
 
             if (in_array($primaryPos, ['ข้าราชการครู', 'พนักงานราชการครู', 'ครูพิเศษสอน'])) {
                 $go_role = 'user';
                 $academic_role = 'user';
                 $man_role = 'user';
+                $lesson_plan_role = 'teacher';
             } elseif (in_array($primaryPos, ['เจ้าหน้าที่', 'นักการภารโรง', 'แม่บ้าน', 'พนักงานขับรถ'])) {
                 $go_role = 'user';
                 $academic_role = 'none';
@@ -292,6 +294,11 @@ try {
                 ':user_id' => $newUserId,
                 ':app_id' => 'pnp-man',
                 ':role' => $man_role
+            ]);
+            $stmtRoleInit->execute([
+                ':user_id' => $newUserId,
+                ':app_id' => 'pnp-lesson-plan',
+                ':role' => $lesson_plan_role
             ]);
             
             $db->commit();

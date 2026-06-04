@@ -117,7 +117,7 @@ try {
     $db->exec("CREATE TABLE IF NOT EXISTS app_roles (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
-        app_id VARCHAR(50) NOT NULL, -- 'pnp-go', 'pnp-academic', 'pnp-man'
+        app_id VARCHAR(50) NOT NULL, -- 'pnp-go', 'pnp-academic', 'pnp-man', 'pnp-lesson-plan'
         role VARCHAR(50) NOT NULL,   -- 'admin', 'user', 'driver', 'teacher', 'none'
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         UNIQUE KEY unique_user_app (user_id, app_id)
@@ -191,7 +191,8 @@ try {
                 'roles' => [
                     'pnp-go' => 'admin',
                     'pnp-academic' => 'admin',
-                    'pnp-man' => 'admin'
+                    'pnp-man' => 'admin',
+                    'pnp-lesson-plan' => 'admin'
                 ]
             ]
         ];

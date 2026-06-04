@@ -187,7 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const appLinks = {
         'pnp-go': { link: document.getElementById('app-link-pnp-go'), pill: document.getElementById('role-pill-pnp-go'), base: './pnp-go/sso.php' },
         'pnp-man': { link: document.getElementById('app-link-pnp-man'), pill: document.getElementById('role-pill-pnp-man'), base: './pnpman/' },
-        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: './pnp-academix/sso.php' }
+        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: './pnp-academix/sso.php' },
+        'pnp-lesson-plan': { link: document.getElementById('app-link-pnp-lesson-plan'), pill: document.getElementById('role-pill-pnp-lesson-plan'), base: './pnp-lessonplan/dist/' }
     };
 
     // เปิด / ปิด ดรอปดาวน์โปรไฟล์
@@ -308,6 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (parseInt(currentUserProfile.is_portal_admin) === 1) {
                 btnAdminPanel.classList.remove('hidden');
+                currentUserProfile.roles = currentUserProfile.roles || {};
+                currentUserProfile.roles['pnp-lesson-plan'] = 'admin';
             } else {
                 btnAdminPanel.classList.add('hidden');
             }
@@ -364,6 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // อัปเดตการแสดงผลของแอปย่อย และแนบสัญญาสิทธิ์ JWT
     function updateAppCards(roles, token) {
         for (const [appId, card] of Object.entries(appLinks)) {
+            if (!card.link || !card.pill) continue;
+
             if (!roles) {
                 card.pill.className = 'role-pill role-none';
                 card.pill.textContent = 'ต้องล็อกอิน';
@@ -390,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (role === 'admin') roleThai = 'ผู้ดูแลระบบ';
                 if (role === 'teacher') roleThai = 'คุณครูผู้สอน';
                 if (role === 'driver') roleThai = 'พนักงานขับรถ';
+                if (role === 'department_head') roleThai = 'หัวหน้าแผนก';
 
                 card.pill.textContent = roleThai;
                 card.link.className = 'app-link';
@@ -587,7 +593,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tdMan.appendChild(createRoleSelector(user.id, 'pnp-man', user.roles['pnp-man']));
             tr.appendChild(tdMan);
 
-            // 7. จัดการสมาชิก
+            // 7. บทบาทแอป PNP Lesson Plan
+            const tdLessonPlan = document.createElement('td');
+            tdLessonPlan.appendChild(createRoleSelector(user.id, 'pnp-lesson-plan', user.roles['pnp-lesson-plan']));
+            tr.appendChild(tdLessonPlan);
+
+            // 8. จัดการสมาชิก
             const tdManage = document.createElement('td');
             tdManage.className = 'text-center';
             
@@ -634,6 +645,10 @@ document.addEventListener('DOMContentLoaded', () => {
             rolesConfig.push({ val: 'admin', label: '👑 หัวหน้าแผนก' });
         } else if (appId === 'pnp-man') {
             rolesConfig.push({ val: 'admin', label: '👑 แอดมินบุคลากร' });
+        } else if (appId === 'pnp-lesson-plan') {
+            rolesConfig.push({ val: 'teacher', label: '📘 ครูผู้สอน' });
+            rolesConfig.push({ val: 'department_head', label: '🛡️ หัวหน้าแผนก' });
+            rolesConfig.push({ val: 'admin', label: '👑 แอดมิน Lesson Plan' });
         }
 
         rolesConfig.forEach(r => {

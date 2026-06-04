@@ -195,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const positionRoleGo = document.getElementById('position-role-go');
     const positionRoleAcademic = document.getElementById('position-role-academic');
     const positionRoleMan = document.getElementById('position-role-man');
+    const positionRoleLessonPlan = document.getElementById('position-role-lesson-plan');
     const btnSubmitPositionForm = document.getElementById('btn-submit-position-form');
     const positionErrorMsg = document.getElementById('position-error-msg');
     const positionErrorText = document.getElementById('position-error-text');
@@ -644,7 +645,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tdMan.appendChild(createInlineRoleSelector(user.id, 'pnp-man', roles['pnp-man'] || 'none'));
             tr.appendChild(tdMan);
 
-            // 10. Actions
+            // 10. PNP Lesson Plan Role
+            const tdLessonPlan = document.createElement('td');
+            tdLessonPlan.appendChild(createInlineRoleSelector(user.id, 'pnp-lesson-plan', roles['pnp-lesson-plan'] || 'none'));
+            tr.appendChild(tdLessonPlan);
+
+            // 11. Actions
             const tdActions = document.createElement('td');
             tdActions.innerHTML = `
                 <div class="action-btns">
@@ -687,6 +693,10 @@ document.addEventListener('DOMContentLoaded', () => {
             rolesConfig.push({ val: 'teacher', label: 'ครู' });
             rolesConfig.push({ val: 'admin', label: 'หัวหน้า' });
         } else if (appId === 'pnp-man') {
+            rolesConfig.push({ val: 'admin', label: 'แอดมิน' });
+        } else if (appId === 'pnp-lesson-plan') {
+            rolesConfig.push({ val: 'teacher', label: 'ครู' });
+            rolesConfig.push({ val: 'department_head', label: 'หัวหน้า' });
             rolesConfig.push({ val: 'admin', label: 'แอดมิน' });
         }
 
@@ -1509,6 +1519,7 @@ document.addEventListener('DOMContentLoaded', () => {
         positionRoleGo.value = roles['pnp-go'] || 'none';
         positionRoleAcademic.value = roles['pnp-academic'] || 'none';
         positionRoleMan.value = roles['pnp-man'] || 'none';
+        positionRoleLessonPlan.value = roles['pnp-lesson-plan'] || 'none';
         
         showModal(positionModalOverlay);
     }
@@ -1548,7 +1559,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 roles: {
                     'pnp-go': positionRoleGo.value,
                     'pnp-academic': positionRoleAcademic.value,
-                    'pnp-man': positionRoleMan.value
+                    'pnp-man': positionRoleMan.value,
+                    'pnp-lesson-plan': positionRoleLessonPlan.value
                 }
             };
 
@@ -2370,6 +2382,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const manCount = data.filter(u => u.roles && u.roles['pnp-man'] && u.roles['pnp-man'] !== 'none').length;
         const manPct = Math.round((manCount / total) * 100);
 
+        const lessonPlanCount = data.filter(u => u.roles && u.roles['pnp-lesson-plan'] && u.roles['pnp-lesson-plan'] !== 'none').length;
+        const lessonPlanPct = Math.round((lessonPlanCount / total) * 100);
+
         wrapper.innerHTML = `
             <div class="bar-row">
                 <div class="bar-meta">
@@ -2412,6 +2427,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bar-fill" style="width: 0%; background: linear-gradient(90deg, #00f2fe, #4facfe);"></div>
                 </div>
             </div>
+
+            <div class="bar-row" style="margin-top: 12px;">
+                <div class="bar-meta">
+                    <span style="color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                        <span>📝</span> PNP Lesson Plan
+                    </span>
+                    <span style="color: var(--text-muted); font-weight: 500;">
+                        <span style="color: #f59e0b; font-weight: 700;">${lessonPlanCount}</span> / ${total} คน (${lessonPlanPct}%)
+                    </span>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-fill" style="width: 0%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+                </div>
+            </div>
         `;
 
         // Trigger width animation on next tick
@@ -2420,6 +2449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fills[0]) fills[0].style.width = `${academicPct}%`;
             if (fills[1]) fills[1].style.width = `${goPct}%`;
             if (fills[2]) fills[2].style.width = `${manPct}%`;
+            if (fills[3]) fills[3].style.width = `${lessonPlanPct}%`;
         }, 50);
     }
 
@@ -2657,4 +2687,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     authGuard();
 });
-

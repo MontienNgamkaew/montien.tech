@@ -83,7 +83,8 @@ if ($method === 'GET') {
             $u['roles'] = [
                 'pnp-go' => 'none',
                 'pnp-academic' => 'none',
-                'pnp-man' => 'none'
+                'pnp-man' => 'none',
+                'pnp-lesson-plan' => 'none'
             ];
             
             foreach ($rolesRows as $row) {
@@ -102,6 +103,7 @@ if ($method === 'GET') {
                 $u['roles']['pnp-go'] = 'admin';
                 $u['roles']['pnp-academic'] = 'admin';
                 $u['roles']['pnp-man'] = 'admin';
+                $u['roles']['pnp-lesson-plan'] = 'admin';
             }
 
             // ดึงข้อมูลตำแหน่งหน้าที่รับผิดชอบจาก PNP Man (assignments table)
@@ -345,11 +347,13 @@ if ($method === 'POST') {
             $go_role = 'none';
             $academic_role = 'none';
             $man_role = 'none';
+            $lesson_plan_role = 'none';
 
             if (in_array($primaryPos, ['ข้าราชการครู', 'พนักงานราชการครู', 'ครูพิเศษสอน'])) {
                 $go_role = 'user';
                 $academic_role = 'user';
                 $man_role = 'user';
+                $lesson_plan_role = 'teacher';
             } elseif (in_array($primaryPos, ['เจ้าหน้าที่', 'นักการภารโรง', 'แม่บ้าน', 'พนักงานขับรถ'])) {
                 $go_role = 'user';
                 $academic_role = 'none';
@@ -368,6 +372,7 @@ if ($method === 'POST') {
             $stmtRoleInit->execute([':user_id' => $newUserId, ':app_id' => 'pnp-go', ':role' => $go_role]);
             $stmtRoleInit->execute([':user_id' => $newUserId, ':app_id' => 'pnp-academic', ':role' => $academic_role]);
             $stmtRoleInit->execute([':user_id' => $newUserId, ':app_id' => 'pnp-man', ':role' => $man_role]);
+            $stmtRoleInit->execute([':user_id' => $newUserId, ':app_id' => 'pnp-lesson-plan', ':role' => $lesson_plan_role]);
 
             $db->commit();
 
@@ -681,8 +686,8 @@ if ($method === 'POST') {
         $appId = isset($input['app_id']) ? trim($input['app_id']) : '';
         $role = isset($input['role']) ? trim($input['role']) : '';
 
-        $validApps = ['pnp-go', 'pnp-academic', 'pnp-man'];
-        $validRoles = ['admin', 'user', 'driver', 'teacher', 'none'];
+        $validApps = ['pnp-go', 'pnp-academic', 'pnp-man', 'pnp-lesson-plan'];
+        $validRoles = ['admin', 'user', 'driver', 'teacher', 'department_head', 'none'];
 
         if ($userId <= 0 || !in_array($appId, $validApps) || !in_array($role, $validRoles)) {
             sendResponse(['error' => 'ข้อมูลสิทธิ์หรือระบบย่อยไม่ถูกต้อง'], 400);

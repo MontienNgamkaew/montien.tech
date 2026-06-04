@@ -815,12 +815,13 @@
                                 <th>🚗 Go</th>
                                 <th>📘 Academix</th>
                                 <th>👥 Man</th>
+                                <th>📝 Lesson</th>
                                 <th>จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="admin-users-table-body">
                             <tr>
-                                <td colspan="9" class="table-loading">⚡ กำลังโหลดข้อมูลสมาชิก...</td>
+                                <td colspan="10" class="table-loading">⚡ กำลังโหลดข้อมูลสมาชิก...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1173,6 +1174,15 @@
                             <option value="none">❌ ไม่มีสิทธิ์</option>
                             <option value="user">👤 สมาชิกทั่วไป</option>
                             <option value="admin">👑 แอดมินบุคลากร</option>
+                        </select>
+                    </div>
+                    <div class="role-row">
+                        <label for="position-role-lesson-plan">📝 PNP Lesson Plan</label>
+                        <select id="position-role-lesson-plan" class="role-select-compact">
+                            <option value="none">❌ ไม่มีสิทธิ์</option>
+                            <option value="teacher">📘 ครูผู้สอน</option>
+                            <option value="department_head">🛡️ หัวหน้าแผนก</option>
+                            <option value="admin">👑 แอดมิน</option>
                         </select>
                     </div>
                 </div>

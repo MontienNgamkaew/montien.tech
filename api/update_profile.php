@@ -161,6 +161,7 @@ try {
         $appRoles['pnp-go'] = 'admin';
         $appRoles['pnp-academic'] = 'admin';
         $appRoles['pnp-man'] = 'admin';
+        $appRoles['pnp-lesson-plan'] = 'admin';
     }
 
     // สร้าง JWT Token ใหม่

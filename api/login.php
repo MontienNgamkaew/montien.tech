@@ -51,6 +51,7 @@ try {
         $appRoles['pnp-go'] = 'admin';
         $appRoles['pnp-academic'] = 'admin';
         $appRoles['pnp-man'] = 'admin';
+        $appRoles['pnp-lesson-plan'] = 'admin';
     }
 
     // 3.1 คำนวณตำแหน่งในโครงสร้างงาน (org_position) เพื่อส่งใน JWT Payload

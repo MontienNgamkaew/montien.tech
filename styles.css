@@ -408,6 +408,7 @@ body.light-theme .badge {
 .card-carrequest { --glow-color: rgba(0, 242, 254, 0.25); }
 .card-pnpman { --glow-color: rgba(138, 79, 255, 0.22); }
 .card-academic { --glow-color: rgba(255, 170, 0, 0.2); }
+.card-lessonplan { --glow-color: rgba(255, 43, 214, 0.24); }
 
 .app-card:hover .card-glow {
     opacity: 1;
@@ -656,6 +657,10 @@ body.light-theme .badge {
     color: var(--accent-academic);
     text-shadow: 0 0 6px rgba(255, 170, 0, 0.6), 0 0 12px rgba(255, 170, 0, 0.3);
 }
+.card-lessonplan .card-responsible {
+    color: #ff2bd6;
+    text-shadow: 0 0 7px rgba(255, 43, 214, 0.75), 0 0 16px rgba(255, 43, 214, 0.45), 0 0 26px rgba(255, 43, 214, 0.24);
+}
 
 /* Light Theme Adjustments for legibility */
 body.light-theme .card-carrequest .card-responsible {
@@ -670,6 +675,10 @@ body.light-theme .card-academic .card-responsible {
     color: hsl(38, 100%, 40%);
     text-shadow: 0 0 4px rgba(255, 170, 0, 0.2);
 }
+body.light-theme .card-lessonplan .card-responsible {
+    color: hsl(316, 92%, 43%);
+    text-shadow: 0 0 5px rgba(255, 43, 214, 0.28), 0 0 12px rgba(255, 43, 214, 0.18);
+}
 
 /* Card Button Colors */
 .card-carrequest .app-link {
@@ -683,6 +692,10 @@ body.light-theme .card-academic .card-responsible {
 .card-academic .app-link {
     background: linear-gradient(135deg, var(--accent-academic), #ff7b00);
     color: hsl(224, 30%, 7%);
+}
+.card-lessonplan .app-link {
+    background: linear-gradient(135deg, #ff2bd6, #ff4f8b);
+    color: #fff;
 }
 
 .app-link .arrow {
@@ -702,6 +715,7 @@ body.light-theme .card-academic .card-responsible {
 .card-carrequest .app-link:hover { box-shadow: 0 0 20px var(--accent-car-glow); }
 .card-pnpman .app-link:hover { box-shadow: 0 0 20px var(--accent-man-glow); }
 .card-academic .app-link:hover { box-shadow: 0 0 20px var(--accent-academic-glow); }
+.card-lessonplan .app-link:hover { box-shadow: 0 0 22px rgba(255, 43, 214, 0.55); }
 
 /* Footer */
 .app-footer {
