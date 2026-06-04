@@ -378,7 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 continue;
             }
 
-            const role = roles[appId] || 'none';
+            let role = roles[appId] || 'none';
+            if (appId === 'pnp-lesson-plan' && !['admin', 'user', 'none'].includes(role)) {
+                role = 'user';
+            }
 
             card.pill.className = 'role-pill';
 
@@ -395,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (role === 'admin') roleThai = 'ผู้ดูแลระบบ';
                 if (role === 'teacher') roleThai = 'คุณครูผู้สอน';
                 if (role === 'driver') roleThai = 'พนักงานขับรถ';
-                if (role === 'department_head') roleThai = 'หัวหน้าแผนก';
 
                 card.pill.textContent = roleThai;
                 card.link.className = 'app-link';
@@ -646,8 +648,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (appId === 'pnp-man') {
             rolesConfig.push({ val: 'admin', label: '👑 แอดมินบุคลากร' });
         } else if (appId === 'pnp-lesson-plan') {
-            rolesConfig.push({ val: 'teacher', label: '📘 ครูผู้สอน' });
-            rolesConfig.push({ val: 'department_head', label: '🛡️ หัวหน้าแผนก' });
             rolesConfig.push({ val: 'admin', label: '👑 แอดมิน Lesson Plan' });
         }
 

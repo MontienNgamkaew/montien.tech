@@ -273,7 +273,7 @@ try {
                 $go_role = 'user';
                 $academic_role = 'user';
                 $man_role = 'user';
-                $lesson_plan_role = 'teacher';
+                $lesson_plan_role = 'user';
             } elseif (in_array($primaryPos, ['เจ้าหน้าที่', 'นักการภารโรง', 'แม่บ้าน', 'พนักงานขับรถ'])) {
                 $go_role = 'user';
                 $academic_role = 'none';

@@ -90,11 +90,17 @@ if ($method === 'GET') {
             foreach ($rolesRows as $row) {
                 // สำหรับสคีมาแบบเดิม หากเก็บในฐานข้อมูลแอปย่อยเป็นชื่อคีย์ที่เหลื่อมล้ำ
                 $appKey = $row['app_id'];
+                $roleValue = $row['role'];
+
+                if ($appKey === 'pnp-lesson-plan' && !in_array($roleValue, ['admin', 'user', 'none'], true)) {
+                    $roleValue = 'user';
+                }
+
                 // ดักจับการแปลงชื่อระบบหากจำเป็น
                 if ($appKey === 'pnp-academic' || $appKey === 'pnp-academic') {
-                    $u['roles']['pnp-academic'] = $row['role'];
+                    $u['roles']['pnp-academic'] = $roleValue;
                 } else {
-                    $u['roles'][$appKey] = $row['role'];
+                    $u['roles'][$appKey] = $roleValue;
                 }
             }
 
@@ -343,7 +349,7 @@ if ($method === 'POST') {
                 ]);
             }
 
-            // 3. ตั้งค่าเริ่มต้นสิทธิ์เข้าใช้ระบบย่อยทั้ง 3 ตัวตามกฎเริ่มต้น
+            // 3. ตั้งค่าเริ่มต้นสิทธิ์เข้าใช้ระบบย่อยตามกฎเริ่มต้น
             $go_role = 'none';
             $academic_role = 'none';
             $man_role = 'none';
@@ -353,7 +359,7 @@ if ($method === 'POST') {
                 $go_role = 'user';
                 $academic_role = 'user';
                 $man_role = 'user';
-                $lesson_plan_role = 'teacher';
+                $lesson_plan_role = 'user';
             } elseif (in_array($primaryPos, ['เจ้าหน้าที่', 'นักการภารโรง', 'แม่บ้าน', 'พนักงานขับรถ'])) {
                 $go_role = 'user';
                 $academic_role = 'none';
@@ -586,6 +592,10 @@ if ($method === 'POST') {
                     ON DUPLICATE KEY UPDATE role = :role
                 ");
                 foreach ($roles as $appId => $role) {
+                    if ($appId === 'pnp-lesson-plan' && !in_array($role, ['admin', 'user', 'none'], true)) {
+                        $role = 'user';
+                    }
+
                     $stmtUpdateRole->execute([
                         ':user_id' => $userId,
                         ':app_id' => $appId,
@@ -688,8 +698,13 @@ if ($method === 'POST') {
 
         $validApps = ['pnp-go', 'pnp-academic', 'pnp-man', 'pnp-lesson-plan'];
         $validRoles = ['admin', 'user', 'driver', 'teacher', 'department_head', 'none'];
+        $validRolesByApp = [
+            'pnp-lesson-plan' => ['admin', 'user', 'none']
+        ];
 
-        if ($userId <= 0 || !in_array($appId, $validApps) || !in_array($role, $validRoles)) {
+        $allowedRoles = $validRolesByApp[$appId] ?? $validRoles;
+
+        if ($userId <= 0 || !in_array($appId, $validApps, true) || !in_array($role, $allowedRoles, true)) {
             sendResponse(['error' => 'ข้อมูลสิทธิ์หรือระบบย่อยไม่ถูกต้อง'], 400);
         }
 

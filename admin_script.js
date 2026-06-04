@@ -695,8 +695,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (appId === 'pnp-man') {
             rolesConfig.push({ val: 'admin', label: 'แอดมิน' });
         } else if (appId === 'pnp-lesson-plan') {
-            rolesConfig.push({ val: 'teacher', label: 'ครู' });
-            rolesConfig.push({ val: 'department_head', label: 'หัวหน้า' });
             rolesConfig.push({ val: 'admin', label: 'แอดมิน' });
         }
 

@@ -154,7 +154,11 @@ try {
 
     $appRoles = [];
     foreach ($rolesRows as $row) {
-        $appRoles[$row['app_id']] = $row['role'];
+        $roleValue = $row['role'];
+        if ($row['app_id'] === 'pnp-lesson-plan' && !in_array($roleValue, ['admin', 'user', 'none'], true)) {
+            $roleValue = 'user';
+        }
+        $appRoles[$row['app_id']] = $roleValue;
     }
 
     if ((int)$updatedUser['is_portal_admin'] === 1) {
