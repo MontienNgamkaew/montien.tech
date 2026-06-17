@@ -123,6 +123,16 @@ try {
         UNIQUE KEY unique_user_app (user_id, app_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+    // 5.1 สร้างตารางสถานะการเปิด/ปิดระบบย่อย: app_status
+    $db->exec("CREATE TABLE IF NOT EXISTS app_status (
+        app_id VARCHAR(50) PRIMARY KEY,           -- 'pnp-go', 'pnp-man', 'pnp-academic', 'pnp-lesson-plan'
+        status ENUM('active','disabled','coming_soon') NOT NULL DEFAULT 'active',
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    foreach (['pnp-go', 'pnp-man', 'pnp-academic', 'pnp-lesson-plan'] as $seedApp) {
+        $db->exec("INSERT IGNORE INTO app_status (app_id, status) VALUES (" . $db->quote($seedApp) . ", 'active')");
+    }
+
     // 6. สร้างตารางฝ่ายงานหลัก: departments
     $db->exec("CREATE TABLE IF NOT EXISTS departments (
         id INT AUTO_INCREMENT PRIMARY KEY,

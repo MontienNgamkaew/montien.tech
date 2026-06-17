@@ -530,6 +530,21 @@ body.light-theme .badge {
     background-color: #f39c12;
 }
 
+/* ปิดใช้งานชั่วคราว (admin ปิดระบบ) */
+.status-disabled {
+    background-color: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+    border: 1px solid rgba(107, 114, 128, 0.35);
+}
+.status-disabled::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #6b7280;
+}
+
 @keyframes pulseGlow {
     0% { transform: scale(0.9); opacity: 0.5; }
     50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 8px var(--success-color); }

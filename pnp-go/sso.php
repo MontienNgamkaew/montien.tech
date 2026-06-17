@@ -49,6 +49,44 @@ $roles = $payload['roles'] ?? [];
 $isPortalAdmin = (int)($payload['is_portal_admin'] ?? 0);
 
 // ================================================================================
+// APP STATUS GATE — ถ้าผู้ดูแลตั้งระบบเป็น "ปิด" หรือ "เร็วๆนี้" ผู้ใช้ทั่วไปเข้าไม่ได้
+// (ผู้ดูแลพอร์ทัลยังเข้าได้เพื่อทดสอบ/ตั้งค่า)
+// ================================================================================
+if ($isPortalAdmin !== 1) {
+    $appStatus = 'active';
+    try {
+        $portalDb = Database::portalConnection();
+        $stmtStatus = $portalDb->prepare("SELECT status FROM app_status WHERE app_id = 'pnp-go' LIMIT 1");
+        $stmtStatus->execute();
+        $fetched = $stmtStatus->fetchColumn();
+        if ($fetched !== false) {
+            $appStatus = $fetched;
+        }
+    } catch (Throwable $e) {
+        $appStatus = 'active'; // ถ้าตรวจสถานะไม่ได้ ปล่อยให้เข้าได้ตามปกติ
+    }
+
+    if ($appStatus === 'disabled' || $appStatus === 'coming_soon') {
+        $isSoon = ($appStatus === 'coming_soon');
+        $icon  = $isSoon ? '🚧' : '🛠️';
+        $head  = $isSoon ? 'ระบบกำลังจะเปิดให้บริการเร็วๆ นี้' : 'ระบบปิดปรับปรุงชั่วคราว';
+        $desc  = $isSoon
+            ? 'ระบบขออนุญาตใช้รถยนต์อยู่ระหว่างการพัฒนา จะเปิดให้บริการในเร็ววัน ขออภัยในความไม่สะดวก'
+            : 'ขณะนี้ระบบปิดปรับปรุงชั่วคราวตามคำสั่งของผู้ดูแลระบบ กรุณากลับมาใหม่ภายหลัง';
+        echo '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>' . $head . '</title>';
+        echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head>';
+        echo '<body class="bg-light d-flex align-items-center justify-content-center" style="min-height:100vh;">';
+        echo '<div class="card shadow-sm p-4 text-center" style="max-width:480px;border-radius:16px;">';
+        echo '<div class="fs-1 mb-3">' . $icon . '</div>';
+        echo '<h4 class="text-dark mb-3">' . $head . '</h4>';
+        echo '<p class="text-muted mb-4">' . $desc . '</p>';
+        echo '<a href="/pnp-portal/" class="btn btn-outline-secondary w-100 py-2" style="border-radius:10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
+        echo '</div></body></html>';
+        exit;
+    }
+}
+
+// ================================================================================
 // USER ROLE MAPPING — Priority: explicit app_roles setting > auto-mapping from position
 // ================================================================================
 // ได้รับสิทธิ์จากหน้าจัดการสมาชิกของ portal (app_roles) ที่เก็บในตาราง app_roles

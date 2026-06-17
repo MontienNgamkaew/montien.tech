@@ -185,11 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ลิงก์ระบบย่อยต้นฉบับดึงจาก Git
     const appLinks = {
-        'pnp-go': { link: document.getElementById('app-link-pnp-go'), pill: document.getElementById('role-pill-pnp-go'), base: './pnp-go/sso.php' },
-        'pnp-man': { link: document.getElementById('app-link-pnp-man'), pill: document.getElementById('role-pill-pnp-man'), base: './pnpman/' },
-        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: './pnp-academix/sso.php' },
-        'pnp-lesson-plan': { link: document.getElementById('app-link-pnp-lesson-plan'), pill: document.getElementById('role-pill-pnp-lesson-plan'), base: './pnp-lessonplan/dist/' }
+        'pnp-go': { link: document.getElementById('app-link-pnp-go'), pill: document.getElementById('role-pill-pnp-go'), base: './pnp-go/sso.php', statusBadge: document.querySelector('#card-pnp-go .status-pill.status-active') },
+        'pnp-man': { link: document.getElementById('app-link-pnp-man'), pill: document.getElementById('role-pill-pnp-man'), base: './pnpman/', statusBadge: document.querySelector('#card-pnp-man .status-pill.status-active') },
+        'pnp-academic': { link: document.getElementById('app-link-pnp-academic'), pill: document.getElementById('role-pill-pnp-academic'), base: './pnp-academix/sso.php', statusBadge: document.querySelector('#card-pnp-academic .status-pill.status-active') },
+        'pnp-lesson-plan': { link: document.getElementById('app-link-pnp-lesson-plan'), pill: document.getElementById('role-pill-pnp-lesson-plan'), base: './pnp-lessonplan/dist/', statusBadge: document.querySelector('#card-pnp-lesson-plan .status-pill.status-active') }
     };
+
+    // สถานะการเปิด/ปิดของแต่ละระบบ (admin กำหนดผ่านหน้าจัดการ) — โหลดจาก api/app_status.php
+    let appStatuses = {};
+    async function loadAppStatuses() {
+        try {
+            const res = await fetch('./api/app_status.php');
+            const data = await res.json();
+            if (data && data.data) appStatuses = data.data;
+        } catch (e) {
+            appStatuses = {};
+        }
+    }
 
     // เปิด / ปิด ดรอปดาวน์โปรไฟล์
     if (profileBadgeBtn) {
@@ -366,8 +378,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // อัปเดตการแสดงผลของแอปย่อย และแนบสัญญาสิทธิ์ JWT
     function updateAppCards(roles, token) {
+        const isPortalAdmin = !!(currentUserProfile && parseInt(currentUserProfile.is_portal_admin) === 1);
+
         for (const [appId, card] of Object.entries(appLinks)) {
             if (!card.link || !card.pill) continue;
+
+            // ===== สถานะระบบ (เปิด / ปิด / เร็วๆนี้) ที่ admin กำหนด =====
+            const st = appStatuses[appId] || 'active';
+            if (card.statusBadge) {
+                if (st === 'disabled') {
+                    card.statusBadge.className = 'status-pill status-disabled';
+                    card.statusBadge.textContent = 'ปิดปรับปรุง';
+                } else if (st === 'coming_soon') {
+                    card.statusBadge.className = 'status-pill status-inactive';
+                    card.statusBadge.textContent = 'เปิดเร็วๆ นี้';
+                } else {
+                    card.statusBadge.className = 'status-pill status-active';
+                    card.statusBadge.textContent = 'เปิดใช้งาน';
+                }
+            }
+
+            // ปิด/เร็วๆนี้ → กั้นการเข้าใช้งาน (ยกเว้นผู้ดูแลพอร์ทัล เพื่อเข้าทดสอบ/ตั้งค่าได้)
+            if (st !== 'active' && !isPortalAdmin) {
+                card.pill.className = 'role-pill role-none';
+                card.pill.textContent = (st === 'coming_soon') ? 'เร็วๆ นี้' : 'ปิดปรับปรุง';
+                card.link.className = 'app-link disabled';
+                card.link.href = '#';
+                card.link.querySelector('span:first-child').textContent =
+                    (st === 'coming_soon') ? 'ระบบอยู่ระหว่างพัฒนา' : 'ปิดปรับปรุงชั่วคราว';
+                continue;
+            }
 
             if (!roles) {
                 card.pill.className = 'role-pill role-none';
@@ -440,7 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    checkAutoLogin();
+    // โหลดสถานะระบบก่อน แล้วค่อยตรวจ auto-login + เรนเดอร์การ์ด
+    loadAppStatuses().finally(checkAutoLogin);
 
     // ==========================================
     // 6. ADMIN USER & ROLE MANAGEMENT PANEL (CRUD OVERLAY)

@@ -294,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentAdminProfile = data.user;
             applyAdminProfile();
             loadUsersTable();
+            loadAppStatusPanel();
 
         } catch (err) {
             console.error('Auth verification failed:', err);
@@ -309,6 +310,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (dropdownFullname) {
             dropdownFullname.textContent = `${currentAdminProfile.first_name} ${currentAdminProfile.last_name}`;
+        }
+    }
+
+    // ==========================================
+    // APP STATUS MANAGEMENT (เปิด/ปิด/เร็วๆนี้)
+    // ==========================================
+    const APP_STATUS_META = {
+        'pnp-go': '🚗 PNP Go (ขอใช้รถ)',
+        'pnp-man': '👥 PNP Man (บุคลากร)',
+        'pnp-academic': '📘 PNP Academix (แผนสอน)',
+        'pnp-lesson-plan': '📝 PNP Lesson Plan'
+    };
+
+    async function loadAppStatusPanel() {
+        const list = document.getElementById('app-status-list');
+        if (!list) return;
+
+        try {
+            const res = await fetch('api/app_status.php');
+            const data = await res.json();
+            const statuses = (data && data.data) ? data.data : {};
+
+            list.innerHTML = '';
+            for (const [appId, name] of Object.entries(APP_STATUS_META)) {
+                const cur = statuses[appId] || 'active';
+                const card = document.createElement('div');
+                card.style.cssText = 'background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:8px;';
+                card.innerHTML = `
+                    <span style="font-weight:600; color:var(--text-primary,#fff); font-size:14px;">${name}</span>
+                    <select class="app-status-select" data-appid="${appId}" style="width:100%; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.25); color:var(--text-primary,#fff); border:1px solid rgba(255,255,255,0.14); font-size:13px;">
+                        <option value="active" ${cur === 'active' ? 'selected' : ''}>🟢 เปิดใช้งาน</option>
+                        <option value="disabled" ${cur === 'disabled' ? 'selected' : ''}>⛔ ปิดใช้งาน</option>
+                        <option value="coming_soon" ${cur === 'coming_soon' ? 'selected' : ''}>🚧 เปิดเร็วๆ นี้</option>
+                    </select>`;
+                list.appendChild(card);
+            }
+
+            list.querySelectorAll('.app-status-select').forEach((sel) => {
+                sel.addEventListener('change', async () => {
+                    const appId = sel.dataset.appid;
+                    const status = sel.value;
+                    sel.disabled = true;
+                    try {
+                        const token = localStorage.getItem('pnp-token');
+                        const r = await fetch('api/app_status.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ app_id: appId, status })
+                        });
+                        const d = await r.json();
+                        if (!r.ok) throw new Error(d.error || 'บันทึกไม่สำเร็จ');
+                        showToast(`อัปเดตสถานะ "${APP_STATUS_META[appId]}" เรียบร้อย`, 'success');
+                    } catch (e) {
+                        showToast('บันทึกสถานะไม่สำเร็จ: ' + e.message, 'error');
+                    } finally {
+                        sel.disabled = false;
+                    }
+                });
+            });
+        } catch (e) {
+            list.innerHTML = '<p style="color:var(--text-muted,#94a3b8); font-size:13px;">โหลดสถานะระบบไม่สำเร็จ</p>';
         }
     }
 
