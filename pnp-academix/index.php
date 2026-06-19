@@ -221,17 +221,23 @@ $activeTheme = $themes[$themeColorKey] ?? $themes['dark-blue'];
             // Dynamic label and target link logic
             $btnLabel = 'เข้าสู่ระบบผ่านพอร์ทัลกลาง';
             $btnUrl = $portalUrl;
+            $btnDisabled = false; // true = ระบบปิด ครูส่งไม่ได้ (ซ่อนปุ่มยื่นส่ง)
 
             if ($isLoggedIn) {
                 $userRole = current_user_role();
                 if ($userRole === 'teacher') {
-                    $btnUrl = 'teacher/submit.php?system_type=' . $type;
+                    // ครูกดปุ่มส่งงาน → เด้งไปหน้าแดชบอร์ดของผู้ใช้ (เลือกรายวิชาที่นั่น)
+                    $btnUrl = 'teacher/dashboard.php?system_type=' . $type;
                     if ($type === 'course_syllabus') {
                         $btnLabel = 'ส่งโครงการสอน';
                     } elseif ($type === 'lesson_plan') {
                         $btnLabel = 'ส่งแผนการจัดการเรียนรู้';
                     } elseif ($type === 'teaching_materials') {
                         $btnLabel = 'ส่งสื่อการสอน';
+                    }
+                    // ถ้าผู้ดูแลปิดระบบประเภทนี้ → ครูยื่นส่งไม่ได้ ซ่อนปุ่มส่ง
+                    if (!$isOpen) {
+                        $btnDisabled = true;
                     }
                 } elseif ($userRole === 'admin') {
                     $btnUrl = 'admin/overview.php';
@@ -331,11 +337,19 @@ $activeTheme = $themes[$themeColorKey] ?? $themes['dark-blue'];
                     <?php endif; ?>
 
                     <!-- Action Trigger Link Button -->
-                    <a href="<?= $btnUrl; ?>"
-                       class="w-full inline-flex items-center justify-center gap-2 py-3 bg-gradient-to-r <?= $info['color_theme']; ?> text-white text-xs font-black rounded-xl hover:shadow-lg active:scale-[0.97] transition-all duration-150 shadow-md">
-                        <span><?= $btnLabel; ?></span>
-                        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
-                    </a>
+                    <?php if ($btnDisabled): ?>
+                        <!-- ระบบปิด: แสดงปุ่มปิดใช้งาน (ครูยื่นส่งเอกสารไม่ได้) -->
+                        <span class="w-full inline-flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-400 text-xs font-black rounded-xl border border-slate-200 cursor-not-allowed select-none">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 0h10.5a2.25 2.25 0 012.25 2.25v6a2.25 2.25 0 01-2.25 2.25H6.75a2.25 2.25 0 01-2.25-2.25v-6a2.25 2.25 0 012.25-2.25z"/></svg>
+                            <span>ปิดรับยื่นส่งเอกสารชั่วคราว</span>
+                        </span>
+                    <?php else: ?>
+                        <a href="<?= $btnUrl; ?>"
+                           class="w-full inline-flex items-center justify-center gap-2 py-3 bg-gradient-to-r <?= $info['color_theme']; ?> text-white text-xs font-black rounded-xl hover:shadow-lg active:scale-[0.97] transition-all duration-150 shadow-md">
+                            <span><?= $btnLabel; ?></span>
+                            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

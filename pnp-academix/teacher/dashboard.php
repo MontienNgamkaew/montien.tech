@@ -169,6 +169,19 @@ $planCompliant = $planSubmitted >= 1;
 // Teaching Materials compliance rule: At least 1 course
 $matCompliant = $matSubmitted >= 1;
 
+// สถานะเปิด/ปิดของแต่ละระบบ (ผู้ดูแลตั้งค่า) — ใช้ซ่อนปุ่มยื่นส่งเมื่อระบบปิด
+$syllabusOpen = isset($systemSettings['course_syllabus']) && (int) $systemSettings['course_syllabus']['is_open'] === 1;
+$planOpen     = isset($systemSettings['lesson_plan']) && (int) $systemSettings['lesson_plan']['is_open'] === 1;
+$matOpen      = isset($systemSettings['teaching_materials']) && (int) $systemSettings['teaching_materials']['is_open'] === 1;
+
+// ปุ่ม "ปิดรับยื่นส่ง" สำหรับการ์ดบนสุด (เมื่อระบบปิด)
+function renderClosedSubmitButton(): string
+{
+    return '<span class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 text-slate-400 text-xs font-bold rounded-xl border border-slate-200 cursor-not-allowed select-none">'
+        . '<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 0h10.5a2.25 2.25 0 012.25 2.25v6a2.25 2.25 0 01-2.25 2.25H6.75a2.25 2.25 0 01-2.25-2.25v-6a2.25 2.25 0 012.25-2.25z"/></svg>'
+        . '<span>ปิดรับยื่นส่งชั่วคราว</span></span>';
+}
+
 // Helper to render badge
 function renderStatusBadge(?string $status, ?string $timing = null): string
 {
@@ -322,10 +335,14 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                 </div>
             </div>
             <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
-                <a href="submit.php?system_type=course_syllabus" 
-                   class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-indigo-600/10">
-                    <span>ยื่นส่งโครงการสอน</span>
-                </a>
+                <?php if ($syllabusOpen): ?>
+                    <a href="submit.php?system_type=course_syllabus"
+                       class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-indigo-600/10">
+                        <span>ยื่นส่งโครงการสอน</span>
+                    </a>
+                <?php else: ?>
+                    <?= renderClosedSubmitButton(); ?>
+                <?php endif; ?>
                 
                 <?php if ($syllabusApproved > 0): ?>
                     <a href="print_memorandum.php?system_type=course_syllabus"
@@ -362,10 +379,14 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                 </div>
             </div>
             <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
-                <a href="submit.php?system_type=lesson_plan" 
-                   class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-amber-600/10">
-                    <span>ยื่นส่งแผนการเรียนรู้</span>
-                </a>
+                <?php if ($planOpen): ?>
+                    <a href="submit.php?system_type=lesson_plan"
+                       class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-amber-600/10">
+                        <span>ยื่นส่งแผนการเรียนรู้</span>
+                    </a>
+                <?php else: ?>
+                    <?= renderClosedSubmitButton(); ?>
+                <?php endif; ?>
                 <?php if ($planApproved > 0): ?>
                     <a href="print_memorandum.php?system_type=lesson_plan"
                        class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition">
@@ -401,10 +422,14 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                 </div>
             </div>
             <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
-                <a href="submit.php?system_type=teaching_materials" 
-                   class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-slate-900/10">
-                    <span>ยื่นส่งสื่อการสอน</span>
-                </a>
+                <?php if ($matOpen): ?>
+                    <a href="submit.php?system_type=teaching_materials"
+                       class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-slate-900/10">
+                        <span>ยื่นส่งสื่อการสอน</span>
+                    </a>
+                <?php else: ?>
+                    <?= renderClosedSubmitButton(); ?>
+                <?php endif; ?>
                 <?php if ($matApproved > 0): ?>
                     <a href="print_memorandum.php?system_type=teaching_materials"
                        class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition">
@@ -507,10 +532,14 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                                 <td class="py-4 px-6 text-center">
                                     <div class="flex flex-col items-center gap-1.5">
                                         <?= renderStatusBadge($c['syllabus_status'], $c['syllabus_timing']); ?>
-                                        <a href="submit.php?course_id=<?= $c['id']; ?>&system_type=course_syllabus" 
-                                           class="text-[10px] font-bold text-teal-700 hover:text-teal-900 underline">
-                                            <?= $c['syllabus_status'] ? 'ส่งซ้ำ / แก้ไข' : 'ยื่นส่งเอกสาร'; ?>
-                                        </a>
+                                        <?php if ($syllabusOpen): ?>
+                                            <a href="submit.php?course_id=<?= $c['id']; ?>&system_type=course_syllabus"
+                                               class="text-[10px] font-bold text-teal-700 hover:text-teal-900 underline">
+                                                <?= $c['syllabus_status'] ? 'ส่งซ้ำ / แก้ไข' : 'ยื่นส่งเอกสาร'; ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-[10px] font-bold text-slate-300 cursor-not-allowed">ปิดรับส่ง</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
 
@@ -518,10 +547,14 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                                 <td class="py-4 px-6 text-center">
                                     <div class="flex flex-col items-center gap-1.5">
                                         <?= renderStatusBadge($c['plan_status'], $c['plan_timing']); ?>
-                                        <a href="submit.php?course_id=<?= $c['id']; ?>&system_type=lesson_plan" 
-                                           class="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 underline">
-                                            <?= $c['plan_status'] ? 'ส่งซ้ำ / แก้ไข' : 'ยื่นส่งเอกสาร'; ?>
-                                        </a>
+                                        <?php if ($planOpen): ?>
+                                            <a href="submit.php?course_id=<?= $c['id']; ?>&system_type=lesson_plan"
+                                               class="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 underline">
+                                                <?= $c['plan_status'] ? 'ส่งซ้ำ / แก้ไข' : 'ยื่นส่งเอกสาร'; ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-[10px] font-bold text-slate-300 cursor-not-allowed">ปิดรับส่ง</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
 
@@ -529,10 +562,14 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
                                 <td class="py-4 px-6 text-center">
                                     <div class="flex flex-col items-center gap-1.5">
                                         <?= renderStatusBadge($c['mat_status'], $c['mat_timing']); ?>
-                                        <a href="submit.php?course_id=<?= $c['id']; ?>&system_type=teaching_materials" 
-                                           class="text-[10px] font-bold text-cyan-700 hover:text-cyan-900 underline">
-                                            <?= $c['mat_status'] ? 'ส่งซ้ำ / แก้ไข' : 'ยื่นส่งเอกสาร'; ?>
-                                        </a>
+                                        <?php if ($matOpen): ?>
+                                            <a href="submit.php?course_id=<?= $c['id']; ?>&system_type=teaching_materials"
+                                               class="text-[10px] font-bold text-cyan-700 hover:text-cyan-900 underline">
+                                                <?= $c['mat_status'] ? 'ส่งซ้ำ / แก้ไข' : 'ยื่นส่งเอกสาร'; ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-[10px] font-bold text-slate-300 cursor-not-allowed">ปิดรับส่ง</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
