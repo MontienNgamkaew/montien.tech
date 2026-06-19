@@ -3,6 +3,10 @@
 !/uploads/.gitkeep
 !/uploads/branding/
 
+# Debug/seed scripts — ไม่ขึ้น git แต่ commit .htaccess เพื่อบล็อกการเข้าถึงผ่านเว็บบน production
+/scratch/*
+!/scratch/.htaccess
+
 # IDE and system files
 .DS_Store
 Thumps.db

@@ -8,6 +8,13 @@ header("Pragma: no-cache");
 
 require_once __DIR__ . '/config.php';
 
+// การ์ดความปลอดภัย: เครื่องมือ debug — เข้าได้เฉพาะ CLI หรือแนบ ?key=<MAINTENANCE_KEY> เท่านั้น
+$__mkey = function_exists('env') ? (string) env('MAINTENANCE_KEY', '') : '';
+if (php_sapi_name() !== 'cli' && (empty($__mkey) || !hash_equals($__mkey, (string) ($_GET['key'] ?? '')))) {
+    http_response_code(403);
+    exit('403 Forbidden');
+}
+
 $title = "เครื่องมือตรวจสอบการเชื่อมต่อฐานข้อมูล | " . htmlspecialchars(get_branding_settings()['system_name']);
 ?>
 <!doctype html>

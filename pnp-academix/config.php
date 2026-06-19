@@ -3,18 +3,21 @@ declare(strict_types=1);
 
 date_default_timezone_set('Asia/Bangkok');
 
-// Dynamic Environment Configuration (XAMPP Local vs Hostinger Production)
-if (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'montien.tech') !== false || $_SERVER['HTTP_HOST'] === 'pnp-edu.montien.tech')) {
-    define('DB_HOST', 'localhost');
-    define('DB_NAME', 'u651170081_pnp_academix');
-    define('DB_USER', 'u651170081_pnp_academix');
-    define('DB_PASS', 'a1d9GH10%');
-} else {
-    define('DB_HOST', 'localhost');
-    define('DB_NAME', 'pnp_academix');
-    define('DB_USER', 'root');
-    define('DB_PASS', '');
+// อ่านความลับฐานข้อมูลจาก .env เท่านั้น (ห้าม hardcode รหัสผ่านในโค้ด) — ใช้ตัวช่วยกลางของ api/
+$academixEnvPath = dirname(__DIR__) . '/api/env.php';
+if (is_file($academixEnvPath)) {
+    require_once $academixEnvPath;
 }
+$acEnv = static function (string $key, string $default): string {
+    return function_exists('env') ? (string) env($key, $default) : $default;
+};
+$isAcademixProd = isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'montien.tech') !== false;
+
+// Dynamic Environment Configuration (XAMPP Local vs Hostinger Production) — ค่าจริงตั้งใน .env (คีย์ ACADEMIX_DB_*)
+define('DB_HOST', $acEnv('ACADEMIX_DB_HOST', 'localhost'));
+define('DB_NAME', $acEnv('ACADEMIX_DB_NAME', $isAcademixProd ? 'u651170081_pnp_academix' : 'pnp_academix'));
+define('DB_USER', $acEnv('ACADEMIX_DB_USER', $isAcademixProd ? 'u651170081_pnp_academix' : 'root'));
+define('DB_PASS', $acEnv('ACADEMIX_DB_PASS', ''));
 define('DB_CHARSET', 'utf8mb4');
 
 try {
