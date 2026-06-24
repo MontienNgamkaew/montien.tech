@@ -587,12 +587,18 @@ function toThaiNumerals($num): string
         </p>
         
         <div class="qr-grid">
-            <?php $i = 1; foreach ($approvedCourses as $ac): 
+            <?php 
+            $i = 1; 
+            // คำนวณ Base Path ย้อนขึ้นไป 1 ระดับจากโฟลเดอร์ของไฟล์นี้ (เนื่องจาก print_memorandum.php อยู่ในโฟลเดอร์ teacher/)
+            $scriptBase = str_replace('\\', '/', dirname(dirname($_SERVER['SCRIPT_NAME'])));
+            $normalizedBase = rtrim($scriptBase, '/') . '/';
+
+            foreach ($approvedCourses as $ac): 
                 $qrUrl = "";
                 $isLocalFile = !empty($ac['file_path']);
                 if ($isLocalFile) {
                     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                    $qrUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/pnp-portal/pnp-academix/' . $ac['file_path'];
+                    $qrUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $normalizedBase . $ac['file_path'];
                     $btnLabel = "ไฟล์เอกสาร PDF ในระบบ";
                 } else {
                     $qrUrl = $ac['drive_link'];
