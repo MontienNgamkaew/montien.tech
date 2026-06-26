@@ -615,7 +615,71 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
         </div>
 
     </div>
-    
+
+    <!-- Overall Progress Bars -->
+    <?php
+    $pctAll   = $totalTeachersCount > 0 ? round(($fullyCompliantCount / $totalTeachersCount) * 100) : 0;
+    $pctSyl   = $totalTeachersCount > 0 ? round(($sysSyllabus['approved'] / $totalTeachersCount) * 100) : 0;
+    $pctPlan  = $totalTeachersCount > 0 ? round(($sysPlan['approved']     / $totalTeachersCount) * 100) : 0;
+    $pctMat   = $totalTeachersCount > 0 ? round(($sysMat['approved']      / $totalTeachersCount) * 100) : 0;
+    function progressColor(int $pct): string {
+        return $pct >= 80 ? 'bg-emerald-500' : ($pct >= 40 ? 'bg-amber-400' : 'bg-rose-400');
+    }
+    function progressTextColor(int $pct): string {
+        return $pct >= 80 ? 'text-emerald-600' : ($pct >= 40 ? 'text-amber-600' : 'text-rose-500');
+    }
+    ?>
+    <div class="bg-white border border-slate-200 rounded-[28px] p-6 sm:p-8 mb-8 shadow-sm">
+        <h2 class="text-sm font-black text-slate-800 mb-6">ความคืบหน้าภาพรวมภาคเรียน</h2>
+        <div class="space-y-5">
+
+            <!-- ส่งครบ 3 ภารกิจ -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-bold text-slate-600">ส่งครบทั้ง 3 ภารกิจ</span>
+                    <span class="text-xs font-black <?= progressTextColor($pctAll) ?>"><?= $fullyCompliantCount ?>/<?= $totalTeachersCount ?> คน &middot; <?= $pctAll ?>%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3">
+                    <div class="h-3 rounded-full <?= progressColor($pctAll) ?> transition-all" style="width:<?= $pctAll ?>%"></div>
+                </div>
+            </div>
+
+            <!-- โครงการสอน -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-medium text-slate-500">โครงการสอน (Syllabus)</span>
+                    <span class="text-xs font-bold <?= progressTextColor($pctSyl) ?>"><?= $sysSyllabus['approved'] ?>/<?= $totalTeachersCount ?> คน &middot; <?= $pctSyl ?>%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="h-2 rounded-full <?= progressColor($pctSyl) ?> transition-all" style="width:<?= $pctSyl ?>%"></div>
+                </div>
+            </div>
+
+            <!-- แผนการสอน -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-medium text-slate-500">แผนการจัดการเรียนรู้ (Lesson Plan)</span>
+                    <span class="text-xs font-bold <?= progressTextColor($pctPlan) ?>"><?= $sysPlan['approved'] ?>/<?= $totalTeachersCount ?> คน &middot; <?= $pctPlan ?>%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="h-2 rounded-full <?= progressColor($pctPlan) ?> transition-all" style="width:<?= $pctPlan ?>%"></div>
+                </div>
+            </div>
+
+            <!-- สื่อการสอน -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-medium text-slate-500">สื่อการเรียนการสอน (Materials)</span>
+                    <span class="text-xs font-bold <?= progressTextColor($pctMat) ?>"><?= $sysMat['approved'] ?>/<?= $totalTeachersCount ?> คน &middot; <?= $pctMat ?>%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="h-2 rounded-full <?= progressColor($pctMat) ?> transition-all" style="width:<?= $pctMat ?>%"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Deep Dive Analytics Charts Section -->
     <?php
     // Calculate global status for each system
@@ -773,6 +837,28 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
                 </div>
             </div>
 
+            <!-- Filter Bar -->
+            <?php
+            $cntAll      = count($teacherData);
+            $cntMissing  = 0; $cntPending = 0; $cntComplete = 0;
+            foreach ($teacherData as $td) {
+                if ($td['syllabus_status'] === 'approved' && $td['plan_status'] === 'approved' && $td['mat_status'] === 'approved') $cntComplete++;
+                elseif ($td['syllabus_status'] === 'pending' || $td['plan_status'] === 'pending' || $td['mat_status'] === 'pending') $cntPending++;
+                else $cntMissing++;
+            }
+            ?>
+            <div class="px-6 sm:px-8 py-4 border-b border-slate-100 flex flex-wrap gap-3 items-center bg-slate-50/30">
+                <div class="flex flex-wrap gap-1.5">
+                    <button onclick="filterTeachers('all')"      id="fbtn-all"      class="fbtn active-filter px-3 py-1.5 text-[11px] font-black rounded-xl bg-slate-900 text-white transition">ทั้งหมด (<?= $cntAll ?>)</button>
+                    <button onclick="filterTeachers('missing')"  id="fbtn-missing"  class="fbtn px-3 py-1.5 text-[11px] font-black rounded-xl bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">ค้างส่ง (<?= $cntMissing ?>)</button>
+                    <button onclick="filterTeachers('pending')"  id="fbtn-pending"  class="fbtn px-3 py-1.5 text-[11px] font-black rounded-xl bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition">รอตรวจ (<?= $cntPending ?>)</button>
+                    <button onclick="filterTeachers('complete')" id="fbtn-complete" class="fbtn px-3 py-1.5 text-[11px] font-black rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition">ส่งครบ (<?= $cntComplete ?>)</button>
+                </div>
+                <input type="text" id="search-teacher" placeholder="ค้นหาชื่อครูหรือแผนกวิชา..."
+                       oninput="applyTeacherFilter()"
+                       class="flex-1 min-w-[200px] px-4 py-2 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-300 font-thai">
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -827,9 +913,19 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
                                     ยังไม่มีข้อมูลบัญชีคุณครูเข้าระบบ กรุณานำเข้ารายชื่อผ่านฟังก์ชันนำเข้า CSV
                                 </td>
                             </tr>
+                        <tr id="filter-empty-row" style="display:none">
+                            <td colspan="6" class="py-10 text-center text-slate-400 text-xs font-medium">ไม่พบครูที่ตรงกับเงื่อนไขที่เลือก</td>
+                        </tr>
                         <?php else: ?>
-                            <?php foreach ($teacherData as $td): ?>
-                                <tr class="hover:bg-slate-50/50 transition">
+                            <?php foreach ($teacherData as $td):
+                                $trStatus = 'missing';
+                                if ($td['syllabus_status'] === 'approved' && $td['plan_status'] === 'approved' && $td['mat_status'] === 'approved') $trStatus = 'complete';
+                                elseif ($td['syllabus_status'] === 'pending' || $td['plan_status'] === 'pending' || $td['mat_status'] === 'pending') $trStatus = 'pending';
+                                $trSearch = mb_strtolower($td['teacher']['fullname'] . ' ' . $td['teacher']['username'] . ' ' . ($td['teacher']['department'] ?? ''));
+                            ?>
+                                <tr class="hover:bg-slate-50/50 transition teacher-row"
+                                    data-status="<?= e($trStatus) ?>"
+                                    data-search="<?= htmlspecialchars($trSearch, ENT_QUOTES) ?>">
                                     <td class="py-4 px-6">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-slate-800"><?= e($td['teacher']['fullname']); ?></span>
@@ -1159,6 +1255,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+</script>
+
+<script>
+// Teacher filter & search
+let _activeFilter = 'all';
+
+function filterTeachers(status) {
+    _activeFilter = status;
+    document.querySelectorAll('.fbtn').forEach(b => {
+        b.classList.remove('bg-slate-900', 'text-white', 'active-filter');
+        b.classList.add('opacity-70');
+    });
+    const active = document.getElementById('fbtn-' + status);
+    if (active) {
+        active.classList.add('bg-slate-900', 'text-white', 'active-filter');
+        active.classList.remove('opacity-70', 'bg-rose-50', 'text-rose-700', 'border-rose-200',
+            'bg-amber-50', 'text-amber-700', 'border-amber-200',
+            'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+    }
+    applyTeacherFilter();
+}
+
+function applyTeacherFilter() {
+    const q = (document.getElementById('search-teacher')?.value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.teacher-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const matchStatus  = _activeFilter === 'all' || row.dataset.status === _activeFilter;
+        const matchSearch  = q === '' || row.dataset.search.includes(q);
+        const show = matchStatus && matchSearch;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    const emptyRow = document.getElementById('filter-empty-row');
+    if (emptyRow) emptyRow.style.display = visible === 0 ? '' : 'none';
+}
 </script>
 
 </body>
