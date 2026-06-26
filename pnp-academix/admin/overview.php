@@ -618,6 +618,20 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
 
     <!-- Overall Progress Bars -->
     <?php
+    $sysSyllabus = ['approved' => 0, 'pending' => 0, 'missing' => 0];
+    $sysPlan     = ['approved' => 0, 'pending' => 0, 'missing' => 0];
+    $sysMat      = ['approved' => 0, 'pending' => 0, 'missing' => 0];
+    foreach ($teacherData as $td) {
+        if ($td['syllabus_status'] === 'approved') $sysSyllabus['approved']++;
+        elseif ($td['syllabus_status'] === 'pending') $sysSyllabus['pending']++;
+        else $sysSyllabus['missing']++;
+        if ($td['plan_status'] === 'approved') $sysPlan['approved']++;
+        elseif ($td['plan_status'] === 'pending') $sysPlan['pending']++;
+        else $sysPlan['missing']++;
+        if ($td['mat_status'] === 'approved') $sysMat['approved']++;
+        elseif ($td['mat_status'] === 'pending') $sysMat['pending']++;
+        else $sysMat['missing']++;
+    }
     $pctAll   = $totalTeachersCount > 0 ? round(($fullyCompliantCount / $totalTeachersCount) * 100) : 0;
     $pctSyl   = $totalTeachersCount > 0 ? round(($sysSyllabus['approved'] / $totalTeachersCount) * 100) : 0;
     $pctPlan  = $totalTeachersCount > 0 ? round(($sysPlan['approved']     / $totalTeachersCount) * 100) : 0;
