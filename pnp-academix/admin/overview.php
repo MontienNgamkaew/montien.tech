@@ -632,10 +632,10 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
         elseif ($td['mat_status'] === 'pending') $sysMat['pending']++;
         else $sysMat['missing']++;
     }
-    $pctAll   = $totalTeachersCount > 0 ? round(($fullyCompliantCount / $totalTeachersCount) * 100) : 0;
-    $pctSyl   = $totalTeachersCount > 0 ? round(($sysSyllabus['approved'] / $totalTeachersCount) * 100) : 0;
-    $pctPlan  = $totalTeachersCount > 0 ? round(($sysPlan['approved']     / $totalTeachersCount) * 100) : 0;
-    $pctMat   = $totalTeachersCount > 0 ? round(($sysMat['approved']      / $totalTeachersCount) * 100) : 0;
+    $pctAll   = $totalTeachersCount > 0 ? (int)round(($fullyCompliantCount / $totalTeachersCount) * 100) : 0;
+    $pctSyl   = $totalTeachersCount > 0 ? (int)round(($sysSyllabus['approved'] / $totalTeachersCount) * 100) : 0;
+    $pctPlan  = $totalTeachersCount > 0 ? (int)round(($sysPlan['approved']     / $totalTeachersCount) * 100) : 0;
+    $pctMat   = $totalTeachersCount > 0 ? (int)round(($sysMat['approved']      / $totalTeachersCount) * 100) : 0;
     function progressColor(int $pct): string {
         return $pct >= 80 ? 'bg-emerald-500' : ($pct >= 40 ? 'bg-amber-400' : 'bg-rose-400');
     }
