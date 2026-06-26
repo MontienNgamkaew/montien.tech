@@ -1,0 +1,5 @@
+RewriteEngine On
+# ส่ง request ไฟล์ใน uploads/ ผ่าน upload_serve.php (ไฟล์จริงอยู่นอก public_html)
+# ถ้าไฟล์มีอยู่จริงบน disk (เช่น .gitkeep) ให้ serve ตรง
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^uploads/(.+)$ /upload_serve.php?app=pnp-academix&file=uploads/$1 [QSA,L]

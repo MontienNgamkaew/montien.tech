@@ -309,7 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $errorMessage = 'ขนาดไฟล์อัปโหลดเกิน 100 MB กรุณาตรวจสอบหรือลดขนาดไฟล์ก่อนอัปโหลด';
                         } else {
                             // Create directory: uploads/semester_id/teacher_id/course_id/system_type/
-                            $uploadDir = dirname(__DIR__) . "/uploads/{$semester['id']}/{$teacherId}/{$postCourseId}/{$postSystemType}/";
+                            $uploadDir = upload_base_path('pnp-academix') . "/uploads/{$semester['id']}/{$teacherId}/{$postCourseId}/{$postSystemType}/";
                             if (!is_dir($uploadDir)) {
                                 mkdir($uploadDir, 0777, true);
                             }
@@ -350,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 // If a new file was uploaded, delete the old file on disk
                                 if ($fileUploaded) {
                                     if (!empty($existingSubmission['file_path'])) {
-                                        $oldFile = dirname(__DIR__) . '/' . $existingSubmission['file_path'];
+                                        $oldFile = upload_base_path('pnp-academix') . '/' . $existingSubmission['file_path'];
                                         if (file_exists($oldFile)) {
                                             @unlink($oldFile);
                                         }

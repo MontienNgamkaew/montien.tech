@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // 2. Scan uploads directory recursively (excluding uploads/branding)
-                $uploadDir = dirname(__DIR__) . '/uploads';
+                $uploadDir = upload_base_path('pnp-academix') . '/uploads';
                 if (is_dir($uploadDir)) {
                     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($uploadDir, RecursiveDirectoryIterator::SKIP_DOTS));
                     foreach ($iterator as $file) {
@@ -109,9 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $realPath = $file->getRealPath();
                             // Skip branding folder
                             if (strpos($realPath, DIRECTORY_SEPARATOR . 'branding' . DIRECTORY_SEPARATOR) !== false) continue;
-                            
+
                             // Calculate relative path to match DB format (e.g. uploads/1/...)
-                            $relativePath = str_replace(dirname(__DIR__) . DIRECTORY_SEPARATOR, '', $realPath);
+                            $relativePath = str_replace(upload_base_path('pnp-academix') . DIRECTORY_SEPARATOR, '', $realPath);
                             $relativePath = str_replace('\\', '/', $relativePath);
                             
                             // If not in database, delete it
@@ -145,38 +145,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Handle Delete Logo
                 if ($deleteLogo) {
-                    if (!empty($logoPath) && file_exists(dirname(__DIR__) . '/' . $logoPath)) {
-                        @unlink(dirname(__DIR__) . '/' . $logoPath);
+                    if (!empty($logoPath) && file_exists(upload_base_path('pnp-academix') . '/' . $logoPath)) {
+                        @unlink(upload_base_path('pnp-academix') . '/' . $logoPath);
                     }
                     $logoPath = '';
                 }
-                
+
                 // Handle Upload Logo
                 if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
                     $fileTmpPath = $_FILES['logo_file']['tmp_name'];
                     $fileName = $_FILES['logo_file']['name'];
                     $fileSize = $_FILES['logo_file']['size'];
                     $fileType = $_FILES['logo_file']['type'];
-                    
+
                     // Validate image type
                     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'];
                     if (!in_array($fileType, $allowedTypes)) {
                         throw new Exception("รูปแบบไฟล์โลโก้ไม่ถูกต้อง อนุญาตเฉพาะ PNG, JPG, GIF และ SVG เท่านั้น");
                     }
-                    
+
                     $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
                     $newFileName = 'logo_' . time() . '.' . $fileExtension;
-                    
-                    $uploadFileDir = dirname(__DIR__) . '/uploads/branding/';
+
+                    $uploadFileDir = upload_base_path('pnp-academix') . '/uploads/branding/';
                     if (!is_dir($uploadFileDir)) {
                         mkdir($uploadFileDir, 0777, true);
                     }
-                    
+
                     $destPath = $uploadFileDir . $newFileName;
                     if (move_uploaded_file($fileTmpPath, $destPath)) {
                         // Delete old file if upload was successful
-                        if (!empty($logoPath) && file_exists(dirname(__DIR__) . '/' . $logoPath)) {
-                            @unlink(dirname(__DIR__) . '/' . $logoPath);
+                        if (!empty($logoPath) && file_exists(upload_base_path('pnp-academix') . '/' . $logoPath)) {
+                            @unlink(upload_base_path('pnp-academix') . '/' . $logoPath);
                         }
                         $logoPath = 'uploads/branding/' . $newFileName;
                     } else {

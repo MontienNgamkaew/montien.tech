@@ -71,6 +71,20 @@ if (!function_exists('pnp_load_env')) {
     }
 }
 
+if (!function_exists('upload_base_path')) {
+    /**
+     * คืน absolute path ของโฟลเดอร์ uploads สำหรับแต่ละ app
+     * ชี้ไปนอก public_html เพื่อให้ไฟล์ไม่หายเมื่อ Hostinger deploy ใหม่
+     *
+     * @param string $app  ชื่อแอป เช่น 'pnp-academix', 'pnpman'
+     */
+    function upload_base_path(string $app): string
+    {
+        $base = env('UPLOAD_BASE_PATH', dirname(__DIR__) . '/pnp_uploads');
+        return rtrim($base, '/\\') . '/' . $app;
+    }
+}
+
 if (!function_exists('env')) {
     /**
      * อ่านค่าคอนฟิกจากสภาพแวดล้อมหรือไฟล์ .env

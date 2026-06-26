@@ -68,7 +68,7 @@ try {
             }
 
             $newFileName = 'personnel_' . uniqid() . '_' . time() . '.' . $ext;
-            $uploadDir = __DIR__ . '/../uploads/';
+            $uploadDir = upload_base_path('pnpman') . '/uploads/';
             
             // Ensure uploads directory exists
             if (!file_exists($uploadDir)) {
@@ -124,7 +124,7 @@ try {
         // If requested to delete current photo
         if ($delete_photo) {
             if (!empty($current_photo_path)) {
-                $full_path = __DIR__ . '/../' . $current_photo_path;
+                $full_path = upload_base_path('pnpman') . '/' . $current_photo_path;
                 if (file_exists($full_path) && is_file($full_path)) {
                     @unlink($full_path);
                 }
@@ -155,7 +155,7 @@ try {
             }
 
             $newFileName = 'personnel_' . uniqid() . '_' . time() . '.' . $ext;
-            $uploadDir = __DIR__ . '/../uploads/';
+            $uploadDir = upload_base_path('pnpman') . '/uploads/';
 
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
@@ -166,7 +166,7 @@ try {
             if (move_uploaded_file($fileTmp, $targetFile)) {
                 // Delete previous old photo
                 if (!empty($current_photo_path)) {
-                    $old_full_path = __DIR__ . '/../' . $current_photo_path;
+                    $old_full_path = upload_base_path('pnpman') . '/' . $current_photo_path;
                     if (file_exists($old_full_path) && is_file($old_full_path)) {
                         @unlink($old_full_path);
                     }
@@ -198,7 +198,7 @@ try {
         $current_photo_path = $existing ? $existing['photo_path'] : null;
 
         if (!empty($current_photo_path)) {
-            $full_path = __DIR__ . '/../' . $current_photo_path;
+            $full_path = upload_base_path('pnpman') . '/' . $current_photo_path;
             if (file_exists($full_path) && is_file($full_path)) {
                 @unlink($full_path);
             }

@@ -35,7 +35,7 @@ try {
 
     if ($delete_logo) {
         if (!empty($current_logo_path)) {
-            $full_path = __DIR__ . '/../' . $current_logo_path;
+            $full_path = upload_base_path('pnpman') . '/' . $current_logo_path;
             if (file_exists($full_path) && is_file($full_path)) {
                 @unlink($full_path);
             }
@@ -69,13 +69,13 @@ try {
 
         // Create target filename
         $newFileName = 'logo_' . time() . '.' . $ext;
-        $uploadDir = __DIR__ . '/../uploads/';
+        $uploadDir = upload_base_path('pnpman') . '/uploads/';
         $targetFile = $uploadDir . $newFileName;
 
         if (move_uploaded_file($fileTmp, $targetFile)) {
             // Delete old file if existed
             if (!empty($current_logo_path)) {
-                $old_full_path = __DIR__ . '/../' . $current_logo_path;
+                $old_full_path = upload_base_path('pnpman') . '/' . $current_logo_path;
                 if (file_exists($old_full_path) && is_file($old_full_path)) {
                     @unlink($old_full_path);
                 }

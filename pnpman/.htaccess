@@ -1,11 +1,13 @@
 RewriteEngine On
 
-# 1. Allow direct access to the api and uploads directories
+# 1. Allow direct access to api and frontend/dist
 RewriteRule ^api/ - [L]
-RewriteRule ^uploads/ - [L]
-
-# 2. If it's already requesting something in frontend/dist, let it pass
 RewriteRule ^frontend/dist/ - [L]
+
+# 2. ส่ง request ไฟล์ใน uploads/ ผ่าน upload_serve.php (ไฟล์จริงอยู่นอก public_html)
+#    ถ้าไฟล์มีอยู่จริงบน disk (เช่น .gitkeep) ให้ serve ตรง
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^uploads/(.+)$ /upload_serve.php?app=pnpman&file=uploads/$1 [QSA,L]
 
 # 3. Otherwise, rewrite everything else to frontend/dist/
 RewriteCond %{REQUEST_URI} !^/api/
