@@ -142,7 +142,10 @@ $branding = get_branding_settings();
 </header>
 
 <?php
-$isPdf = $submission['file_path'] && strtolower(pathinfo($submission['file_path'], PATHINFO_EXTENSION)) === 'pdf';
+$fileOnDisk = $submission['file_path']
+    ? file_exists(upload_base_path('pnp-academix') . '/' . $submission['file_path'])
+    : false;
+$isPdf = $fileOnDisk && strtolower(pathinfo($submission['file_path'], PATHINFO_EXTENSION)) === 'pdf';
 $containerClass = $isPdf ? 'max-w-7xl' : 'max-w-5xl';
 ?>
 <main class="flex-1 <?= $containerClass; ?> w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -157,6 +160,16 @@ $containerClass = $isPdf ? 'max-w-7xl' : 'max-w-5xl';
         <div class="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 text-xs sm:text-sm font-bold mb-6 flex items-center gap-2">
             <svg class="w-5 h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             <span><?= e($errorMessage); ?></span>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($submission['file_path'] && !$fileOnDisk): ?>
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs sm:text-sm font-bold mb-6 flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div>
+                <span class="block">ไม่พบไฟล์เอกสารบนเซิร์ฟเวอร์</span>
+                <span class="block font-normal mt-1 text-amber-700">ระบบมีข้อมูลการส่งงานในฐานข้อมูล แต่ไม่พบไฟล์จริงที่ <code class="bg-amber-100 px-1 rounded"><?= e($submission['file_path']); ?></code> — อาจเกิดจากการ restore เซิร์ฟเวอร์ กรุณาแจ้งให้ครูส่งงานใหม่อีกครั้ง</span>
+            </div>
         </div>
     <?php endif; ?>
 
@@ -228,11 +241,18 @@ $containerClass = $isPdf ? 'max-w-7xl' : 'max-w-5xl';
                 <div class="bg-white border border-slate-200 rounded-[32px] p-6 shadow-sm">
                     <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mb-4">ช่องทางดาวน์โหลด / ลิงก์สำรอง</h3>
                     <div class="space-y-3">
+                        <?php if ($fileOnDisk): ?>
                         <a href="../<?= e($submission['file_path']); ?>" download
                            class="w-full inline-flex items-center justify-center gap-2 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-750 text-xs font-bold rounded-xl transition no-underline">
                             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                             <span>ดาวน์โหลดไฟล์ลงเครื่อง</span>
                         </a>
+                        <?php else: ?>
+                        <span class="w-full inline-flex items-center justify-center gap-2 py-2.5 bg-slate-100 border border-slate-200 text-slate-400 text-xs font-bold rounded-xl cursor-not-allowed">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            <span>ไม่พบไฟล์บนเซิร์ฟเวอร์</span>
+                        </span>
+                        <?php endif; ?>
 
                         <?php if ($submission['drive_link']): ?>
                             <?php 
@@ -270,10 +290,18 @@ $containerClass = $isPdf ? 'max-w-7xl' : 'max-w-5xl';
                     </div>
                     
                     <!-- Full height embedded iframe PDF viewer -->
-                    <iframe src="../<?= e($submission['file_path']); ?>" 
-                            class="w-full h-[650px] rounded-2xl border border-slate-150 shadow-inner bg-slate-100" 
+                    <?php if ($fileOnDisk): ?>
+                    <iframe src="../<?= e($submission['file_path']); ?>"
+                            class="w-full h-[650px] rounded-2xl border border-slate-150 shadow-inner bg-slate-100"
                             style="background-color: #fff;">
                     </iframe>
+                    <?php else: ?>
+                    <div class="w-full h-[300px] rounded-2xl border border-amber-200 bg-amber-50 flex flex-col items-center justify-center gap-3 text-amber-700">
+                        <svg class="w-12 h-12 text-amber-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                        <span class="text-sm font-bold">ไม่พบไฟล์เอกสาร</span>
+                        <span class="text-xs font-normal text-amber-600">กรุณาแจ้งให้ครูส่งงานใหม่อีกครั้ง</span>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -345,17 +373,24 @@ $containerClass = $isPdf ? 'max-w-7xl' : 'max-w-5xl';
                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">ไฟล์แนบ / ช่องทางตรวจงาน</h3>
                     
                     <?php if ($submission['file_path']): ?>
-                        <div class="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 border border-teal-100 flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                            FILE
+                        <div class="w-16 h-16 rounded-2xl <?= $fileOnDisk ? 'bg-teal-50 text-teal-700 border-teal-100' : 'bg-amber-50 text-amber-600 border-amber-100'; ?> border flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                            <?= $fileOnDisk ? 'FILE' : '!' ?>
                         </div>
                         <h4 class="text-sm font-black text-slate-800 mb-1">อัปโหลดไฟล์จากระบบ</h4>
                         <p class="text-[10px] text-slate-400 font-medium mb-6">อัปโหลดผ่านเซิร์ฟเวอร์ <?= htmlspecialchars($branding['system_name']); ?> โดยตรง</p>
-                        
+
+                        <?php if ($fileOnDisk): ?>
                         <a href="../<?= e($submission['file_path']); ?>" target="_blank"
                            class="w-full inline-flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition no-underline">
                             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                             <span>เปิดอ่าน / ดาวน์โหลดไฟล์</span>
                         </a>
+                        <?php else: ?>
+                        <span class="w-full inline-flex items-center justify-center gap-2 py-3 bg-amber-50 border border-amber-200 text-amber-600 text-xs font-bold rounded-xl cursor-not-allowed">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span>ไม่พบไฟล์บนเซิร์ฟเวอร์</span>
+                        </span>
+                        <?php endif; ?>
                     <?php endif; ?>
 
                     <?php if ($submission['drive_link']): ?>
