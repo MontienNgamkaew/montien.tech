@@ -63,3 +63,5 @@ git diff --check
 ```
 
 Python integration/release tests ต้องเปิด staging fixture ที่แยกจาก production ตาม `PORTAL-V2-STAGING.md` เท่านั้น
+
+โค้ดที่ deploy บันทึกบน branch `codex/portal-v2-staging` ส่วน source ที่เริ่มเตรียมสำหรับเชื่อม Lesson Plan/บริการภายนอกถูกพักไว้ใน workspace ไม่รวมในชุดปล่อยนี้ `.gitattributes` กำหนด dist เป็น generated และไม่ตรวจ trailing whitespace ของ HTML template ภายใน bundle; ไม่ได้แก้ bytes/hash ของ bundle ที่ปล่อย

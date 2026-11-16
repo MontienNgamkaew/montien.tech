@@ -1,0 +1,2 @@
+# Bundled template strings preserve intentional HTML spacing; review source files.
+pnpman/frontend/dist/assets/* linguist-generated=true -whitespace
