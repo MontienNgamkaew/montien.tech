@@ -491,8 +491,9 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
     <style>
         body { font-family: 'IBM Plex Sans Thai', 'Outfit', sans-serif; }
     </style>
+<link rel="stylesheet" href="../assets/academix.css?v=teacher-preview-20261116">
 </head>
-<body class="bg-slate-50 text-slate-800 font-thai min-h-screen flex flex-col relative overflow-x-hidden">
+<body class="ac-legacy bg-slate-50 text-slate-800 font-thai min-h-screen flex flex-col relative overflow-x-hidden">
 
 <header class="w-full sticky top-0 z-50 bg-gradient-to-r from-indigo-50/80 via-white/95 to-teal-50/80 backdrop-blur-md border-b border-slate-200/85 shadow-sm">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -577,6 +578,7 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
             $isFormDisabled = $isApproved;
         ?>
             
+            <?php if ($existingSubmission && pnp_portal_v2()): ?><p class="mb-6"><a class="ac-button" href="preview.php?submission_id=<?= (int)$existingSubmission['id'] ?>" target="_blank" rel="noopener">เปิดดูงานที่ส่ง (Preview) ↗</a></p><?php endif; ?>
             <?php if ($isApproved): ?>
                 <!-- Approved Warning Banner -->
                 <div class="bg-rose-50 border border-rose-200 rounded-2xl p-5 text-rose-800 mb-6">
@@ -587,20 +589,9 @@ function renderStatusBadge(?array $sub, int $courseId, string $systemType) {
                         <div class="flex-1">
                             <h4 class="text-xs sm:text-sm font-black text-rose-900">เอกสารได้รับการอนุมัติเรียบร้อยแล้ว</h4>
                             <p class="text-[11px] sm:text-xs text-rose-700 font-medium mt-1 leading-relaxed">
-                                เนื่องจากเอกสารนี้ได้รับการพิจารณาและอนุมัติผ่านเกณฑ์วิชาการแล้ว ท่านจึง **ไม่สามารถทำการแก้ไขหรือยื่นส่งไฟล์/ลิงก์ทับข้อมูลเดิมได้** หากมีความจำเป็นต้องการแก้ไขหรือส่งใหม่ ท่านจำเป็นต้องกดปุ่มด้านล่างเพื่อทำการลบข้อมูลเดิมออกก่อน แล้วจึงยื่นส่งเอกสารชุดใหม่เข้ามาครับ
-                            </p>
+                                เอกสารนี้อนุมัติแล้ว สามารถเปิดดูงานเดิมได้ หากต้องการแก้ไข กรุณาติดต่อผู้ดูแลระบบ</p>
                             
-                            <form method="post" action="submit.php?course_id=<?= $selectedCourseId; ?>&system_type=<?= $selectedSystemType; ?>" class="mt-4 delete-submission-form">
-                                <input type="hidden" name="csrf_token" value="<?= e(create_csrf_token()); ?>">
-                                <input type="hidden" name="action" value="delete_submission">
-                                <input type="hidden" name="course_id" value="<?= $selectedCourseId; ?>">
-                                <input type="hidden" name="system_type" value="<?= $selectedSystemType; ?>">
-                                <button type="submit" 
-                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-rose-600/10 hover:scale-[1.02] active:scale-[0.98]">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
-                                    <span>ลบข้อมูลการส่งเดิมเพื่อส่งใหม่</span>
-                                </button>
-                            </form>
+
                         </div>
                     </div>
                 </div>

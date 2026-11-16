@@ -1,0 +1,39 @@
+<?php
+declare(strict_types=1);
+$canCreate=!pnp_portal_v2()||pnp_portal_can('pnp-academic','create','self');
+$canEdit=!pnp_portal_v2()||pnp_portal_can('pnp-academic','edit','self');
+$canExport=!pnp_portal_v2()||pnp_portal_can('pnp-academic','export','self');
+$totals=[];
+foreach(AC_DOCUMENT_TYPES as $key=>$type){$p=$type['prefix'];$t=['submitted'=>0,'approved'=>0,'pending'=>0,'rejected'=>0,'late'=>0];foreach($courses as $course){$status=$course[$p.'_status'];if($status)$t['submitted']++;if(isset($t[$status??'']))$t[$status]++;if($course[$p.'_timing']==='late')$t['late']++;}$t['complete']=$key==='course_syllabus'?($totalCourses>0&&$t['submitted']===$totalCourses):$t['submitted']>=1;$totals[$key]=$t;}
+ac_start('สถานะการส่งงานของฉัน',$branding,true);ac_header($branding);
+?>
+<main class="ac-main" id="ac-main">
+ <div class="ac-page-heading"><div><p class="ac-eyebrow">My academic submissions</p><h1>สถานะการส่งงานของฉัน</h1><p><?= ac_h(current_user_fullname()) ?> · <?= (int)$totalCourses ?> รายวิชาที่รับผิดชอบ</p></div><div class="ac-heading-actions"><span class="ac-term">ภาคเรียน <?= ac_h($semester['semester_name']) ?></span><?php if($canCreate): ?><a class="ac-button primary" href="#add-course" data-open-course>+ เพิ่มรายวิชา</a><?php endif; ?></div></div>
+ <?php if($successMessage): ?><div class="ac-notice success" role="status"><?= ac_h($successMessage) ?></div><?php endif; ?>
+ <?php if($errorMessage): ?><div class="ac-notice warning" role="alert"><?= ac_h($errorMessage) ?></div><?php endif; ?>
+ <section class="ac-summary-grid" aria-label="สรุปงานสามประเภท">
+ <?php foreach(AC_DOCUMENT_TYPES as $key=>$type):$t=$totals[$key];$setting=$systemSettings[$key]??null;$open=$setting&&(int)$setting['is_open']===1; ?>
+  <article class="ac-panel ac-summary"><div class="ac-summary-top"><span class="ac-type-number"><?= $type['number'] ?></span><span class="ac-service <?= $open?'open':'closed' ?>"><?= $open?'เปิดรับงาน':'ปิดรับงาน' ?></span></div><h2><?= $type['title'] ?></h2><div class="ac-summary-count"><strong><?= $t['submitted'] ?></strong><span>ส่งแล้ว จาก <?= (int)$totalCourses ?> รายวิชา</span></div><progress value="<?= $t['submitted'] ?>" max="<?= max(1,$totalCourses) ?>" aria-label="<?= ac_h($type['title'].' ส่งแล้ว '.$t['submitted'].' จาก '.$totalCourses.' รายวิชา') ?>"></progress><p class="ac-rule"><?= $type['rule'] ?> <span class="<?= $t['complete']?'ac-complete':'' ?>"><?= $totalCourses?($t['complete']?'· ครบเกณฑ์จำนวนส่ง':'· ยังไม่ครบเกณฑ์'):'· ยังไม่มีรายวิชา' ?></span></p><div class="ac-mini-stats"><span>รอตรวจ <b><?= $t['pending'] ?></b></span><span>อนุมัติ <b><?= $t['approved'] ?></b></span><span>แก้ไข <b><?= $t['rejected'] ?></b></span></div><div class="ac-summary-footer"><span>กำหนดส่ง <?= $setting?ac_h(ac_date($setting['deadline_date'])):'ยังไม่กำหนด' ?></span><?php if($canExport&&$t['approved']>0): ?><a href="print_memorandum.php?system_type=<?= $key ?>" target="_blank" rel="noopener">พิมพ์บันทึกงานที่อนุมัติ ↗</a><?php endif; ?></div></article>
+ <?php endforeach; ?>
+ </section>
+ <p class="ac-summary-note">จำนวนส่งและผลการตรวจแยกกัน: เอกสารที่ “ต้องแก้ไข” ยังต้องดำเนินการตามข้อเสนอแนะ แม้จำนวนส่งครบเกณฑ์แล้ว</p>
+ <section class="ac-course-section" aria-labelledby="ac-courses-title"><div class="ac-section-heading"><div><h2 id="ac-courses-title">รายวิชาและงานที่ส่ง</h2><p>ดูสถานะแต่ละประเภท และเปิดดูต้นฉบับได้โดยไม่แก้ไขข้อมูล</p></div><span id="ac-result-count" aria-live="polite"><?= (int)$totalCourses ?> รายวิชา</span></div>
+ <form class="ac-filters" role="search" onsubmit="return false"><label class="ac-search">ค้นหารายวิชา<input id="ac-search" type="search" placeholder="รหัสวิชา หรือชื่อรายวิชา" autocomplete="off"></label><label>ประเภทงาน<select id="ac-type-filter"><option value="all">ทั้ง 3 ประเภท</option value="course_syllabus">โครงการสอน</option><option value="lesson_plan">แผนการสอน</option><option value="teaching_materials">สื่อการสอน</option></select></label><label>รายวิชาที่มีสถานะ<select id="ac-status-filter"><option value="all">ทุกสถานะ</option><option value="missing">ยังไม่ส่ง</option><option value="pending">รอตรวจ</option><option value="approved">อนุมัติแล้ว</option><option value="rejected">ต้องแก้ไข</option><option value="late">ส่งล่าช้า</option></select></label><button type="button" class="ac-button" id="ac-clear-filters">ล้างตัวกรอง</button></form>
+ <div class="ac-courses" id="ac-courses">
+ <?php foreach($courses as $course): ?>
+  <article class="ac-panel ac-course" id="course-<?= (int)$course['id'] ?>" data-course data-search="<?= ac_h($course['course_code'].' '.$course['course_name']) ?>"><header class="ac-course-heading"><span class="ac-course-code"><?= ac_h($course['course_code']) ?></span><h3><?= ac_h($course['course_name']) ?></h3></header><div class="ac-document-grid">
+   <?php foreach(AC_DOCUMENT_TYPES as $key=>$type):$p=$type['prefix'];$status=$course[$p.'_status'];$subId=(int)($course[$p.'_sub_id']??0);$setting=$systemSettings[$key]??null;$open=$setting&&(int)$setting['is_open']===1;$hasAttachment=!empty($course[$p.'_file_path'])||!empty($course[$p.'_drive_link']);$canSubmit=$open&&($status?$canEdit:$canCreate)&&$status!=='approved'; ?>
+    <section class="ac-document-cell" data-document data-type="<?= $key ?>" data-status="<?= ac_h($status?:'missing') ?>" data-late="<?= $course[$p.'_timing']==='late'?'1':'0' ?>"><h4><?= $type['title'] ?></h4><div class="ac-badges"><?= ac_badge($status,$course[$p.'_timing']) ?></div><p class="ac-submission-time"><?= $subId?'ส่งเมื่อ '.ac_h(ac_date($course[$p.'_submitted_at']??null)):'ยังไม่มีข้อมูลการส่งงาน' ?></p>
+     <?php if(!empty($course[$p.'_feedback'])): ?><details class="ac-feedback"><summary>ข้อเสนอแนะจากผู้ตรวจ</summary><p><?= nl2br(ac_h($course[$p.'_feedback'])) ?></p></details><?php endif; ?>
+     <div class="ac-document-actions"><?php if($subId&&$hasAttachment): ?><a class="ac-button" href="preview.php?submission_id=<?= $subId ?>" target="_blank" rel="noopener" aria-label="<?= ac_h('ดู'.$type['title'].'ที่ส่งของวิชา '.$course['course_code']) ?>">ดูงานที่ส่ง ↗</a><?php elseif($subId): ?><span class="ac-help">ไม่มีไฟล์หรือลิงก์แนบ</span><?php endif; ?>
+     <?php if($canSubmit): ?><a class="ac-submit-link" href="submit.php?course_id=<?= (int)$course['id'] ?>&amp;system_type=<?= $key ?>"><?= $status?'แก้ไข / ส่งใหม่':'ส่งเอกสาร' ?> →</a><?php elseif(!$open): ?><span class="ac-help">ปิดรับส่ง · ยังเปิดดูงานเดิมได้</span><?php elseif($status==='approved'): ?><span class="ac-help">เอกสารอนุมัติแล้ว · เปิดดูได้</span><?php endif; ?></div>
+    </section>
+   <?php endforeach; ?>
+  </div></article>
+ <?php endforeach; ?>
+ </div>
+ <div class="ac-panel ac-empty" id="ac-no-results" <?= $totalCourses?'hidden':'' ?>><h3><?= $totalCourses?'ไม่พบรายวิชาตามตัวกรอง':'ยังไม่มีรายวิชาในภาคเรียนนี้' ?></h3><p><?= $totalCourses?'ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูงานทั้งหมด':($canCreate?'เพิ่มรายวิชาที่รับผิดชอบเพื่อเริ่มส่งเอกสาร':'กรุณาติดต่อผู้ดูแลเพื่อตรวจสอบรายวิชาและสิทธิ์ของคุณ') ?></p></div>
+ </section>
+ <?php if($canCreate): ?><details class="ac-panel ac-add-course" id="add-course"><summary>เพิ่มรายวิชาที่รับผิดชอบ</summary><form method="post" action="dashboard.php" class="ac-add-course-form"><input type="hidden" name="csrf_token" value="<?= ac_h(create_csrf_token()) ?>"><input type="hidden" name="action" value="add_course"><label for="course_code_input">รหัสวิชา<input type="text" name="course_code" id="course_code_input" maxlength="50" required placeholder="เช่น 20001-2001"></label><label for="course_name_input">ชื่อรายวิชา<input type="text" name="course_name" id="course_name_input" maxlength="255" required placeholder="ชื่อรายวิชาที่รับผิดชอบ"></label><button type="submit" class="ac-button primary">บันทึกรายวิชา</button></form></details><?php endif; ?>
+</main>
+<?php ac_end($branding); ?>

@@ -10,7 +10,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 class PatchRelease(unittest.TestCase):
     def fixture(self,backup_ok):
-        source=ROOT/'private-audit/releases/portal-multirole-20261116-v1'
+        source=ROOT/'private-audit/releases'/os.environ.get('PNP_PATCH_FIXTURE_RELEASE','portal-multirole-20261116-v1')
         report=ROOT/'private-audit/portal-v2-preflight-44e6158d/report.json'
         if not source.exists() or not report.exists():self.skipTest('Prepared private rehearsal required')
         cfg=json.loads(report.read_text())['isolated_databases'];self.assertTrue(all(x.startswith('pnp_v2_preflight_') for x in cfg.values()))
@@ -20,6 +20,7 @@ class PatchRelease(unittest.TestCase):
         for f in m['files']:
             if f['before'] is not None:
                 target=root/f['path'];target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source/'baseline'/f['path'],target)
+        (root/'api/v2').mkdir(parents=True,exist_ok=True)
         shutil.copyfile(ROOT/'api/env.php',root/'api/env.php')
         runtime=root/'api/v2/runtime.local.json';runtime.write_text(json.dumps({'enabled':True,'base':'','paused_apps':['pnp-lesson-plan']}))
         lines=[]
@@ -39,6 +40,9 @@ class PatchRelease(unittest.TestCase):
         root,release,m=self.fixture(True);env=(root/'.env').read_bytes()
         for mode in ['check','deploy']:
             r=self.run_mode(root,release,mode);self.assertEqual(r.returncode,0,r.stderr)
+        for f in m['files']:
+            self.assertEqual((root/f['path']).stat().st_mode & 0o777,0o644)
+            if f['before'] is None:self.assertEqual((root/f['path']).parent.stat().st_mode & 0o777,0o755)
         installed=json.loads((release/'installed.json').read_text());self.assertTrue(installed['old_data_unchanged']);self.assertTrue(installed['lesson_plan_still_paused']);self.assertEqual(env,(root/'.env').read_bytes())
         r=self.run_mode(root,release,'rollback');self.assertEqual(r.returncode,0,r.stderr)
         for f in m['files']:
