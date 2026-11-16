@@ -73,6 +73,7 @@ echo 'Synthetic databases created; no source data copied'.PHP_EOL;
     target = copy_source()
     subprocess.run(['php', '-d', 'pdo_mysql.default_socket=' + SOCKET, str(target / 'scripts/maintenance/migrate-portal-v2.php'), '--apply', '--database=' + databases['portal']], env=environment(config), check=True)
     subprocess.run(['php', '-d', 'pdo_mysql.default_socket=' + SOCKET, str(target / 'scripts/maintenance/migrate-portal-v2-go.php'), '--apply', '--database=' + databases['pnpgo']], env=environment(config), check=True)
+    subprocess.run(['php', '-d', 'pdo_mysql.default_socket=' + SOCKET, str(target / 'scripts/maintenance/migrate-portal-v2-multirole.php'), '--apply', '--database=' + databases['portal']], env=environment(config), check=True)
     # Explicit test grants; no inherited new rights during application requests.
     php = r'''
 $i=json_decode(stream_get_contents(STDIN),true);$p=new PDO('mysql:unix_socket='.$i['socket'].';dbname='.$i['databases']['portal'],'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);

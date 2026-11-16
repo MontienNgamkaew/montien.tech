@@ -61,11 +61,11 @@ $out=[];foreach($i['databases'] as $label=>$db){if(!preg_match('/^pnp_v2_preflig
         for t,n in counts.items():
             if before[label][t]['rows']!=n:raise SystemExit('Restore count mismatch')
     code=work/'code';(code/'api/v2').mkdir(parents=True);(code/'scripts/maintenance').mkdir(parents=True)
-    for f in ['api/env.php','api/v2/core.php','scripts/maintenance/migrate-portal-v2.php','scripts/maintenance/migrate-portal-v2-go.php']:shutil.copyfile(ROOT/f,code/f)
+    for f in ['api/env.php','api/v2/core.php','scripts/maintenance/migrate-portal-v2.php','scripts/maintenance/migrate-portal-v2-go.php','scripts/maintenance/migrate-portal-v2-multirole.php']:shutil.copyfile(ROOT/f,code/f)
     env=os.environ.copy()
     for label,prefix in [('portal','DB_'),('pnpgo','PNPGO_DB_'),('academix','ACADEMIX_DB_')]:env.update({prefix+'HOST':'localhost',prefix+'NAME':values['databases'][label],prefix+'USER':'root',prefix+'PASS':''})
     migrations={}
-    for script,label in [('migrate-portal-v2.php','portal'),('migrate-portal-v2-go.php','pnpgo')]:
+    for script,label in [('migrate-portal-v2.php','portal'),('migrate-portal-v2-go.php','pnpgo'),('migrate-portal-v2-multirole.php','portal')]:
         r=subprocess.run(['php','-d','pdo_mysql.default_socket='+SOCKET,str(code/'scripts/maintenance'/script),'--apply','--database='+values['databases'][label]],env=env,capture_output=True,text=True)
         (work/(script+'.log')).write_text(r.stdout+r.stderr)
         if r.returncode:raise SystemExit('Migration failed; see private log')

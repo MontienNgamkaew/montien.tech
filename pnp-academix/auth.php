@@ -94,6 +94,11 @@ function require_role(string $role): void
 {
     require_login();
 
+    if (pnp_portal_v2()) {
+        $workspace=$role==='teacher'?'self':'admin';
+        $context=pnp_portal_guard('pnp-academic','view',false,$workspace);
+        $_SESSION['role']=$role;$GLOBALS['pnp_academic_context']=$context;return;
+    }
     if (current_user_role() !== $role) {
         http_response_code(403);
         exit('ไม่มีสิทธิ์เข้าถึงหน้านี้');
@@ -107,7 +112,7 @@ function require_admin(): void
         global $pdo;
         $page=basename($_SERVER['SCRIPT_NAME']??'');$action=(string)($_POST['action']??'');$post=($_SERVER['REQUEST_METHOD']??'GET')==='POST';
         $right=match($page){'settings.php'=>'manage_settings','print_report.php'=>'export','import.php'=>$post&&$action==='import_courses_csv'?'create':'manage_users',default=>$post?($page==='review.php'?'approve':'manage_users'):'view'};
-        $context=pnp_portal_guard('pnp-academic',$right);
+        $context=pnp_portal_guard('pnp-academic',$right,false,'admin');
         if(($page==='settings.php'||$page==='import.php')&&$context['access']['scope']!=='all')pnp_portal_fail(new PortalProblem(403,'การตั้งค่าและนำเข้าข้อมูลต้องมีขอบเขตทั้งองค์กร'));
         if($post&&(in_array($action,['delete_teacher','cleanup_files','delete_unused_files','garbage_collect','new_semester'],true)||($page==='import.php'&&$action!=='import_courses_csv')))pnp_portal_fail(new PortalProblem(403,'จัดการบัญชีผ่าน Portal กลาง และยังไม่เปิดการลบ/ล้างข้อมูลในรุ่นใหม่นี้'));
         $target=(int)($_GET['teacher_id']??$_POST['teacher_id']??0);
@@ -123,7 +128,7 @@ function require_teacher(): void
         if($post&&str_starts_with($action,'delete_'))pnp_portal_fail(new PortalProblem(403,'ยังไม่เปิดการลบข้อมูลถาวรในรุ่นใหม่'));
         $right=$page==='print_memorandum.php'?'export':($post?'create':'view');
         if($post&&$action==='submit_document'){global $pdo;$s=$pdo->prepare('SELECT id FROM submissions WHERE course_id=? AND system_type=? LIMIT 1');$s->execute([(int)($_POST['course_id']??0),(string)($_POST['system_type']??'')]);if($s->fetchColumn())$right='edit';}
-        $context=pnp_portal_guard('pnp-academic',$right);pnp_portal_scope($context,$context['user']['username']);
+        $context=pnp_portal_guard('pnp-academic',$right,false,'self');pnp_portal_scope($context,$context['user']['username']);
     }
 }
 
@@ -174,4 +179,14 @@ function logout_user(): void
     }
 
     session_destroy();
+}
+
+function pnp_academic_workspace_links(): void {
+    if(!pnp_portal_v2())return;
+    $context=$GLOBALS['pnp_academic_context']??pnp_portal_guard('pnp-academic');$a=PortalV2::access($context['user'],'pnp-academic');
+    echo '<nav aria-label="พื้นที่ทำงาน" style="padding:12px 24px;background:#edf5f3;display:flex;gap:20px;font-size:14px">';
+    if($a['has_self_workspace']&&in_array('view',$a['self_rights'],true))echo '<a href="'.e(PortalV2::base().'/pnp-academix/teacher/dashboard.php').'">งานของฉัน · ส่งงาน</a>';
+    if($a['has_admin_workspace'])echo '<a href="'.e(PortalV2::base().'/pnp-academix/admin/overview.php').'">งานดูแลระบบ</a>';
+    if($a['can_delegate'])echo '<a href="'.e(PortalV2::base().'/portal-v2/#staff').'">มอบหมายเจ้าหน้าที่</a>';
+    echo '</nav>';
 }

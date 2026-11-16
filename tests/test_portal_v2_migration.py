@@ -21,7 +21,7 @@ $out=[];foreach($i['databases'] as $label=>$name){if(!preg_match('/^pnp_v2_stage
         def snapshot():return subprocess.check_output(['php','-r',php],input=inputs)
         before=snapshot()
         target=stage.PRIVATE/'public/pnp-portal/scripts/maintenance'
-        for script,label in [('migrate-portal-v2.php','portal'),('migrate-portal-v2-go.php','pnpgo')]:
+        for script,label in [('migrate-portal-v2.php','portal'),('migrate-portal-v2-go.php','pnpgo'),('migrate-portal-v2-multirole.php','portal')]:
             subprocess.run(['php','-d','pdo_mysql.default_socket='+stage.SOCKET,str(target/script),'--apply','--database='+config['databases'][label]],env=stage.environment(config),check=True,stdout=subprocess.DEVNULL)
         self.assertEqual(before,snapshot(),'Existing users/passwords/IDs changed')
 

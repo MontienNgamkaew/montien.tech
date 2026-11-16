@@ -20,7 +20,7 @@ if (!$submissionId) {
 
 // Fetch submission details with course and teacher information
 $stmt = $pdo->prepare("
-    SELECT s.*, c.course_code, c.course_name, u.fullname AS teacher_fullname, u.username AS teacher_username
+    SELECT s.*, c.course_code, c.course_name, c.teacher_id AS submission_teacher_id, u.fullname AS teacher_fullname, u.username AS teacher_username
     FROM submissions s
     INNER JOIN courses c ON s.course_id = c.id
     INNER JOIN users u ON c.teacher_id = u.id
@@ -29,6 +29,7 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute(['submission_id' => $submissionId]);
 $submission = $stmt->fetch();
+if($submission&&pnp_portal_v2()&&($_SERVER['REQUEST_METHOD']??'GET')==='POST'&&(int)$submission['submission_teacher_id']===(int)current_user_id())pnp_portal_fail(new PortalProblem(403,'อนุมัติหรือตรวจงานของตนเองไม่ได้ กรุณาให้ผู้ตรวจคนอื่นดำเนินการ'));
 if ($submission && pnp_portal_v2()) pnp_portal_scope($GLOBALS['pnp_academic_context'], (string)$submission['teacher_username']);
 
 if (!$submission) {

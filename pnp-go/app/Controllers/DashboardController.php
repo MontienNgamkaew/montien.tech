@@ -420,6 +420,7 @@ final class DashboardController
     private function canApprove(array $user, array $requisition): bool
     {
         if(function_exists('pnp_portal_v2')&&pnp_portal_v2()&&!pnp_portal_can('pnp-go','approve'))return false;
+        if(function_exists('pnp_portal_v2')&&pnp_portal_v2()&&(int)($requisition['user_id']??0)===(int)$user['id'])return false;
         // admin สามารถอนุมัติแทนได้ทั้ง 1, 2, 3
         if ($user['role'] === 'admin') {
             return str_starts_with($requisition['status'], 'pending_level_');

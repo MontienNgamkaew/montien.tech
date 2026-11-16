@@ -116,6 +116,8 @@ if ($isPortalAdmin === 1 || $pnpAcademicRole === 'admin') {
     $localRole = 'admin';
 }
 
+if($centralPayload!==null){$ca=PortalV2::access(PortalV2::actor(),'pnp-academic');if($ca['has_self_workspace']&&$ca['has_admin_workspace']&&!((int)$payload['is_portal_admin']))$localRole='teacher';}
+
 try {
     // Check if the user already exists in pnp_academic DB
     $stmt = $pdo->prepare('SELECT * FROM users WHERE username = :username LIMIT 1');
@@ -182,7 +184,9 @@ try {
     $_SESSION['login_at'] = time();
     
     // Redirect to Academix landing page (index.php) after SSO login
-    header('Location: index.php');
+    $workspace=(string)($_GET['workspace']??'');
+    if($centralPayload!==null&&in_array($workspace,['self','admin'],true)){PortalV2::requireApp('pnp-academic','view',$workspace);header('Location: '.($workspace==='self'?'teacher/dashboard.php':'admin/overview.php'));}
+    else header('Location: index.php');
     exit;
 
 } catch (Exception $e) {

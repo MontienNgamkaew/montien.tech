@@ -20,7 +20,7 @@ if (!$semester) {
 }
 
 // 2. Fetch all active teachers
-$stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE role = 'teacher' AND status = 'active' ORDER BY fullname ASC");
+$stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE (role = 'teacher' OR EXISTS (SELECT 1 FROM courses own_courses WHERE own_courses.teacher_id=users.id)) AND status = 'active' ORDER BY fullname ASC");
 $stmt->execute();
 $teachers = $stmt->fetchAll();
 if (pnp_portal_v2()) $teachers = pnp_portal_filter($GLOBALS['pnp_academic_context'], $teachers);

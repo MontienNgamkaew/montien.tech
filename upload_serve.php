@@ -38,7 +38,7 @@ if(pnp_portal_v2()){
                 if($app==='pnp-academix'){
                     $q=$pdoFile->prepare('SELECT u.username FROM submissions s JOIN courses c ON c.id=s.course_id JOIN users u ON u.id=c.teacher_id WHERE s.file_path=? LIMIT 1');$q->execute([$file]);$owner=$q->fetchColumn();
                     if(!$owner&&preg_match('~^uploads/\d+/(\d+)/(\d+)/~',$file,$parts)){$q=$pdoFile->prepare('SELECT u.username FROM courses c JOIN users u ON u.id=c.teacher_id WHERE c.id=? AND u.id=?');$q->execute([(int)$parts[2],(int)$parts[1]]);$owner=$q->fetchColumn();}
-                    if($owner){if($context['access']['role']!=='admin'&&$owner!==$context['user']['username'])pnp_portal_fail(new PortalProblem(403,'เปิดเอกสารของบุคคลอื่นไม่ได้'));pnp_portal_scope($context,(string)$owner);}
+                    if($owner){$sameOwner=(int)PortalV2::query('SELECT id FROM users WHERE username=?',[$owner])->fetchColumn()===(int)$context['user']['id'];if($sameOwner&&pnp_portal_can('pnp-academic','view','self'))$context=pnp_portal_guard('pnp-academic','view',false,'self');if($context['access']['role']!=='admin'&&!$sameOwner)pnp_portal_fail(new PortalProblem(403,'เปิดเอกสารของบุคคลอื่นไม่ได้'));pnp_portal_scope($context,(string)$owner);}
                     elseif(!str_starts_with($file,'uploads/branding/'))pnp_portal_fail(new PortalProblem(404,'ไม่พบเอกสารที่อ้างอิง'));
                 }else{
                     $q=$pdoFile->prepare('SELECT u.username FROM requisitions r JOIN users u ON u.id=r.user_id WHERE r.pdf_path=? OR r.report_photo_path=? OR r.report_photo_path_2=? LIMIT 1');$q->execute([$file,$file,$file]);$owner=$q->fetchColumn();

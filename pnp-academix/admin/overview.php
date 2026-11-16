@@ -73,7 +73,7 @@ if (!$semester) {
 }
 
 // 2. Fetch all teachers
-$stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE role = 'teacher' AND status = 'active' ORDER BY fullname ASC");
+$stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE (role = 'teacher' OR EXISTS (SELECT 1 FROM courses own_courses WHERE own_courses.teacher_id=users.id)) AND status = 'active' ORDER BY fullname ASC");
 $stmt->execute();
 $teachers = $stmt->fetchAll();
 if (pnp_portal_v2()) $teachers = pnp_portal_filter($GLOBALS['pnp_academic_context'], $teachers);
@@ -547,6 +547,7 @@ function renderComplianceBadge(string $status, string $labelType, bool $isLate =
         </div>
     </div>
 </header>
+<?php pnp_academic_workspace_links(); ?>
 
 <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
     

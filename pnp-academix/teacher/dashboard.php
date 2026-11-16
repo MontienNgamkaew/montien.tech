@@ -22,6 +22,7 @@ if (!$semester) {
 }
 
 $errorMessage = '';
+$successMessage = '';
 
 // Handle Add/Delete Course actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -271,6 +272,7 @@ function renderStatusBadge(?string $status, ?string $timing = null): string
         </div>
     </div>
 </header>
+<?php pnp_academic_workspace_links(); ?>
 
 <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
     

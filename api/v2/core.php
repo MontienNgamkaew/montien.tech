@@ -101,24 +101,53 @@ final class PortalV2
         if(in_array($role,['supply_head','deputy_director','director'],true))return ['view','approve','export'];
         if(in_array($role,['user','teacher','driver','department_head'],true))return ['view','create','edit','export'];return [];
     }
-    public static function access(array $u,string $app): array {
+    public static function multiRoleReady(): bool {
+        static $ready=null;if($ready!==null)return $ready;
+        try{return $ready=(bool)self::query('SELECT version FROM pnp_v2_migrations WHERE version=3')->fetchColumn();}catch(PDOException $e){return $ready=false;}
+    }
+    public static function roleProfile(array $u,string $app): array {
+        $row=self::multiRoleReady()?self::query('SELECT * FROM pnp_v2_role_profiles WHERE user_id=? AND app_id=?',[$u['id'],$app])->fetch():false;
+        return $row?['roles'=>json_decode($row['roles_json'],true)?:[],'self_rights'=>json_decode($row['self_rights_json'],true)?:[],'can_delegate'=>(bool)$row['can_delegate'],'delegable_rights'=>json_decode($row['delegable_rights_json'],true)?:[]]:[];
+    }
+    public static function access(array $u,string $app,string $workspace='default',bool $includeStaff=true): array {
         if(!isset(self::APPS[$app]))throw new PortalProblem(404,'ไม่พบระบบย่อย');
         $status=self::appLocked($app)?'disabled':(self::query('SELECT status FROM app_status WHERE app_id=?',[$app])->fetchColumn()?:'disabled');
-        if((int)$u['is_portal_admin']===1)return ['app_id'=>$app,'role'=>'admin','rights'=>self::RIGHTS,'scope'=>'all','scope_value'=>'','status'=>$status];
+        $master=(int)$u['is_portal_admin']===1;
         $row=self::query('SELECT r.role,g.rights_json,g.scope,g.scope_value FROM app_roles r LEFT JOIN pnp_v2_grants g ON g.user_id=r.user_id AND BINARY g.app_id=BINARY r.app_id WHERE r.user_id=? AND r.app_id=?',[$u['id'],$app])->fetch();
-        $role=$row['role']??'none';
-        // Migration populates explicit grants; missing entries do not inherit authority silently.
-        $rights=$row&&$row['rights_json']?json_decode($row['rights_json'],true):[];
-        if(!in_array($role,self::APPS[$app]['roles'],true)||$role==='none')$rights=[];
-        return ['app_id'=>$app,'role'=>$role,'rights'=>array_values(array_intersect(self::RIGHTS,is_array($rights)?$rights:[])),'scope'=>$row['scope']??'all','scope_value'=>$row['scope_value']??'','status'=>$status];
+        $role=$row['role']??'none';$profile=self::roleProfile($u,$app);
+        $roles=$master?['admin','teacher']:($profile['roles']??($role==='none'?[]:[$role]));
+        $rights=$master?self::RIGHTS:($row&&$row['rights_json']?json_decode($row['rights_json'],true):[]);
+        $rights=array_values(array_intersect(self::RIGHTS,is_array($rights)?$rights:[]));
+        if(!$master&&(!in_array($role,self::APPS[$app]['roles'],true)||$role==='none'))$rights=[];
+        $access=['app_id'=>$app,'role'=>$master?'admin':$role,'roles'=>$roles,'rights'=>$rights,'scope'=>$master?'all':($row['scope']??'all'),'scope_value'=>$master?'':($row['scope_value']??''),'status'=>$status,'can_delegate'=>$master||(!empty($profile['can_delegate'])&&in_array('admin',$roles,true)),'delegable_rights'=>$master?self::RIGHTS:array_values(array_intersect($rights,$profile['delegable_rights']??[])),'self_rights'=>$master?['view','create','edit','export']:($profile['self_rights']??(array_intersect($roles,['teacher','user','department_head'])?array_values(array_intersect($rights,['view','create','edit','export'])):[]))];
+        if($includeStaff&&self::multiRoleReady()&&!$master&&!in_array('admin',$roles,true)){
+            $staff=self::query('SELECT * FROM pnp_v2_staff_assignments WHERE user_id=? AND app_id=? AND revoked_at IS NULL',[$u['id'],$app])->fetch();
+            if($staff){
+                $parent=self::query("SELECT u.* FROM users u JOIN pnp_v2_accounts a ON a.user_id=u.id WHERE u.id=? AND u.status='active' AND a.approval_status='approved' AND a.archived_at IS NULL",[$staff['assigned_by']])->fetch();
+                if($parent){$pa=self::access($parent,$app,'default',false);$sr=json_decode($staff['rights_json'],true)?:[];
+                    $contained=$pa['scope']==='all'||($staff['scope']==='department'&&$pa['scope']==='department'&&$staff['scope_value']===$pa['scope_value']);
+                    if($pa['can_delegate']&&$contained&&!array_diff($sr,$pa['delegable_rights'])&&in_array('view',$sr,true)){
+                        $access['roles']=array_values(array_unique(array_merge($roles,['staff'])));$access['role']='admin';$access['rights']=$sr;$access['scope']=$staff['scope'];$access['scope_value']=$staff['scope_value'];$access['assignment']=['assigned_by'=>(int)$staff['assigned_by'],'revision'=>(int)$staff['revision']];
+                    }
+                }
+            }
+        }
+        $access['has_admin_workspace']=$master||(bool)array_intersect($access['roles'],['admin','staff']);
+        $access['has_self_workspace']=$master||(bool)array_intersect($access['roles'],['teacher','user','department_head']);
+        if($workspace==='self'){$access['rights']=$access['has_self_workspace']?$access['self_rights']:[];$access['role']=$app==='pnp-academic'?'teacher':'user';$access['scope']='self';$access['scope_value']=$u['username'];}
+        if($workspace==='admin'&&!$access['has_admin_workspace'])$access['rights']=[];
+        return $access;
     }
-    public static function requireApp(string $app,string $right='view'): array {
-        $u=self::actor();if(self::appLocked($app))throw new PortalProblem(403,'ระบบนี้ปิดใช้งานชั่วคราวตามแผนปรับปรุง','app_disabled');$a=self::access($u,$app);
+    public static function requireApp(string $app,string $right='view',string $workspace='default'): array {
+        if(!in_array($workspace,['default','self','admin'],true))throw new PortalProblem(400,'พื้นที่ทำงานไม่ถูกต้อง');
+        $u=self::actor();if(self::appLocked($app))throw new PortalProblem(403,'ระบบนี้ปิดใช้งานชั่วคราวตามแผนปรับปรุง','app_disabled');$a=self::access($u,$app,$workspace);
+        if($workspace==='default'&&$right==='view'&&!in_array('view',$a['rights'],true)&&in_array('view',$a['self_rights'],true))$a=self::access($u,$app,'self');
         if($a['status']!=='active' && (int)$u['is_portal_admin']!==1)throw new PortalProblem(403,'ระบบนี้ยังไม่เปิดให้บริการ','app_disabled');
         if(!in_array($right,$a['rights'],true))throw new PortalProblem(403,'ไม่มีสิทธิ์ดำเนินการนี้ในระบบ','permission_denied');
         return ['user'=>$u,'access'=>$a];
     }
     public static function scopeAllows(array $context,string $username): bool {
+        if($context['access']['scope']==='self')return (int)self::query('SELECT id FROM users WHERE username=?',[$username])->fetchColumn()===(int)$context['user']['id'];
         if($context['access']['scope']==='all')return true;
         $department=self::query('SELECT department FROM users WHERE username=?',[$username])->fetchColumn();
         return $department!==false && $context['access']['scope']==='department' && $context['access']['scope_value']!=='' && hash_equals($context['access']['scope_value'],(string)$department);

@@ -173,6 +173,7 @@ $activeTheme = $themes[$themeColorKey] ?? $themes['dark-blue'];
         </div>
     </div>
 </header>
+<?php pnp_academic_workspace_links(); ?>
 
 <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
     <!-- Systems Grid -->

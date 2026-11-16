@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/core.php';
+require_once __DIR__.'/grants.php';
 
 function memberRow(int $id,bool $lock=false): array {
     $row=PortalV2::query('SELECT u.*,m.auth_version,m.must_change_password,m.approval_status,m.archived_at FROM users u JOIN pnp_v2_accounts m ON m.user_id=u.id WHERE u.id=?'.($lock?' FOR UPDATE':''),[$id])->fetch();
@@ -34,7 +35,7 @@ function assertMasterSurvives(int $target,int $actor,bool $removesAuthority): vo
 try{
     PortalV2::ready();$action=(string)($_GET['action']??'bootstrap');$method=$_SERVER['REQUEST_METHOD']??'GET';
     if(!in_array($method,['GET','POST'],true))throw new PortalProblem(405,'Method not allowed');
-    $readActions=['bootstrap','session','members','audit','launch'];
+    $readActions=['bootstrap','session','members','audit','launch','staff'];
     if($method==='GET'&&!in_array($action,$readActions,true))throw new PortalProblem(405,'ต้องใช้ POST สำหรับการเปลี่ยนข้อมูล');
     $input=[];if($method==='POST'){PortalV2::requireCsrf();$input=PortalV2::input();if(in_array($action,$readActions,true))throw new PortalProblem(405,'Method not allowed');}
     if($action==='bootstrap'){
@@ -64,12 +65,12 @@ try{
         PortalV2::json(['ok'=>true,'message'=>'หากพบบัญชี ระบบจะส่งคำขอให้ผู้ดูแลตรวจสอบและติดต่อกลับ ไม่มีการส่งอีเมลอัตโนมัติ']);
     }
     if($action==='session'){
-        $app=(string)($_GET['app']??'');$right=(string)($_GET['right']??'view');if(!in_array($right,PortalV2::RIGHTS,true))throw new PortalProblem(400,'สิทธิ์ไม่ถูกต้อง');$u=$app?PortalV2::requireApp($app,$right)['user']:PortalV2::actor();$roles=[];
+        $app=(string)($_GET['app']??'');$right=(string)($_GET['right']??'view');if(!in_array($right,PortalV2::RIGHTS,true))throw new PortalProblem(400,'สิทธิ์ไม่ถูกต้อง');$workspace=(string)($_GET['workspace']??'default');$u=$app?PortalV2::requireApp($app,$right,$workspace)['user']:PortalV2::actor();$roles=[];
         foreach(PortalV2::APPS as $id=>$definition)$roles[$id]=PortalV2::access($u,$id)['role'];
         PortalV2::json(['ok'=>true,'valid'=>true,'user'=>array_merge(PortalV2::publicUser($u),['user_id'=>(int)$u['id'],'roles'=>$roles])]);
     }
     if($action==='launch'){
-        $app=(string)($_GET['app']??'');PortalV2::requireApp($app);header('Cache-Control: no-store');header('Location: '.PortalV2::base().PortalV2::APPS[$app]['path']);exit;
+        $app=(string)($_GET['app']??'');$workspace=(string)($_GET['workspace']??'default');PortalV2::requireApp($app,'view',$workspace);header('Cache-Control: no-store');header('Location: '.PortalV2::base().PortalV2::APPS[$app]['path'].($app==='pnp-academic'&&in_array($workspace,['self','admin'],true)?'?workspace='.$workspace:''));exit;
     }
     if($action==='logout'){
         $u=PortalV2::actor(true,true);PortalV2::query('UPDATE pnp_v2_sessions SET revoked_at=UTC_TIMESTAMP() WHERE token_hash=?',[hash('sha256',(string)($_COOKIE['pnp_portal_session']??''))]);PortalV2::cookie('pnp_portal_session','',time()-3600);PortalV2::audit((int)$u['id'],(int)$u['id'],'session.logout');PortalV2::json(['ok'=>true]);
@@ -81,6 +82,7 @@ try{
     if($action==='update_profile'){
         $u=PortalV2::actor();$email=trim((string)($input['email']??''));$phone=trim((string)($input['phone']??''));if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>100||mb_strlen($phone)>20)throw new PortalProblem(400,'อีเมลหรือหมายเลขโทรศัพท์ไม่ถูกต้อง');PortalV2::db()->beginTransaction();PortalV2::query('UPDATE users SET email=?,phone=? WHERE id=?',[$email,$phone,$u['id']]);PortalV2::audit((int)$u['id'],(int)$u['id'],'profile.update',['email'=>$u['email'],'phone'=>$u['phone']],['email'=>$email,'phone'=>$phone]);PortalV2::db()->commit();PortalV2::json(['ok'=>true,'message'=>'บันทึกข้อมูลติดต่อแล้ว']);
     }
+    if(in_array($action,['staff','assign_staff','revoke_staff'],true))portalStaffAction($action,$input);
     $actor=PortalV2::master();$actorId=(int)$actor['id'];
     if($action==='members'){
         $rows=PortalV2::query('SELECT u.*,m.must_change_password,m.approval_status,m.archived_at FROM users u JOIN pnp_v2_accounts m ON m.user_id=u.id ORDER BY u.id DESC LIMIT 500')->fetchAll();$users=[];
@@ -119,20 +121,7 @@ try{
         $hash=PortalV2::password((string)($input['password']??''));PortalV2::db()->beginTransaction();memberRow($id,true);
         PortalV2::query('UPDATE users SET password_hash=? WHERE id=?',[$hash,$id]);PortalV2::query('UPDATE pnp_v2_accounts SET must_change_password=1,auth_version=auth_version+1 WHERE user_id=?',[$id]);PortalV2::query("UPDATE pnp_v2_reset_requests SET status='resolved',resolved_at=UTC_TIMESTAMP() WHERE user_id=? AND status='pending'",[$id]);PortalV2::audit($actorId,$id,'password.reset',[],['must_change_password'=>true,'sessions_revoked'=>true]);PortalV2::db()->commit();PortalV2::json(['ok'=>true,'message'=>'ตั้งรหัสผ่านชั่วคราวแล้ว สมาชิกต้องเปลี่ยนเมื่อเข้าสู่ระบบ']);
     }
-    if($action==='save_grant'){
-        $id=(int)($input['user_id']??0);$app=(string)($input['app_id']??'');$role=(string)($input['role']??'none');$rights=$input['rights']??[];$scope=(string)($input['scope']??'all');$value=trim((string)($input['scope_value']??''));
-        if(!isset(PortalV2::APPS[$app])||!in_array($role,PortalV2::APPS[$app]['roles'],true)||!is_array($rights)||array_diff($rights,PortalV2::RIGHTS)||!in_array($scope,['all','department'],true))throw new PortalProblem(400,'ข้อมูลสิทธิ์ไม่ถูกต้อง');
-        $rights=array_values(array_unique($rights));if($role==='none')$rights=[];if($rights&&!in_array('view',$rights,true))throw new PortalProblem(400,'สิทธิ์ทำงานต้องมีสิทธิ์ดูข้อมูลด้วย');
-        if($role!=='admin'&&(in_array('manage_users',$rights,true)||in_array('manage_settings',$rights,true)))throw new PortalProblem(400,'การจัดการผู้ใช้และตั้งค่าต้องเป็นผู้ดูแลระบบย่อย');
-        if($scope==='department'&&($value===''||!PortalV2::query('SELECT id FROM users WHERE department=? LIMIT 1',[$value])->fetchColumn()))throw new PortalProblem(400,'กรุณาเลือกแผนกจากทะเบียนกลาง');
-        if($scope!=='all'&&($app==='pnp-go'||in_array('manage_settings',$rights,true)))throw new PortalProblem(400,'PNP Go และสิทธิ์ตั้งค่าระบบรุ่นนี้ต้องใช้ขอบเขตทั้งองค์กร');
-        if($role!=='admin'&&array_diff($rights,PortalV2::legacyRights($role)))throw new PortalProblem(400,'งานที่เลือกไม่สอดคล้องกับบทบาท กรุณาเลือกบทบาทผู้ดูแลหากต้องการสิทธิ์เพิ่มเติม');
-        if($scope==='all')$value='';PortalV2::db()->beginTransaction();$target=memberRow($id,true);if((int)$target['is_portal_admin']===1)throw new PortalProblem(409,'ผู้ดูแลสูงสุดมีสิทธิ์บริหารทุกระบบอยู่แล้ว');
-        $before=PortalV2::query('SELECT * FROM pnp_v2_grants WHERE user_id=? AND app_id=? FOR UPDATE',[$id,$app])->fetch();$revision=(int)($before['revision']??0);
-        if((int)($input['revision']??-1)!==$revision)throw new PortalProblem(409,'สิทธิ์ถูกแก้ไขโดยผู้ดูแลคนอื่น กรุณาโหลดข้อมูลใหม่');
-        PortalV2::query('INSERT INTO app_roles (user_id,app_id,role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE role=VALUES(role)',[$id,$app,$role]);
-        PortalV2::query('INSERT INTO pnp_v2_grants (user_id,app_id,rights_json,scope,scope_value,revision) VALUES (?,?,?,?,?,1) ON DUPLICATE KEY UPDATE rights_json=VALUES(rights_json),scope=VALUES(scope),scope_value=VALUES(scope_value),revision=revision+1',[$id,$app,json_encode($rights),$scope,$value]);PortalV2::audit($actorId,$id,'access.change',$before?:[],['app_id'=>$app,'role'=>$role,'rights'=>$rights,'scope'=>$scope,'scope_value'=>$value]);PortalV2::db()->commit();PortalV2::json(['ok'=>true,'message'=>'กำหนดสิทธิ์แล้ว มีผลกับคำขอถัดไป']);
-    }
+    if($action==='save_grant')portalSaveGrant($input,$actor);
     if($action==='system_status'){
         $app=(string)($input['app_id']??'');$status=(string)($input['status']??'');if(PortalV2::appLocked($app)&&$status!=='disabled')throw new PortalProblem(409,'ระบบนี้พักบริการระหว่างเชื่อมสิทธิ์ ยังเปิดจากหน้านี้ไม่ได้');if(!isset(PortalV2::APPS[$app])||!in_array($status,['active','disabled','coming_soon'],true))throw new PortalProblem(400,'สถานะระบบไม่ถูกต้อง');
         PortalV2::db()->beginTransaction();$before=PortalV2::query('SELECT status FROM app_status WHERE app_id=? FOR UPDATE',[$app])->fetchColumn();

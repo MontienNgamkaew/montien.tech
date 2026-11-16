@@ -25,7 +25,7 @@ if (!$semester) {
 }
 
 // 2. Fetch teacher details
-$stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE id = :teacher_id AND role = 'teacher' LIMIT 1");
+$stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE id = :teacher_id AND (role = 'teacher' OR EXISTS (SELECT 1 FROM courses own_courses WHERE own_courses.teacher_id=users.id)) LIMIT 1");
 $stmt->execute(['teacher_id' => $teacherId]);
 $teacher = $stmt->fetch();
 
