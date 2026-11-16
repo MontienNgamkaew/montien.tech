@@ -53,6 +53,9 @@ $removeAvatar = isset($input['remove_avatar']) ? (int)$input['remove_avatar'] : 
 if (empty($email)) {
     sendResponse(['error' => 'กรุณากรอก E-mail'], 400);
 }
+if ($password !== '' && strlen($password) < 6) {
+    sendResponse(['error' => 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร'], 400);
+}
 
 try {
     // 3. ตรวจสอบความถูกต้องของบัญชีผู้ใช้ในระบบ
@@ -82,10 +85,7 @@ try {
     $hasNewAvatar = false;
 
     if ($removeAvatar === 1) {
-        // หากต้องการลบรูปโปรไฟล์ออก
-        if ($avatarPath && file_exists(__DIR__ . '/../' . $avatarPath)) {
-            @unlink(__DIR__ . '/../' . $avatarPath);
-        }
+        // Detach the photo only; retain its bytes for recovery.
         $avatarPath = null;
         $hasNewAvatar = true;
     } elseif (!empty($avatar) && preg_match('/^data:image\/(\w+);base64,/', $avatar, $type)) {
@@ -93,22 +93,22 @@ try {
         $ext = strtolower($type[1]);
         if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
             $data = substr($avatar, strpos($avatar, ',') + 1);
-            $data = base64_decode($data);
-            if ($data !== false) {
-                // ลบรูปโปรไฟล์เดิมก่อน
-                if ($user['avatar_path'] && file_exists(__DIR__ . '/../' . $user['avatar_path'])) {
-                    @unlink(__DIR__ . '/../' . $user['avatar_path']);
-                }
-
-                $filename = 'avatar_' . uniqid() . '.' . $ext;
+            $data = base64_decode($data, true);
+            if ($data !== false && $data !== '') {
+                // A separate filename keeps the current photo safe if UPDATE fails.
+                $filename = 'avatar_' . bin2hex(random_bytes(16)) . '.' . $ext;
                 $dir = __DIR__ . '/../uploads/';
-                if (!file_exists($dir)) {
-                    mkdir($dir, 0777, true);
+                if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
+                    throw new RuntimeException('ไม่สามารถเตรียมโฟลเดอร์รูปโปรไฟล์ได้');
                 }
-                if (file_put_contents($dir . $filename, $data)) {
+                if (file_put_contents($dir . $filename, $data) === strlen($data)) {
                     $avatarPath = 'uploads/' . $filename;
                     $hasNewAvatar = true;
+                } else {
+                    throw new RuntimeException('ไม่สามารถบันทึกรูปโปรไฟล์ใหม่ได้');
                 }
+            } else {
+                throw new RuntimeException('ข้อมูลรูปโปรไฟล์ไม่ถูกต้อง');
             }
         }
     }
@@ -128,9 +128,6 @@ try {
     }
 
     if (!empty($password)) {
-        if (strlen($password) < 6) {
-            sendResponse(['error' => 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร'], 400);
-        }
         $sql .= ", password_hash = :password_hash";
         $params[':password_hash'] = password_hash($password, PASSWORD_BCRYPT);
     }

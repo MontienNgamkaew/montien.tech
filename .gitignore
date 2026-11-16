@@ -18,6 +18,13 @@ api/pnp_users.db
 Sample_DB/
 *.sql.bak
 backup*.sql
+# Private operational artifacts (never publish dumps, credentials or inventories)
+/backups/
+/private-audit/
+*.sql.gz
+*.sql.zst
+*.sql.zip
+*-client.cnf
 
 # Dependencies (ติดตั้งใหม่ได้ด้วย composer/npm — ไม่ต้องเก็บใน git)
 /vendor/
@@ -30,6 +37,8 @@ node_modules/
 pnp-go/storage/sessions/
 pnp-go/storage/cache/
 *.log
+__pycache__/
+*.py[cod]
 
 # ไฟล์ระบบปฏิบัติการ / เอดิเตอร์
 .DS_Store

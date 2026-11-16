@@ -315,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                             
                             // Clean filename
-                            $newFileName = $postSystemType . '_' . time() . '.' . $fileExtension;
+                            $newFileName = $postSystemType . '_' . bin2hex(random_bytes(16)) . '.' . $fileExtension;
                             $destPath = $uploadDir . $newFileName;
                             
                             if (move_uploaded_file($fileTmpPath, $destPath)) {
@@ -339,56 +339,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 : 'รูปแบบลิงก์ Google Drive ไม่ถูกต้อง (กรุณากรอกในรูปแบบ URL)';
                         } else {
                             // Check if a submission already exists for this course and system type in the active semester
-                            $stmtCheck = $pdo->prepare("SELECT id, file_path FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1");
-                            $stmtCheck->execute([
-                                'course_id' => $postCourseId,
-                                'system_type' => $postSystemType
-                            ]);
-                            $existingSubmission = $stmtCheck->fetch();
-                            
-                            if ($existingSubmission) {
-                                // If a new file was uploaded, delete the old file on disk
-                                if ($fileUploaded) {
-                                    if (!empty($existingSubmission['file_path'])) {
-                                        $oldFile = upload_base_path('pnp-academix') . '/' . $existingSubmission['file_path'];
-                                        if (file_exists($oldFile)) {
-                                            @unlink($oldFile);
-                                        }
-                                    }
-                                } else {
-                                    // If no new file was uploaded, keep the old file path (if any)
-                                    $filePath = $existingSubmission['file_path'];
-                                }
-                                
-                                // Update existing entry
-                                $stmt = $pdo->prepare("
-                                    UPDATE submissions
-                                    SET file_path = :file_path, drive_link = :drive_link, submission_timing = :submission_timing, status = 'pending', feedback = NULL, submitted_at = CURRENT_TIMESTAMP
-                                    WHERE id = :id
-                                ");
-                                $stmt->execute([
-                                    'file_path' => $filePath,
-                                    'drive_link' => !empty($driveLink) ? $driveLink : null,
-                                    'submission_timing' => $submittedTiming,
-                                    'id' => (int)$existingSubmission['id']
-                                ]);
-                            } else {
-                                // No existing submission: insert a new one
-                                $stmt = $pdo->prepare("
-                                    INSERT INTO submissions (course_id, system_type, file_path, drive_link, submission_timing, status)
-                                    VALUES (:course_id, :system_type, :file_path, :drive_link, :submission_timing, 'pending')
-                                ");
-                                $stmt->execute([
+                            try {
+                                $pdo->beginTransaction();
+                                // Serialize replacements for the same course, including first submissions.
+                                $lockCourse = $pdo->prepare('SELECT id FROM courses WHERE id = ? FOR UPDATE');
+                                $lockCourse->execute([$postCourseId]);
+                                $stmtCheck = $pdo->prepare("SELECT id, file_path, status FROM submissions WHERE course_id = :course_id AND system_type = :system_type LIMIT 1 FOR UPDATE");
+                                $stmtCheck->execute([
                                     'course_id' => $postCourseId,
-                                    'system_type' => $postSystemType,
-                                    'file_path' => $filePath,
-                                    'drive_link' => !empty($driveLink) ? $driveLink : null,
-                                    'submission_timing' => $submittedTiming
+                                    'system_type' => $postSystemType
                                 ]);
+                                $existingSubmission = $stmtCheck->fetch();
+
+                                if ($existingSubmission && $existingSubmission['status'] === 'approved') {
+                                    throw new RuntimeException('เอกสารได้รับการอนุมัติระหว่างการส่ง กรุณาตรวจสอบสถานะอีกครั้ง');
+                                }
+                                if ($existingSubmission) {
+                                    // Never delete the old document during replacement.
+                                    if (!$fileUploaded) {
+                                        // If no new file was uploaded, keep the old file path (if any)
+                                        $filePath = $existingSubmission['file_path'];
+                                    }
+
+                                    // Update existing entry
+                                    $stmt = $pdo->prepare("
+                                        UPDATE submissions
+                                        SET file_path = :file_path, drive_link = :drive_link, submission_timing = :submission_timing, status = 'pending', feedback = NULL, submitted_at = CURRENT_TIMESTAMP
+                                        WHERE id = :id
+                                    ");
+                                    $stmt->execute([
+                                        'file_path' => $filePath,
+                                        'drive_link' => !empty($driveLink) ? $driveLink : null,
+                                        'submission_timing' => $submittedTiming,
+                                        'id' => (int)$existingSubmission['id']
+                                    ]);
+                                } else {
+                                    // No existing submission: insert a new one
+                                    $stmt = $pdo->prepare("
+                                        INSERT INTO submissions (course_id, system_type, file_path, drive_link, submission_timing, status)
+                                        VALUES (:course_id, :system_type, :file_path, :drive_link, :submission_timing, 'pending')
+                                    ");
+                                    $stmt->execute([
+                                        'course_id' => $postCourseId,
+                                        'system_type' => $postSystemType,
+                                        'file_path' => $filePath,
+                                        'drive_link' => !empty($driveLink) ? $driveLink : null,
+                                        'submission_timing' => $submittedTiming
+                                    ]);
+                                }
+                                $pdo->commit();
+                                $_SESSION['success_flash'] = 'ยื่นส่งเอกสารของคุณเรียบร้อยแล้ว ระบบกำลังรอการตรวจประเมินจากผู้ดูแลระบบ';
+                                redirect_to('dashboard.php');
+                            } catch (Exception $e) {
+                                if ($pdo->inTransaction()) {
+                                    $pdo->rollBack();
+                                }
+                                error_log('Submission save failed: ' . $e->getMessage());
+                                $errorMessage = 'ไม่สามารถบันทึกเอกสารได้ กรุณาลองใหม่อีกครั้ง โดยเอกสารเดิมยังคงอยู่';
                             }
-                            
-                            $_SESSION['success_flash'] = 'ยื่นส่งเอกสารของคุณเรียบร้อยแล้ว ระบบกำลังรอการตรวจประเมินจากผู้ดูแลระบบ';
-                            redirect_to('dashboard.php');
                         }
                     }
                 }

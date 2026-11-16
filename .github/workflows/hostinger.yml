@@ -1,0 +1,47 @@
+name: Deploy to Hostinger (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Check only, deploy the five allowlisted files, or rollback code
+        required: true
+        default: check
+        type: choice
+        options:
+          - check
+          - deploy
+          - rollback
+      rollback_release:
+        description: Currently deployed release ID (required only for rollback)
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: montien-tech-hostinger-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: hostinger-production
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify deploy tooling and PHP syntax
+        run: |
+          php -v
+          find api pnp-academix pnpman/api scripts -name '*.php' -print0 | xargs -0 -n1 php -l
+          python3 -m unittest discover -s tests -p 'test_deploy_gateway.py' -v
+      - name: Run selected manual operation
+        env:
+          DEPLOY_MODE: ${{ inputs.mode }}
+          ROLLBACK_RELEASE: ${{ inputs.rollback_release }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          HOSTINGER_SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: python3 scripts/deploy/manual_hostinger.py --mode "$DEPLOY_MODE" --rollback-release "$ROLLBACK_RELEASE"

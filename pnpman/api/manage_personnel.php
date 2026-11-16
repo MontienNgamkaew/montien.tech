@@ -121,14 +121,8 @@ try {
         $current_photo_path = $existing ? $existing['photo_path'] : null;
         $new_photo_path = $current_photo_path;
 
-        // If requested to delete current photo
+        // Detach only; keep the old file available if the database update fails.
         if ($delete_photo) {
-            if (!empty($current_photo_path)) {
-                $full_path = upload_base_path('pnpman') . '/' . $current_photo_path;
-                if (file_exists($full_path) && is_file($full_path)) {
-                    @unlink($full_path);
-                }
-            }
             $new_photo_path = null;
         }
 
@@ -154,7 +148,7 @@ try {
                 exit;
             }
 
-            $newFileName = 'personnel_' . uniqid() . '_' . time() . '.' . $ext;
+            $newFileName = 'personnel_' . bin2hex(random_bytes(16)) . '.' . $ext;
             $uploadDir = upload_base_path('pnpman') . '/uploads/';
 
             if (!file_exists($uploadDir)) {
@@ -164,13 +158,7 @@ try {
             $targetFile = $uploadDir . $newFileName;
 
             if (move_uploaded_file($fileTmp, $targetFile)) {
-                // Delete previous old photo
-                if (!empty($current_photo_path)) {
-                    $old_full_path = upload_base_path('pnpman') . '/' . $current_photo_path;
-                    if (file_exists($old_full_path) && is_file($old_full_path)) {
-                        @unlink($old_full_path);
-                    }
-                }
+                // Retain the old file even after success; no automatic cleanup.
                 $new_photo_path = 'uploads/' . $newFileName;
             } else {
                 http_response_code(500);

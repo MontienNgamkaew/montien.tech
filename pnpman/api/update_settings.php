@@ -34,12 +34,7 @@ try {
     $new_logo_path = $current_logo_path;
 
     if ($delete_logo) {
-        if (!empty($current_logo_path)) {
-            $full_path = upload_base_path('pnpman') . '/' . $current_logo_path;
-            if (file_exists($full_path) && is_file($full_path)) {
-                @unlink($full_path);
-            }
-        }
+        // Remove the reference only, never the recovery copy on disk.
         $new_logo_path = '';
     }
 
@@ -68,18 +63,15 @@ try {
         }
 
         // Create target filename
-        $newFileName = 'logo_' . time() . '.' . $ext;
+        $newFileName = 'logo_' . bin2hex(random_bytes(16)) . '.' . $ext;
         $uploadDir = upload_base_path('pnpman') . '/uploads/';
+        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
+            throw new RuntimeException('ไม่สามารถเตรียมโฟลเดอร์โลโก้ได้');
+        }
         $targetFile = $uploadDir . $newFileName;
 
         if (move_uploaded_file($fileTmp, $targetFile)) {
-            // Delete old file if existed
-            if (!empty($current_logo_path)) {
-                $old_full_path = upload_base_path('pnpman') . '/' . $current_logo_path;
-                if (file_exists($old_full_path) && is_file($old_full_path)) {
-                    @unlink($old_full_path);
-                }
-            }
+            // Keep the previous file if the later UPDATE fails.
             $new_logo_path = 'uploads/' . $newFileName;
         } else {
             http_response_code(500);
@@ -104,7 +96,7 @@ try {
         ]
     ]);
 
-} catch (PDOException $e) {
+} catch (Exception $e) {
     http_response_code(500);
     echo json_encode(["status" => "error", "message" => "Database failure: " . $e->getMessage()]);
 }

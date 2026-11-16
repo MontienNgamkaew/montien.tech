@@ -145,9 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Handle Delete Logo
                 if ($deleteLogo) {
-                    if (!empty($logoPath) && file_exists(upload_base_path('pnp-academix') . '/' . $logoPath)) {
-                        @unlink(upload_base_path('pnp-academix') . '/' . $logoPath);
-                    }
+                    // Detach only; retain old bytes for recovery after failed saves.
                     $logoPath = '';
                 }
 
@@ -165,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
-                    $newFileName = 'logo_' . time() . '.' . $fileExtension;
+                    $newFileName = 'logo_' . bin2hex(random_bytes(16)) . '.' . $fileExtension;
 
                     $uploadFileDir = upload_base_path('pnp-academix') . '/uploads/branding/';
                     if (!is_dir($uploadFileDir)) {
@@ -174,10 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $destPath = $uploadFileDir . $newFileName;
                     if (move_uploaded_file($fileTmpPath, $destPath)) {
-                        // Delete old file if upload was successful
-                        if (!empty($logoPath) && file_exists(upload_base_path('pnp-academix') . '/' . $logoPath)) {
-                            @unlink(upload_base_path('pnp-academix') . '/' . $logoPath);
-                        }
+                        // Retain the old logo; DB changes below may still fail.
                         $logoPath = 'uploads/branding/' . $newFileName;
                     } else {
                         throw new Exception("เกิดข้อผิดพลาดในการบันทึกไฟล์โลโก้บนเซิร์ฟเวอร์");
@@ -185,6 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Save to database
+                $pdo->beginTransaction();
                 $stmt = $pdo->prepare("INSERT INTO branding_settings (meta_key, meta_value) VALUES (:key, :value) ON DUPLICATE KEY UPDATE meta_value = :value2");
                 
                 $stmt->execute(['key' => 'system_name', 'value' => $systemName, 'value2' => $systemName]);
@@ -197,12 +193,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $themeColor = 'dark-blue';
                 }
                 $stmt->execute(['key' => 'theme_color', 'value' => $themeColor, 'value2' => $themeColor]);
+                $pdo->commit();
                 
                 // Force reload of static get_branding_settings
                 $branding = get_branding_settings(true);
                 
                 $successMessage = 'บันทึกการตั้งค่ารูปลักษณ์และข้อมูลระบบสำเร็จเรียบร้อยแล้ว';
             } catch (Exception $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 $errorMessage = $e->getMessage();
             }
         } elseif ($action === 'save_signatures') {
