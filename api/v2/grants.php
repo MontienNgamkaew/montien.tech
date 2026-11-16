@@ -20,7 +20,7 @@ function portalSaveGrant(array $input,array $actor): void {
     [$scope,$value]=portalGrantScope((string)($input['scope']??'all'),trim((string)($input['scope_value']??'')));
     if($scope!=='all'&&($app==='pnp-go'||in_array('manage_settings',$rights,true)))throw new PortalProblem(400,'ระบบรถและสิทธิ์ตั้งค่าต้องมีขอบเขตทั้งองค์กร');
     $self=portalGrantRights($input['self_rights']??(array_intersect($roles,['teacher','user','department_head'])?array_values(array_intersect($rights,['view','create','edit','export'])):[]));
-    if(array_diff($self,['view','create','edit','export'])||($self&&!array_intersect($roles,['teacher','user','department_head'])))throw new PortalProblem(400,'สิทธิ์งานส่วนตัวต้องมีบทบาทผู้ใช้งานหรือครูผู้สอน');
+    if(array_diff($self,['view','create','edit','export'])||($self&&!array_intersect($roles,['teacher','user','department_head'])&&!($app==='pnp-academic'&&PortalV2::isTeachingMember(memberRow($id)))))throw new PortalProblem(400,'สิทธิ์งานส่วนตัวต้องมีบทบาทผู้ใช้งานหรือครูผู้สอน');
     $delegate=!empty($input['can_delegate']);$ceiling=portalGrantRights($input['delegable_rights']??[]);
     if(($delegate||$ceiling)&&!in_array('admin',$roles,true))throw new PortalProblem(400,'เฉพาะบทบาทผู้ดูแลที่ได้รับมอบหมายจึงแต่งตั้งเจ้าหน้าที่ได้');
     if(array_diff($ceiling,$rights))throw new PortalProblem(400,'เพดานสิทธิ์ส่งต่อต้องไม่เกินสิทธิ์ของผู้ดูแล');

@@ -96,7 +96,7 @@ $i=json_decode(stream_get_contents(STDIN),true);if(!preg_match('/^pnp_v2_stage_[
 
     def test_06_master_validation(self):
         self.assertEqual(self.grant('stage_viewer',roles=['teacher'],rights=['view'],can_delegate=True,delegable_rights=['view'])[0],400)
-        self.assertEqual(self.grant('stage_viewer',roles=['admin'],self_rights=['view'])[0],400)
+        self.assertEqual(self.grant('stage_viewer',roles=['admin'],self_rights=['view'])[0],200)
         self.assertEqual(self.grant('stage_viewer',delegable_rights=['view','manage_settings'])[0],400)
 
 if __name__=='__main__':unittest.main()

@@ -109,6 +109,9 @@ final class PortalV2
         $row=self::multiRoleReady()?self::query('SELECT * FROM pnp_v2_role_profiles WHERE user_id=? AND app_id=?',[$u['id'],$app])->fetch():false;
         return $row?['roles'=>json_decode($row['roles_json'],true)?:[],'self_rights'=>json_decode($row['self_rights_json'],true)?:[],'can_delegate'=>(bool)$row['can_delegate'],'delegable_rights'=>json_decode($row['delegable_rights_json'],true)?:[]]:[];
     }
+    public static function isTeachingMember(array $user,array $roles=[]): bool {
+        return in_array(trim((string)($user['primary_position']??'')),['ข้าราชการครู','พนักงานราชการครู','ครูพิเศษสอน'],true)||in_array('teacher',$roles,true);
+    }
     public static function access(array $u,string $app,string $workspace='default',bool $includeStaff=true): array {
         if(!isset(self::APPS[$app]))throw new PortalProblem(404,'ไม่พบระบบย่อย');
         $status=self::appLocked($app)?'disabled':(self::query('SELECT status FROM app_status WHERE app_id=?',[$app])->fetchColumn()?:'disabled');
@@ -130,6 +133,17 @@ final class PortalV2
                         $access['roles']=array_values(array_unique(array_merge($roles,['staff'])));$access['role']='admin';$access['rights']=$sr;$access['scope']=$staff['scope'];$access['scope_value']=$staff['scope_value'];$access['assignment']=['assigned_by'=>(int)$staff['assigned_by'],'revision'=>(int)$staff['revision']];
                     }
                 }
+            }
+        }
+        $access['assigned_roles']=$roles;$access['assigned_self_rights']=$access['self_rights'];
+        $access['teaching_position']=$app==='pnp-academic'&&self::isTeachingMember($u);
+        // Approved active accounts are checked by actor(); this baseline never grants administration.
+        $access['automatic_teacher']=$app==='pnp-academic'&&self::isTeachingMember($u,$access['roles']);
+        if($access['automatic_teacher']){
+            $access['roles']=array_values(array_unique(array_merge($access['roles'],['teacher'])));
+            $access['self_rights']=array_values(array_unique(array_merge($access['self_rights'],['view','create','edit','export'])));
+            if(!array_intersect($access['roles'],['admin','staff'])){
+                $access['role']='teacher';$access['rights']=$access['self_rights'];$access['scope']='self';$access['scope_value']=$u['username'];
             }
         }
         $access['has_admin_workspace']=$master||(bool)array_intersect($access['roles'],['admin','staff']);
