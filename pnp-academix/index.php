@@ -14,6 +14,7 @@ header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
+if (pnp_portal_v2()) require_login();
 
 $isLoggedIn = is_logged_in();
 $dashboardUrl = '#';

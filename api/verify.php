@@ -7,6 +7,10 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/jwt.php';
+if(pnp_portal_v2()){
+    try{PortalV2::ready();$u=PortalV2::actor();$roles=[];foreach(PortalV2::APPS as $id=>$app)$roles[$id]=PortalV2::access($u,$id)['role'];PortalV2::json(['ok'=>true,'valid'=>true,'user'=>array_merge(PortalV2::publicUser($u),['user_id'=>(int)$u['id'],'roles'=>$roles])]);}
+    catch(PortalProblem $e){PortalV2::json(['ok'=>false,'valid'=>false,'error'=>$e->getMessage(),'kind'=>$e->kind],$e->status);}
+}
 
 $token = '';
 

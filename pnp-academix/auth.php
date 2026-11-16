@@ -1,18 +1,20 @@
 <?php
 declare(strict_types=1);
+require_once dirname(__DIR__) . '/api/portal_access.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 
     session_set_cookie_params([
         'lifetime' => 0,
-        'path' => '/',
+        'path' => pnp_portal_v2()?PortalV2::base().'/pnp-academix/':'/',
         'domain' => '',
         'secure' => $isSecure,
         'httponly' => true,
         'samesite' => 'Lax'
     ]);
 
+    if(pnp_portal_v2())session_name('pnp_academix_session');
     session_start();
 }
 
@@ -25,6 +27,7 @@ if (!function_exists('e')) {
 
 function is_logged_in(): bool
 {
+    if (pnp_portal_v2() && !pnp_portal_can('pnp-academic','view')) return false;
     return !empty($_SESSION['user_id']) && !empty($_SESSION['role']);
 }
 
@@ -56,6 +59,7 @@ function redirect_to(string $path): never
  */
 function get_portal_url(): string
 {
+    if (pnp_portal_v2()) return PortalV2::base() . '/portal-v2/';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     if (strpos($host, 'montien.tech') !== false) {
         // Production: portal is at root
@@ -67,6 +71,19 @@ function get_portal_url(): string
 
 function require_login(): void
 {
+    if (pnp_portal_v2()) {
+        global $pdo;
+        $context = pnp_portal_guard('pnp-academic');
+        $statement = $pdo->prepare('SELECT id FROM users WHERE username=?');
+        $statement->execute([$context['user']['username']]);
+        $localId = $statement->fetchColumn();
+        if (!$localId) redirect_to(PortalV2::base() . '/pnp-academix/sso.php');
+        $_SESSION['user_id'] = (int)$localId;
+        $_SESSION['username'] = $context['user']['username'];
+        $_SESSION['fullname'] = trim($context['user']['first_name'].' '.$context['user']['last_name']);
+        $_SESSION['role'] = $context['access']['role']==='admin' ? 'admin' : 'teacher';
+        $GLOBALS['pnp_academic_context'] = $context;
+    }
     if (!is_logged_in()) {
         // Redirect to Portal for SSO authentication instead of local login
         redirect_to(get_portal_url());
@@ -86,11 +103,28 @@ function require_role(string $role): void
 function require_admin(): void
 {
     require_role('admin');
+    if (pnp_portal_v2()) {
+        global $pdo;
+        $page=basename($_SERVER['SCRIPT_NAME']??'');$action=(string)($_POST['action']??'');$post=($_SERVER['REQUEST_METHOD']??'GET')==='POST';
+        $right=match($page){'settings.php'=>'manage_settings','print_report.php'=>'export','import.php'=>$post&&$action==='import_courses_csv'?'create':'manage_users',default=>$post?($page==='review.php'?'approve':'manage_users'):'view'};
+        $context=pnp_portal_guard('pnp-academic',$right);
+        if(($page==='settings.php'||$page==='import.php')&&$context['access']['scope']!=='all')pnp_portal_fail(new PortalProblem(403,'การตั้งค่าและนำเข้าข้อมูลต้องมีขอบเขตทั้งองค์กร'));
+        if($post&&(in_array($action,['delete_teacher','cleanup_files','delete_unused_files','garbage_collect','new_semester'],true)||($page==='import.php'&&$action!=='import_courses_csv')))pnp_portal_fail(new PortalProblem(403,'จัดการบัญชีผ่าน Portal กลาง และยังไม่เปิดการลบ/ล้างข้อมูลในรุ่นใหม่นี้'));
+        $target=(int)($_GET['teacher_id']??$_POST['teacher_id']??0);
+        if($target){$s=$pdo->prepare('SELECT username FROM users WHERE id=?');$s->execute([$target]);$username=$s->fetchColumn();if(!$username)pnp_portal_fail(new PortalProblem(404,'ไม่พบบุคลากร'));pnp_portal_scope($context,(string)$username);}
+    }
 }
 
 function require_teacher(): void
 {
     require_role('teacher');
+    if (pnp_portal_v2()) {
+        $page=basename($_SERVER['SCRIPT_NAME']??'');$action=(string)($_POST['action']??'');$post=($_SERVER['REQUEST_METHOD']??'GET')==='POST';
+        if($post&&str_starts_with($action,'delete_'))pnp_portal_fail(new PortalProblem(403,'ยังไม่เปิดการลบข้อมูลถาวรในรุ่นใหม่'));
+        $right=$page==='print_memorandum.php'?'export':($post?'create':'view');
+        if($post&&$action==='submit_document'){global $pdo;$s=$pdo->prepare('SELECT id FROM submissions WHERE course_id=? AND system_type=? LIMIT 1');$s->execute([(int)($_POST['course_id']??0),(string)($_POST['system_type']??'')]);if($s->fetchColumn())$right='edit';}
+        $context=pnp_portal_guard('pnp-academic',$right);pnp_portal_scope($context,$context['user']['username']);
+    }
 }
 
 function create_csrf_token(): string
@@ -124,6 +158,7 @@ function login_user(array $user): void
 
 function logout_user(): void
 {
+    if(pnp_portal_v2())redirect_to(PortalV2::base().'/portal-v2/#logout');
     $_SESSION = [];
 
     if (ini_get('session.use_cookies')) {

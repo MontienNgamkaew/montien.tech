@@ -23,6 +23,7 @@ if (!$semester) {
 $stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE role = 'teacher' AND status = 'active' ORDER BY fullname ASC");
 $stmt->execute();
 $teachers = $stmt->fetchAll();
+if (pnp_portal_v2()) $teachers = pnp_portal_filter($GLOBALS['pnp_academic_context'], $teachers);
 
 // 2.2 Fetch deadlines from system settings
 $stmt = $pdo->prepare('SELECT system_type, deadline_date, is_open FROM system_settings WHERE semester_id = :semester_id');

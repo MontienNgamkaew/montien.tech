@@ -17,6 +17,7 @@ final class AuthController
     public function logout(): void
     {
         verify_csrf();
+        if(function_exists('pnp_portal_v2')&&pnp_portal_v2())pnp_portal_logout();
 
         $_SESSION = [];
 
@@ -29,7 +30,7 @@ final class AuthController
         
         // Single Logout (SLO): redirect to central portal and wipe localStorage token
         $isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']);
-        $portalUrl = $isLocal ? '/pnp-portal/?action=logout' : '/?action=logout';
+        $portalUrl = function_exists('pnp_portal_v2')&&pnp_portal_v2()?PortalV2::base().'/portal-v2/#login':($isLocal ? '/pnp-portal/?action=logout' : '/?action=logout');
         header('Location: ' . $portalUrl);
         exit;
     }

@@ -76,6 +76,7 @@ if (!$semester) {
 $stmt = $pdo->prepare("SELECT id, username, fullname, department FROM users WHERE role = 'teacher' AND status = 'active' ORDER BY fullname ASC");
 $stmt->execute();
 $teachers = $stmt->fetchAll();
+if (pnp_portal_v2()) $teachers = pnp_portal_filter($GLOBALS['pnp_academic_context'], $teachers);
 
 // 2.5 Query all assigned departments from portal DB for active teachers
 $teacherDepartmentsMap = [];

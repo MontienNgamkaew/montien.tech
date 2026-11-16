@@ -5,6 +5,13 @@
 
 // โหลดค่าลับจากไฟล์ .env (ไม่ commit ขึ้น git) — ดู .env.example
 require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/portal_access.php';
+if(pnp_portal_v2()){
+    $script=$_SERVER['SCRIPT_NAME']??'';
+    if(preg_match('~/api/(login|admin_users|update_profile|import_csv|export_csv)\.php$~D',$script)||((($_SERVER['REQUEST_METHOD']??'GET')==='POST')&&str_ends_with($script,'/api/app_status.php'))){
+        PortalV2::json(['ok'=>false,'error'=>'ใช้ Portal รุ่นใหม่สำหรับบัญชีและสิทธิ์ส่วนกลาง','portal_url'=>PortalV2::base().'/portal-v2/'],410);
+    }
+}
 
 // คีย์ลับสำหรับเซ็น JWT — ต้องตั้งค่าจริงใน .env (โดยเฉพาะบน production)
 // ค่าเริ่มต้นด้านล่างใช้เฉพาะตอนพัฒนาเครื่อง local ที่ยังไม่มี .env เท่านั้น

@@ -1,0 +1,14 @@
+Options -Indexes
+<FilesMatch "^(\.env.*|.*\.sql(?:\..*)?|.*\.(?:bak|log))$">
+    Require all denied
+</FilesMatch>
+<Files "runtime.local.json">
+    Require all denied
+</Files>
+RewriteEngine On
+RewriteCond %{DOCUMENT_ROOT}/api/v2/maintenance.flag -f
+RewriteRule ^(?!portal-v2/maintenance\.php$) portal-v2/maintenance.php [L]
+RewriteRule ^(?:index\.html)?$ index.php [L]
+RewriteRule ^pnp-lessonplan(?:/|$) portal-v2/lesson-plan-unavailable.php [L]
+RewriteRule ^(?:\.git|\.claude|\.codex|private-audit|backups|scripts|tests)(?:/|$) - [F,L]
+RewriteRule ^uploads/(.+)$ upload_serve.php?app=portal&file=uploads/$1 [QSA,L]

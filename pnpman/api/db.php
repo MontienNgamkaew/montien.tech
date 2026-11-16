@@ -1,4 +1,20 @@
 <?php
+require_once __DIR__ . '/../../api/portal_access.php';
+if (pnp_portal_v2()) {
+    $page=basename($_SERVER['SCRIPT_NAME']??'');$post=($_SERVER['REQUEST_METHOD']??'GET')==='POST';
+    $right=match($page){'update_settings.php','manage_structure.php'=>'manage_settings','import_csv.php','assign_job.php'=>'create','manage_personnel.php'=>'manage_users','csv_template.php'=>'export',default=>$post?'edit':'view'};
+    $context=pnp_portal_guard('pnp-man',$right,true);
+    if($page==='change_password.php')pnp_portal_fail(new PortalProblem(410,'เปลี่ยนรหัสผ่านที่ Portal กลางเท่านั้น'),true);
+    if($post){
+        try{PortalV2::requireCsrf(false);}catch(PortalProblem $e){pnp_portal_fail($e,true);}
+        $body=str_contains($_SERVER['CONTENT_TYPE']??'','application/json')?(json_decode(file_get_contents('php://input'),true)?:[]):$_POST;
+        if(in_array($page,['clear_assignments.php','copy_year.php','remove_assignment.php'],true)||($page==='manage_personnel.php'&&in_array($body['action']??'',['add','delete'],true))||($page==='manage_structure.php'&&in_array($body['action']??'',['delete_department','delete_job'],true)))pnp_portal_fail(new PortalProblem(403,'รุ่นใหม่ยังไม่เปิดการลบหรือเขียนทับชุดข้อมูลเดิม ใช้ Portal กลางจัดการบัญชี'),true);
+        if($context['access']['scope']!=='all'&&in_array($page,['update_settings.php','manage_structure.php','import_csv.php','reorder_assignments.php'],true))pnp_portal_fail(new PortalProblem(403,'การตั้งค่าโครงสร้างและนำเข้าต้องมีขอบเขตทั้งองค์กร'),true);
+        $target=(int)($body['personnel_id']??($page==='manage_personnel.php'?($body['id']??0):0));
+        if($target){$u=PortalV2::query('SELECT username,is_portal_admin FROM users WHERE id=?',[$target])->fetch();if(!$u)pnp_portal_fail(new PortalProblem(404,'ไม่พบสมาชิก'),true);if((int)$u['is_portal_admin']===1&&(int)$context['user']['is_portal_admin']!==1)pnp_portal_fail(new PortalProblem(403,'แก้ไขบัญชีผู้ดูแลสูงสุดไม่ได้'),true);pnp_portal_scope($context,$u['username'],true);}
+    }
+    $GLOBALS['pnp_man_context']=$context;
+}
 // CORS headers are handled by api/config.php
 
 // นำเข้าการเชื่อมต่อฐานข้อมูลหลักจากพอร์ทัลกลางเพื่อหลีกเลี่ยงรหัสผ่านไม่ตรงกัน
@@ -93,6 +109,7 @@ function parseFullName($fullName) {
 }
 
 function isCurrentAdmin($pdo) {
+    if(pnp_portal_v2())return ($GLOBALS['pnp_man_context']['access']['role']??'none')==='admin' && (bool)array_intersect(['create','edit','manage_users','manage_settings'],$GLOBALS['pnp_man_context']['access']['rights']??[]);
     // ใช้ตัวช่วย SSO กลางในการตรวจ JWT (ออกโดย Portal กลาง)
     require_once __DIR__ . '/../../api/sso_auth.php';
 

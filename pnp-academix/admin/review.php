@@ -29,6 +29,7 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute(['submission_id' => $submissionId]);
 $submission = $stmt->fetch();
+if ($submission && pnp_portal_v2()) pnp_portal_scope($GLOBALS['pnp_academic_context'], (string)$submission['teacher_username']);
 
 if (!$submission) {
     exit('ไม่พบข้อมูลการยื่นส่งเอกสารนี้ในระบบ');

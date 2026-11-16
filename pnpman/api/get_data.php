@@ -7,8 +7,9 @@ try {
     $year = isset($_GET['year']) ? intval($_GET['year']) : 2569;
 
     // Get all personnel from unified users table (excluding the dummy 'admin' account)
-    $stmt = $pdo->query("SELECT id, CONCAT(title, first_name, ' ', last_name) AS name, primary_position AS main_title, avatar_path AS photo_path FROM users WHERE status = 'active' AND username != 'admin'");
+    $stmt = $pdo->query("SELECT id, username, CONCAT(title, first_name, ' ', last_name) AS name, primary_position AS main_title, avatar_path AS photo_path FROM users WHERE status = 'active' AND username != 'admin'");
     $personnel = $stmt->fetchAll();
+    if(pnp_portal_v2())$personnel=pnp_portal_filter($GLOBALS['pnp_man_context'],$personnel);
 
     // Get all departments
     $stmt = $pdo->query("SELECT * FROM departments ORDER BY sort_order, id");
@@ -22,6 +23,7 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM assignments WHERE academic_year = ? ORDER BY sort_order, id");
     $stmt->execute([$year]);
     $assignments = $stmt->fetchAll();
+    if(pnp_portal_v2()){$allowedIds=array_column($personnel,'id');$assignments=array_values(array_filter($assignments,static fn(array $a):bool=>in_array($a['personnel_id'],$allowedIds)));}
 
     // Get college settings
     $stmt = $pdo->query("SELECT * FROM college_settings WHERE id = 1");

@@ -8,6 +8,7 @@ DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteRule ^storage/(pdfs|reports|signatures)/(.+)$ /upload_serve.php?app=pnp-go&file=storage/$1/$2 [QSA,L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

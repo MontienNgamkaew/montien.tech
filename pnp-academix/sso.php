@@ -12,16 +12,18 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../api/jwt.php';
 require_once __DIR__ . '/../api/config.php';
 
+require_once dirname(__DIR__) . '/api/portal_access.php';
+$centralPayload = pnp_portal_payload('pnp-academic');
 $token = $_GET['token'] ?? '';
 
-if (empty($token)) {
+if ($centralPayload === null && empty($token)) {
     // If no token is provided, redirect back to the Portal Home
     header('Location: ' . get_portal_url());
     exit;
 }
 
 // Decode and verify the JWT Token using shared Portal Secret Key
-$payload = JWT::decode($token, JWT_SECRET_KEY);
+$payload = $centralPayload ?? JWT::decode($token, JWT_SECRET_KEY);
 if (!$payload) {
     echo '<!doctype html>';
     echo '<html lang="th">';

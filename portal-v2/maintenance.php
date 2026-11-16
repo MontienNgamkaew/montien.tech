@@ -1,0 +1,3 @@
+<?php
+http_response_code(503);header('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-store');header('Retry-After: 120');
+?><!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังปรับปรุง Portal</title><body style="font-family:Tahoma,sans-serif;background:#f4f6fa;color:#1b2d46"><main style="max-width:560px;margin:15vh auto;padding:28px;background:white;border-radius:14px"><h1 style="font-size:24px">กำลังปรับปรุงศูนย์บริการดิจิทัล</h1><p style="line-height:1.8">ระบบจะกลับมาให้บริการในอีกสักครู่<br>กรุณารอสักครู่แล้วลองใหม่</p></main></body></html>

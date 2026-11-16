@@ -11,16 +11,18 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/../api/jwt.php';
 require_once __DIR__ . '/../api/config.php';
 
+require_once dirname(__DIR__) . '/api/portal_access.php';
+$centralPayload = pnp_portal_payload('pnp-go');
 $token = $_GET['token'] ?? '';
 
-if (empty($token)) {
+if ($centralPayload === null && empty($token)) {
     // If no token is provided, redirect back to the Portal Home
     header('Location: /pnp-portal/');
     exit;
 }
 
 // Decode and verify the JWT Token using shared Portal Secret Key
-$payload = JWT::decode($token, JWT_SECRET_KEY);
+$payload = $centralPayload ?? JWT::decode($token, JWT_SECRET_KEY);
 if (!$payload) {
     echo '<!doctype html>';
     echo '<html lang="th">';
@@ -108,7 +110,7 @@ if ($pnpGoRole === 'none') {
 }
 
 // กำหนดบทบาทท้องถิ่นตามสิทธิ์ที่กำหนดในตาราง app_roles
-$localRole = $pnpGoRole; // ใช้ค่า app_roles โดยตรง (admin, director, deputy_director, supply_head, user)
+$localRole = $centralPayload !== null && $pnpGoRole === 'driver' ? 'user' : $pnpGoRole; // ใช้ค่า app_roles โดยตรง (admin, director, deputy_director, supply_head, user)
 
 // ถ้าเป็น admin ให้สามารถอนุมัติได้ทั้ง 1, 2, 3 — เช็ค is_portal_admin เพื่อความแน่นอน
 if ($isPortalAdmin === 1) {
@@ -183,7 +185,8 @@ try {
     echo '<div class="card shadow-sm p-4 text-center" style="max-width: 480px; border-radius: 16px;">';
     echo '<div class="text-danger fs-1 mb-3">❌</div>';
     echo '<h4 class="text-dark mb-3">ไม่สามารถเชื่อมโยงฐานข้อมูลย่อยได้</h4>';
-    echo '<p class="text-muted mb-4">พบปัญหาทางเทคนิค: ' . htmlspecialchars($e->getMessage()) . '</p>';
+    error_log('PNP Go SSO failed: '.get_class($e).' code='.$e->getCode());
+    echo '<p class="text-muted mb-4">กรุณาติดต่อผู้ดูแลระบบเพื่อตรวจสอบการเชื่อมต่อ</p>';
     echo '<a href="/pnp-portal/" class="btn btn-primary w-100 py-2.5" style="border-radius: 10px;">กลับสู่หน้าแรกพอร์ทัลกลาง</a>';
     echo '</div></body></html>';
     exit;
