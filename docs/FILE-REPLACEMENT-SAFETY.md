@@ -10,7 +10,7 @@
 | `pnp-academix/teacher/submit.php` | ไม่ลบเอกสารเดิมเมื่อส่งใหม่ ใช้ชื่อสุ่ม บันทึกด้วย transaction และ lock รายวิชา ตรวจสถานะอนุมัติซ้ำหลัง lock |
 | `pnp-academix/admin/settings.php` | ไม่ลบโลโก้เดิม ใช้ชื่อสุ่ม และบันทึก branding ทุกคีย์ใน transaction เดียว |
 
-คงพาธฐานข้อมูล, URL เดิม, schema และ `.env` ไม่มี migration สำหรับชุดนี้ ยังไม่ push หรือ deploy
+คงพาธฐานข้อมูล, URL เดิม, schema และ `.env` ไม่มี migration สำหรับชุดนี้ หลังจบ staging ได้ปล่อยขึ้นจริงผ่าน manual workflow แล้ว ดู [ผลปล่อย](DEPLOYED-20261116.md)
 
 ## การเก็บไฟล์
 

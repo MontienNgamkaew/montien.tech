@@ -1,5 +1,9 @@
 # ผลดำเนินการ 16 พฤศจิกายน 2569
 
+## สถานะล่าสุด
+
+ตั้ง manual GitHub Actions และปล่อย PHP 5 ไฟล์ขึ้น production สำเร็จแล้วด้วย source `9ddd74a` หลัง backup/checksum ผ่าน ตรวจไฟล์ผู้ใช้และ `.env` เทียบกับ backup ไม่เปลี่ยน ดู [ผลปล่อยจริง](DEPLOYED-20261116.md) ส่วนบันทึกด้านล่างเป็นลำดับการเตรียมก่อนปล่อย
+
 ## ทำแล้ว
 
 - สำรองฐานข้อมูล production ผ่าน mysqldump โดยไม่โหลด bootstrap ของแอป: Portal 8, PNP Go 7, Academix 6 ตาราง ทุกตารางที่ตรวจเป็น InnoDB
