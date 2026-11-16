@@ -1,0 +1,31 @@
+<?php
+declare(strict_types=1);
+require_once __DIR__.'/admin-support.php';
+$maps=['course_syllabus'=>'syllabuses','lesson_plan'=>'plans','teaching_materials'=>'mats'];
+$totals=[];foreach($maps as $kind=>$map){$totals[$kind]=['submitted'=>0,'missing'=>0,'pending'=>0,'approved'=>0,'rejected'=>0,'late'=>0];foreach($teacherData as $td)foreach(ac_submission_counts($td[$map],$td['course_count']) as $k=>$n)$totals[$kind][$k]+=$n;}
+$departments=[];foreach($teacherData as $td)$departments[trim($td['teacher']['department']??'')?:'ไม่ระบุแผนก']=true;ksort($departments);
+ac_start('ภาพรวมการส่งงานครู',$branding);ac_header($branding,'admin');
+?>
+<script defer src="<?= ac_h(ac_base().'/assets/academix-admin.js?v=admin-review-20261116') ?>"></script>
+<main class="ac-main" id="ac-main">
+<?php ac_admin_navigation(); ?>
+<div class="ac-page-heading"><div><p class="ac-eyebrow">Academic administration</p><h1>ภาพรวมการส่งงานครู</h1><p>ครู <?= count($teacherData) ?> คนในขอบเขตที่ได้รับมอบหมาย · ผ่านเกณฑ์อนุมัติครบทั้ง 3 ประเภท <?= (int)$fullyCompliantCount ?> คน</p></div><span class="ac-term">ภาคเรียน <?= ac_h($semester['semester_name']) ?></span></div>
+<?php if($successMessage): ?><div class="ac-notice success" role="status"><?= ac_h($successMessage) ?></div><?php endif; ?>
+<?php if($errorMessage): ?><div class="ac-notice warning" role="alert"><?= ac_h($errorMessage) ?></div><?php endif; ?>
+<section class="ac-summary-grid" aria-label="ภาพรวมงานสามประเภท">
+<?php foreach(AC_DOCUMENT_TYPES as $kind=>$type):$t=$totals[$kind]; ?>
+<article class="ac-panel ac-summary"><div class="ac-summary-top"><span class="ac-type-number"><?= $type['number'] ?></span><span class="ac-service open">ส่งแล้ว <?= $t['submitted'] ?> รายการ</span></div><h2><?= $type['title'] ?></h2><div class="ac-summary-count"><strong><?= $t['pending'] ?></strong><span>รายการรอตรวจ</span></div><div class="ac-mini-stats"><span>อนุมัติ <b><?= $t['approved'] ?></b></span><span>แก้ไข <b><?= $t['rejected'] ?></b></span><span>ยังไม่ส่ง <b><?= $t['missing'] ?></b></span></div><p class="ac-rule"><?= $type['rule'] ?></p><button class="ac-button ac-queue-button" type="button" data-queue-type="<?= $kind ?>">ดูรายการรอตรวจ →</button></article>
+<?php endforeach; ?>
+</section><p class="ac-summary-note">จำนวนเอกสารนับจากงานล่าสุดของแต่ละรายวิชา “ยังไม่ส่ง” นับรายวิชาแต่ละประเภท เกณฑ์แผนการสอนและสื่อการสอนใช้ขั้นต่ำอย่างละ 1 รายวิชาต่อครู</p>
+<section aria-labelledby="ac-teachers-title"><div class="ac-section-heading"><div><h2 id="ac-teachers-title">ติดตามงานรายบุคคล</h2><p>แยกจำนวนและสถานะทั้งสามประเภท เลือกรายวิชาเพื่อ Preview และตรวจพิจารณา</p></div><span id="ac-admin-result-count" aria-live="polite"><?= count($teacherData) ?> คน</span></div>
+<form class="ac-filters ac-admin-filters" role="search" id="ac-admin-filters"><label class="ac-search">ค้นหาครู<input type="search" id="ac-admin-search" placeholder="ชื่อครู หรือชื่อบัญชี" autocomplete="off"></label><label>แผนก<select id="ac-admin-department"><option value="all">ทุกแผนกที่มีสิทธิ์</option><?php foreach($departments as $d=>$unused): ?><option value="<?= ac_h($d) ?>"><?= ac_h($d) ?></option><?php endforeach; ?></select></label><label>ประเภทงาน<select id="ac-admin-type"><option value="all">ทั้ง 3 ประเภท</option><?php foreach(AC_DOCUMENT_TYPES as $k=>$type): ?><option value="<?= $k ?>"><?= $type['title'] ?></option><?php endforeach; ?></select></label><label>สถานะงาน<select id="ac-admin-status"><option value="all">ทุกสถานะ</option><option value="pending">รอตรวจ</option><option value="rejected">ต้องแก้ไข</option><option value="approved">อนุมัติแล้ว</option><option value="missing">ยังไม่ส่ง</option><option value="late">ส่งล่าช้า</option></select></label><button type="button" class="ac-button" id="ac-admin-clear">ล้างตัวกรอง</button></form>
+<div class="ac-courses">
+<?php foreach($teacherData as $td):$teacher=$td['teacher'];$dept=trim($teacher['department']??'')?:'ไม่ระบุแผนก'; ?>
+<article class="ac-panel ac-course" data-admin-teacher data-search="<?= ac_h($teacher['fullname'].' '.$teacher['username']) ?>" data-department="<?= ac_h($dept) ?>"><header class="ac-course-heading"><div><h3><?= ac_h($teacher['fullname']) ?></h3><p class="ac-help"><?= ac_h($dept) ?> · <?= (int)$td['course_count'] ?> รายวิชา</p></div><a class="ac-button" href="review_teacher.php?teacher_id=<?= (int)$teacher['id'] ?>">ดูรายวิชาและงานทั้งหมด →</a></header><div class="ac-document-grid">
+<?php foreach(AC_DOCUMENT_TYPES as $kind=>$type):$subs=$td[$maps[$kind]];$counts=ac_submission_counts($subs,$td['course_count']);$complete=$kind==='course_syllabus'?($td['course_count']>0&&$counts['approved']===$td['course_count']):$counts['approved']>=1; ?>
+<section class="ac-document-cell" data-admin-document data-type="<?= $kind ?>" data-statuses="<?= ac_h(implode(' ',array_keys(array_filter(array_intersect_key($counts,array_flip(['missing','pending','approved','rejected','late'])))))) ?>"><h4><?= $type['title'] ?></h4><p class="ac-rule"><?= $counts['submitted'] ?> / <?= (int)$td['course_count'] ?> รายวิชา · <?= $complete?'ผ่านเกณฑ์อนุมัติ':'ยังไม่ผ่านเกณฑ์อนุมัติ' ?></p><div class="ac-count-badges"><?php foreach(['pending','approved','rejected','missing'] as $status): ?><span class="ac-badge <?= $status ?>"><?= ac_status($status) ?> <?= $counts[$status] ?></span><?php endforeach; ?></div>
+<?php if($subs): ?><details class="ac-submission-list" data-work-list><summary>เลือกเอกสารที่ส่ง (<?= count($subs) ?>)</summary><ul><?php foreach($td['courses'] as $course):$sub=$subs[$course['id']]??null;if(!$sub)continue; ?><li data-admin-submission data-status="<?= ac_h($sub['status']) ?>" data-late="<?= $sub['submission_timing']==='late'?'1':'0' ?>"><a href="review.php?submission_id=<?= (int)$sub['id'] ?>"><?= ac_h($course['course_code'].' · '.$course['course_name']) ?></a><span class="ac-badges"><?= ac_badge($sub['status'],$sub['submission_timing']) ?></span></li><?php endforeach; ?></ul></details><?php else: ?><p class="ac-help">ยังไม่มีงานประเภทนี้</p><?php endif; ?>
+</section><?php endforeach; ?>
+</div></article><?php endforeach; ?>
+</div><div class="ac-panel ac-empty" id="ac-admin-empty" <?= $teacherData?'hidden':'' ?>><h3>ไม่พบครูตามเงื่อนไข</h3><p>ลองเปลี่ยนตัวกรอง หรือตรวจสอบขอบเขตสิทธิ์ของคุณ</p></div>
+</section></main><?php ac_end($branding); ?>

@@ -1,0 +1,18 @@
+<?php
+declare(strict_types=1);
+$canApprove=(!pnp_portal_v2()||pnp_portal_can('pnp-academic','approve','admin'))&&(int)$submission['submission_teacher_id']!==(int)current_user_id();
+$isOwn=(int)$submission['submission_teacher_id']===(int)current_user_id();
+$type=AC_DOCUMENT_TYPES[$submission['system_type']]??['title'=>'เอกสารที่ส่ง'];
+header("Content-Security-Policy: default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self' https: data:; frame-src 'self' https://drive.google.com https://docs.google.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'none'; frame-ancestors 'self'; form-action 'self'");
+ac_start('ตรวจพิจารณา · '.$type['title'],$branding);ac_header($branding,'admin');
+?>
+<main class="ac-main ac-review-main" id="ac-main"><a class="ac-back" href="review_teacher.php?teacher_id=<?= (int)$submission['submission_teacher_id'] ?>#course-<?= (int)$submission['course_id'] ?>">← กลับงานของครู</a>
+<div class="ac-page-heading"><div><p class="ac-eyebrow">Document review</p><h1><?= ac_h($type['title']) ?></h1><p><?= ac_h($submission['teacher_fullname'].' · '.$submission['course_code'].' '.$submission['course_name']) ?></p></div><div class="ac-badges"><?= ac_badge($submission['status'],$submission['submission_timing']) ?></div></div>
+<?php if($errorMessage): ?><div class="ac-notice warning" role="alert"><?= ac_h($errorMessage) ?></div><?php endif; ?>
+<div class="ac-review-layout"><div class="ac-review-document"><?php $documentUrl=ac_base().'/admin/review.php?submission_id='.(int)$submissionId;require __DIR__.'/admin-document-frame.php'; ?></div>
+<aside class="ac-review-sidebar"><section class="ac-panel ac-review-details"><h2>ข้อมูลการส่งงาน</h2><dl><dt>ครูผู้สอน</dt><dd><?= ac_h($submission['teacher_fullname']) ?></dd><dt>ภาคเรียน</dt><dd><?= ac_h($submission['semester_name']) ?></dd><dt>ส่งเมื่อ</dt><dd><?= ac_h(ac_date($submission['submitted_at'])) ?></dd><dt>ข้อเสนอแนะปัจจุบัน</dt><dd><?= !empty($submission['feedback'])?nl2br(ac_h($submission['feedback'])):'ยังไม่มีข้อเสนอแนะ' ?></dd></dl></section>
+<section class="ac-panel ac-review-details"><h2>ผลการพิจารณา</h2>
+<?php if($canApprove&&empty($reviewConflict)): ?><p class="ac-help">ตรวจเอกสารฉบับนี้ก่อนบันทึก ส่งกลับแก้ไขต้องระบุเหตุผล</p><form method="post" action="review.php?submission_id=<?= (int)$submissionId ?>" class="ac-review-form"><input type="hidden" name="csrf_token" value="<?= ac_h(create_csrf_token()) ?>"><input type="hidden" name="review_revision" value="<?= ac_h(ac_review_revision($submission)) ?>"><label for="review-feedback">ข้อเสนอแนะ / เหตุผลส่งกลับแก้ไข<textarea id="review-feedback" name="feedback" rows="5" maxlength="10000"><?= ac_h(is_string($_POST['feedback']??null)?$_POST['feedback']:($submission['feedback']??'')) ?></textarea></label><label class="ac-review-ack"><input type="checkbox" name="confirm_review" value="1" required><span>ฉันตรวจเอกสารฉบับนี้แล้ว</span></label><button class="ac-button primary" type="submit" name="action" value="approve">อนุมัติเอกสาร</button><button class="ac-button ac-reject" type="submit" name="action" value="reject">ส่งกลับแก้ไข</button><p class="ac-help">บันทึกเฉพาะผลพิจารณาและข้อเสนอแนะ เอกสารต้นฉบับยังคงเดิม</p></form>
+<?php elseif(!empty($reviewConflict)): ?><p class="ac-help">ต้องเปิดหน้าใหม่เพื่อตรวจเอกสารฉบับปัจจุบันก่อนบันทึกผล</p><a class="ac-button" href="review.php?submission_id=<?= (int)$submissionId ?>">โหลดเอกสารปัจจุบัน</a>
+<?php else: ?><div class="ac-notice"><p><?= $isOwn?'นี่คืองานของคุณ สามารถเปิดดูได้ แต่ต้องให้ผู้ตรวจคนอื่นพิจารณา':'บัญชีนี้มีสิทธิ์เปิดดูเอกสาร ยังไม่มีสิทธิ์อนุมัติหรือส่งกลับแก้ไข' ?></p></div><?php endif; ?>
+</section></aside></div></main><?php ac_end($branding); ?>
