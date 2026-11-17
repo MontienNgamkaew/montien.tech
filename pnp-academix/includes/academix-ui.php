@@ -20,11 +20,12 @@ function ac_branding(PDO $db):array{
  try{foreach($db->query('SELECT meta_key,meta_value FROM branding_settings')->fetchAll(PDO::FETCH_ASSOC) as $row)if(array_key_exists($row['meta_key'],$defaults))$defaults[$row['meta_key']]=$row['meta_value'];}catch(PDOException $e){}
  return $defaults;
 }
-function ac_start(string $title,array $branding,bool $scripts=false):void{
+function ac_start(string $title,array $branding,bool $scripts=false,bool $landing=false):void{
  header('Content-Type: text/html; charset=utf-8');header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');
  echo '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>'.ac_h($title).' | PNP Academix</title><link rel="stylesheet" href="'.ac_h(ac_base().'/assets/academix.css?v=admin-review-20261116').'"><link rel="stylesheet" href="'.ac_h(ac_base().'/assets/academix-glass.css?v=glass-20261116-v1').'">';
+ if($landing)echo '<link rel="stylesheet" href="'.ac_h(ac_base().'/assets/academix-landing.css?v=cat-countdown-20261116-v1').'"><script defer src="'.ac_h(ac_base().'/assets/academix-landing.js?v=cat-countdown-20261116-v1').'"></script>';
  if($scripts)echo '<script defer src="'.ac_h(ac_base().'/assets/academix.js?v=admin-review-20261116').'"></script>';
- echo '</head><body class="ac-body"><a class="ac-skip" href="#ac-main">ข้ามไปเนื้อหา</a>';
+ echo '</head><body class="ac-body'.($landing?' ac-dark-landing':'').'"><a class="ac-skip" href="#ac-main">ข้ามไปเนื้อหา</a>';
 }
 function ac_header(array $branding,string $view='self',?string $viewer=null):void{
  $portal=function_exists('get_portal_url')?get_portal_url():(PortalV2::base().'/portal-v2/');$viewer=$viewer??(function_exists('current_user_fullname')?current_user_fullname():'');
