@@ -30,7 +30,9 @@ function ac_start(string $title,array $branding,bool $scripts=false,bool $landin
 function ac_header(array $branding,string $view='self',?string $viewer=null):void{
  $portal=function_exists('get_portal_url')?get_portal_url():(PortalV2::base().'/portal-v2/');$viewer=$viewer??(function_exists('current_user_fullname')?current_user_fullname():'');
  $admin=function_exists('pnp_portal_can')&&pnp_portal_v2()?pnp_portal_can('pnp-academic','view','admin'):(function_exists('current_user_role')&&current_user_role()==='admin');
- echo '<header class="ac-topbar"><a class="ac-brand" href="'.ac_h(ac_base().'/index.php').'"><span class="ac-brand-mark" aria-hidden="true">PNP</span><span><strong>PNP Academix</strong><small>'.ac_h($branding['college_name']).'</small></span></a><nav aria-label="พื้นที่ทำงาน" class="ac-nav"><a '.($view==='self'?'aria-current="page"':'').' href="'.ac_h(ac_base().'/teacher/dashboard.php').'">งานของฉัน</a>';
+ echo '<header class="ac-topbar"><a class="ac-brand" href="'.ac_h(ac_base().'/index.php').'"><span class="ac-brand-mark" aria-hidden="true">PNP</span><span><strong>PNP Academix</strong><small>'.ac_h($branding['college_name']).'</small></span></a><nav aria-label="พื้นที่ทำงาน" class="ac-nav"><a '.($view==='home'?'aria-current="page"':'').' href="'.ac_h(ac_base().'/index.php').'">หน้าแรก</a>';
+ $self=!pnp_portal_v2()||pnp_portal_can('pnp-academic','view','self');
+ if($self)echo '<a '.($view==='self'?'aria-current="page"':'').' href="'.ac_h(ac_base().'/teacher/dashboard.php').'">งานของฉัน</a>';
  if($admin)echo '<a '.($view==='admin'?'aria-current="page"':'').' href="'.ac_h(ac_base().'/admin/overview.php').'">งานดูแลระบบ</a>';
  echo '<a href="'.ac_h($portal).'">กลับสู่ Portal ↗</a></nav><span class="ac-user">'.ac_h($viewer).'</span></header>';
 }

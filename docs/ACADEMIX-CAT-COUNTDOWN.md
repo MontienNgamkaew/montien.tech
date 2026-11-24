@@ -60,3 +60,16 @@ Rollback คืนเฉพาะโค้ด ไม่ restore/delete DB หร
 เปิดใช้ 17 พฤศจิกายน 2569 เวลา 16:09:07 น. (09:09:07 UTC) ใช้ชื่อรุ่นที่เตรียมไว้วันที่ 16 ตรวจ SHA256 ครบ 6 ไฟล์ ข้อมูลเดิมทั้ง 31 ตารางก่อน–หลังติดตั้งเท่ากัน รวม migration marker สองรายการ และ `.env` ไม่เปลี่ยน ชุด backup ใหม่ตรวจ SHA256 ของ dump และ archives ผ่าน
 
 HTTP ของ CSS/JS รุ่นใหม่ตอบ 200 และตรง source ทุก byte หน้าแรกที่ยังไม่ล็อกอินกลับ Portal ตามเดิม Preview raw ที่ไม่ล็อกอินตอบ 401, helper และ Lesson Plan ตอบ 403 ไม่แก้กำหนดส่งหรือผลตรวจงานจริงระหว่างทดสอบและติดตั้ง
+
+
+## ผู้ดูแลเข้าถึงหน้าแรกได้โดยตรง — 24 พฤศจิกายน 2569
+
+รุ่น `academix-admin-home-link-20261124-v1` เพิ่ม “หน้าแรก” ใน navigation ร่วม และ “หน้าแรกและเวลาถอยหลัง” ในเมนู Dashboard ผู้ดูแล (`includes/academix-ui.php`, `includes/admin-support.php`) ผู้ดูแลมีสิทธิ์เปิดหน้าแรกผ่านบัญชี Portal เดิมอยู่แล้ว จึงไม่แก้ auth หรือ grants และซ่อน “งานของฉัน” หากบัญชีนั้นไม่มีสิทธิ์ self
+
+ตรวจด้วยบัญชีจำลองตำแหน่งเจ้าหน้าที่ roles=[admin], admin rights=[view,approve], self_rights=[]: เปิดหน้าแมว 200, พบลิงก์บน Dashboard, self workspace ยัง 403 และสิทธิ์ approve ยังคงอยู่ Countdown suite 3 กลุ่มและ PHP lint 2 ไฟล์ผ่าน คำสั่งทดสอบใช้ `python3 -m unittest discover -s tests -p test_academix_countdown.py` ตามเงื่อนไข fixture ข้างต้น
+
+แพ็กเกจมีเฉพาะเมนู 2 ไฟล์ ตรวจ baseline บน PHP 8.3.37 ก่อนติดตั้ง ใช้ full backup และเปรียบเทียบข้อมูลเดิมตาม installer เดิม ไม่รวมงาน Lesson Plan ที่พักไว้
+
+Release/backup: `/home/u651170081/releases/academix-admin-home-link-20261124-v1/` และ `/home/u651170081/backups/montien-tech/academix-admin-home-link-20261124-v1/` หลักฐานส่วนตัว `private-audit/releases/academix-admin-home-link-20261124-v1/`
+
+เปิดใช้จริง 24 พฤศจิกายน 2569 เวลา 10:21:51 น. (03:21:51 UTC) ตรวจ hash 2 ไฟล์และชุด backup ผ่าน ข้อมูลเดิม 31 ตารางรวม migration marker เท่าเดิม และ `.env` ไม่เปลี่ยน ไม่มีการแก้สิทธิ์บัญชีจริง

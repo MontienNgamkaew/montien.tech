@@ -10,7 +10,7 @@ function ac_review_revision(array $s):string{
  return hash('sha256',json_encode($values,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
 }
 function ac_admin_navigation():void{
- echo '<nav class="ac-admin-nav" aria-label="เมนูผู้ดูแล"><a href="overview.php">ภาพรวมการส่งงาน</a><a href="history.php">ประวัติย้อนหลัง</a>';
+ echo '<nav class="ac-admin-nav" aria-label="เมนูผู้ดูแล"><a href="../index.php">หน้าแรกและเวลาถอยหลัง</a><a href="overview.php">ภาพรวมการส่งงาน</a><a href="history.php">ประวัติย้อนหลัง</a>';
  if(!pnp_portal_v2()||pnp_portal_can('pnp-academic','export','admin'))echo '<a href="print_report.php">พิมพ์รายงาน</a>';
  $all=!pnp_portal_v2()||($GLOBALS['pnp_academic_context']['access']['scope']??'')==='all';
  if($all&&(!pnp_portal_v2()||pnp_portal_can('pnp-academic','manage_settings','admin')))echo '<a href="settings.php">ตั้งค่าการรับงาน</a>';
